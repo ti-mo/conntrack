@@ -6,6 +6,7 @@ import (
 	"net"
 	"errors"
 	"golang.org/x/sys/unix"
+	"fmt"
 )
 
 var (
@@ -74,4 +75,34 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	default:
 		return EventUnknown, nil
 	}
+}
+
+// DecodeEventAttributes generates and populates an Event from a netlink.Message.
+// Pure function, pointer argument for performance purposes.
+// TODO: name this something proper, this is a helper that needs to be broken up
+func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
+
+	// Decode the header to make sure we're dealing with a Conntrack event
+	et, err := DecodeEventType(nlmsg.Header)
+	if err != nil {
+		return Event{}, err
+	}
+
+	// Successfully decoded Conntrack event header, allocate Event
+	e := Event{Type: et}
+
+	// Unmarshal a netlink.Message into netfilter.Attributes
+	attrs, err := netfilter.UnmarshalMessage(*nlmsg)
+	if err != nil {
+		return Event{}, err
+	}
+
+	ra, err := DecodeRootAttributes(attrs)
+	if err != nil {
+		return Event{}, err
+	}
+
+	fmt.Println(ra)
+
+	return e, nil
 }
