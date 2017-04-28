@@ -18,6 +18,47 @@ type Status struct {
 	FixedTimeout bool
 	Template bool
 	Untracked bool
+
+	value uint32
+}
+
+func (s Status) String() string {
+	names := []string{
+		"EXPECTED",
+		"SEEN_REPLY",
+		"ASSURED",
+		"CONFIRMED",
+		"SRC_NAT",
+		"DST_NAT",
+		"NAT_MASK",
+		"SEQ_ADJUST",
+		"SRC_NAT_DONE",
+		"DST_NAT_DONE",
+		"NAT_DONE_MASK",
+		"DYING",
+		"FIXED_TIMEOUT",
+		"TEMPLATE",
+		"UNTRACKED",
+	}
+
+	var rs string
+
+	// Loop over the field's bits
+	for i, name := range names {
+		if s.value & (1 << uint32(i)) != 0 {
+			if rs != "" {
+				rs += "|"
+			}
+			rs += name
+		}
+	}
+
+	// Set default value if none of the flags were set
+	if rs == "" {
+		rs = "DEFAULT"
+	}
+
+	return rs
 }
 
 func (s *Status) UnmarshalBinary(b []byte) error {
@@ -41,6 +82,8 @@ func (s *Status) UnmarshalBinary(b []byte) error {
 	if si & IPS_FIXED_TIMEOUT != 0 { s.FixedTimeout = true }
 	if si & IPS_TEMPLATE != 0 { s.Template = true }
 	if si & IPS_UNTRACKED != 0 { s.Untracked = true	}
+
+	s.value = si
 
 	return nil
 }

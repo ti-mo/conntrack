@@ -2,21 +2,6 @@ package conntrack
 
 import "github.com/gonetlink/netfilter"
 
-// From libnfnetlink/include/libnfnetlink/linux_nfnetlink_compat.h
-// This table is still actively used in upstream conntrack-tools and libnfnetlink
-// It is in a _compat file because these values presumably stem from a time where there were
-// only 32 multicast Netlink groups available. (before genetlink?)
-const (
-	NF_NETLINK_CONNTRACK_NEW         = 1
-	NF_NETLINK_CONNTRACK_UPDATE      = 1 << 1
-	NF_NETLINK_CONNTRACK_DESTROY     = 1 << 2
-	NF_NETLINK_CONNTRACK_EXP_NEW     = 1 << 3
-	NF_NETLINK_CONNTRACK_EXP_UPDATE  = 1 << 4
-	NF_NETLINK_CONNTRACK_EXP_DESTROY = 1 << 5
-
-	NFCT_ALL_CT_GROUPS = (NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE | NF_NETLINK_CONNTRACK_DESTROY)
-)
-
 // MessageType is a Conntrack-specific representation of a netfilter.MessageType.
 // It is used to specify the type of action to execute on
 // the kernel's state table (get, create, delete, etc.).
@@ -46,22 +31,20 @@ const (
 	CTA_STATUS
 	CTA_PROTOINFO
 	CTA_HELP
-	CTA_NAT_SRC
+	CTA_NAT_SRC // Deprecated
 	CTA_TIMEOUT
 	CTA_MARK
 	CTA_COUNTERS_ORIG
 	CTA_COUNTERS_REPLY
 	CTA_USE
 	CTA_ID
-	CTA_NAT_DST
-	CTA_TUPLE_MASTER
-	CTA_SEQ_ADJ_ORIG
-	CTA_NAT_SEQ_ADJ_ORIG = CTA_SEQ_ADJ_ORIG
-	CTA_SEQ_ADJ_REPLY
-	CTA_NAT_SEQ_ADJ_REPLY = CTA_SEQ_ADJ_REPLY
-	CTA_SECMARK
+	CTA_NAT_DST       // Deprecated
+	CTA_TUPLE_MASTER  // TODO
+	CTA_SEQ_ADJ_ORIG  // TODO: ctattr_seqadj
+	CTA_SEQ_ADJ_REPLY // TODO: http://www.spinics.net/lists/netdev/msg245785.html
+	CTA_SECMARK       // Deprecated
 	CTA_ZONE
-	CTA_SECCTX
+	CTA_SECCTX // TODO
 	CTA_TIMESTAMP
 	CTA_MARK_MASK
 	CTA_LABELS
@@ -80,13 +63,13 @@ const (
 	CTA_TUPLE_ZONE
 )
 
-// ProtoType describes the type of Layer 4 protocol metadata in this container.
-type ProtoType uint8
+// ProtoTupleType describes the type of Layer 4 protocol metadata in this container.
+type ProtoTupleType uint8
 
 // This is enum ctattr_l4proto defined in
 // Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
 const (
-	CTA_PROTO_UNSPEC ProtoType = iota
+	CTA_PROTO_UNSPEC ProtoTupleType = iota
 	CTA_PROTO_NUM
 	CTA_PROTO_SRC_PORT
 	CTA_PROTO_DST_PORT
@@ -98,12 +81,57 @@ const (
 	CTA_PROTO_ICMPV6_CODE
 )
 
-type IPType uint8
+type IPTupleType uint8
 
+// This is enum ctattr_ip defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
 const (
-	CTA_IP_UNSPEC IPType = iota
+	CTA_IP_UNSPEC IPTupleType = iota
 	CTA_IP_V4_SRC
 	CTA_IP_V4_DST
 	CTA_IP_V6_SRC
 	CTA_IP_V6_DST
+)
+
+type CounterType uint8
+
+// This is enum ctattr_counters defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_COUNTERS_UNSPEC CounterType = iota
+	CTA_COUNTERS_PACKETS
+	CTA_COUNTERS_BYTES
+)
+
+type TimestampType uint8
+
+// This is enum ctattr_tstamp defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_TIMESTAMP_UNSPEC TimestampType = iota
+	CTA_TIMESTAMP_START
+	CTA_TIMESTAMP_STOP
+	CTA_TIMESTAMP_PAD
+)
+
+type ProtoInfoType uint8
+
+// This is enum ctattr_protoinfo defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_PROTOINFO_UNSPEC ProtoInfoType = iota
+	CTA_PROTOINFO_TCP
+	CTA_PROTOINFO_DCCP
+	CTA_PROTOINFO_SCTP
+)
+
+type ProtoInfoTCPType uint8
+
+const (
+	CTA_PROTOINFO_TCP_UNSPEC ProtoInfoTCPType = iota
+	CTA_PROTOINFO_TCP_STATE
+	CTA_PROTOINFO_TCP_WSCALE_ORIGINAL
+	CTA_PROTOINFO_TCP_WSCALE_REPLY
+	CTA_PROTOINFO_TCP_FLAGS_ORIGINAL
+	CTA_PROTOINFO_TCP_FLAGS_REPLY
 )

@@ -1,12 +1,12 @@
 package conntrack
 
 import (
-	"github.com/mdlayher/netlink"
-	"github.com/gonetlink/netfilter"
-	"net"
 	"errors"
-	"golang.org/x/sys/unix"
 	"fmt"
+	"github.com/gonetlink/netfilter"
+	"github.com/mdlayher/netlink"
+	"log"
+	"net"
 )
 
 var (
@@ -18,23 +18,31 @@ const NFNL_SUBSYS_CT_ALL = netfilter.NFNL_SUBSYS_CTNETLINK | netfilter.NFNL_SUBS
 
 // Event can hold all information needed to process a Conntrack event in userspace.
 type Event struct {
-	Type		EventType
-	Proto		int
-	SrcAddress	net.IP
-	SrcPort		uint16
-	DstAddress	net.IP
-	DstPort		uint16
+	Type       EventType
+	Proto      int
+	SrcAddress net.IP
+	SrcPort    uint16
+	DstAddress net.IP
+	DstPort    uint16
 }
 
 // EventType is a type of Conntrack event derived from the Netlink header.
 // It describes an action to the state table in the kernel.
 type EventType uint8
 
+// From libnfnetlink/include/libnfnetlink/linux_nfnetlink_compat.h, NF_NETLINK_CONNTRACK_*
+// This table is still actively used in upstream conntrack-tools and libnfnetlink
+// It is in a _compat file because these values presumably stem from a time where there were
+// only 32 multicast Netlink groups available. (before genetlink?)
 const (
-	EventUnknown EventType = 0x0
-	EventNew     EventType = 0x1
-	EventUpdate  EventType = 0x2
-	EventDestroy EventType = 0x4
+	EventNew        EventType = 1
+	EventUpdate     EventType = 1 << 1
+	EventDestroy    EventType = 1 << 2
+	EventExpNew     EventType = 1 << 3
+	EventExpUpdate  EventType = 1 << 4
+	EventExpDestroy EventType = 1 << 5
+
+	EventAll EventType = (EventNew | EventUpdate | EventDestroy)
 )
 
 func (et EventType) String() string {
@@ -57,15 +65,15 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	ht := netfilter.UnmarshalNetlinkHeaderType(nlh.Type)
 
 	// Fail when the message is not a conntrack or conntrack-exp message
-	if ht.SubsystemID & NFNL_SUBSYS_CT_ALL == 0 {
-		return EventUnknown, errNotConntrack
+	if ht.SubsystemID&NFNL_SUBSYS_CT_ALL == 0 {
+		return 0, errNotConntrack
 	}
 
-	switch(Messagetype(ht.MessageType)) {
-	// Since the MessageType is only of kind new, get or delete,
-	// the header's flags are used to distinguish between NEW and UPDATE.
+	switch Messagetype(ht.MessageType) {
 	case IPCTNL_MSG_CT_NEW:
-		if nlh.Flags & (unix.NLM_F_CREATE | unix.NLM_F_EXCL) != 0 {
+		// Since the MessageType is only of kind new, get or delete,
+		// the header's flags are used to distinguish between NEW and UPDATE.
+		if nlh.Flags&(netfilter.NLM_F_CREATE|netfilter.NLM_F_EXCL) != 0 {
 			return EventNew, nil
 		} else {
 			return EventUpdate, nil
@@ -73,7 +81,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	case IPCTNL_MSG_CT_DELETE:
 		return EventDestroy, nil
 	default:
-		return EventUnknown, nil
+		return 0, nil
 	}
 }
 
@@ -97,12 +105,14 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 		return Event{}, err
 	}
 
-	ra, err := DecodeRootAttributes(attrs)
+	nfa, err := UnmarshalNetfilterAttributes(attrs)
 	if err != nil {
+		log.Println(netfilter.UnmarshalNetlinkHeaderType(nlmsg.Header.Type))
+		log.Println(attrs)
 		return Event{}, err
 	}
 
-	fmt.Println(ra)
+	fmt.Println(nfa)
 
 	return e, nil
 }
