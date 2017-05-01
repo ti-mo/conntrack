@@ -38,17 +38,18 @@ const (
 	CTA_COUNTERS_REPLY
 	CTA_USE
 	CTA_ID
-	CTA_NAT_DST       // Deprecated
-	CTA_TUPLE_MASTER  // TODO
-	CTA_SEQ_ADJ_ORIG  // TODO: ctattr_seqadj
-	CTA_SEQ_ADJ_REPLY // TODO: http://www.spinics.net/lists/netdev/msg245785.html
-	CTA_SECMARK       // Deprecated
+	CTA_NAT_DST // Deprecated
+	CTA_TUPLE_MASTER
+	CTA_SEQ_ADJ_ORIG
+	CTA_SEQ_ADJ_REPLY
+	CTA_SECMARK // Deprecated
 	CTA_ZONE
-	CTA_SECCTX // TODO
+	CTA_SECCTX
 	CTA_TIMESTAMP
 	CTA_MARK_MASK
 	CTA_LABELS
 	CTA_LABELS_MASK
+	__CTA_MAX
 )
 
 // TupleType describes the type of tuple contained in this container.
@@ -93,6 +94,16 @@ const (
 	CTA_IP_V6_DST
 )
 
+type HelperType uint8
+
+// This is enum ctattr_help defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_HELP_UNSPEC HelperType = iota
+	CTA_HELP_NAME
+	CTA_HELP_INFO
+)
+
 type CounterType uint8
 
 // This is enum ctattr_counters defined in
@@ -112,6 +123,15 @@ const (
 	CTA_TIMESTAMP_START
 	CTA_TIMESTAMP_STOP
 	CTA_TIMESTAMP_PAD
+)
+
+type SecurityType uint8
+
+// This is enum enum ctattr_secctx defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_SECCTX_UNSPEC SecurityType = iota
+	CTA_SECCTX_NAME
 )
 
 type ProtoInfoType uint8
@@ -134,4 +154,15 @@ const (
 	CTA_PROTOINFO_TCP_WSCALE_REPLY
 	CTA_PROTOINFO_TCP_FLAGS_ORIGINAL
 	CTA_PROTOINFO_TCP_FLAGS_REPLY
+)
+
+type SequenceAdjustType uint8
+
+// This is enum ctattr_seqadj defined in
+// Linux/include/uapi/linux/netfilter/nfnetlink_conntrack.h
+const (
+	CTA_SEQADJ_UNSPEC SequenceAdjustType = iota
+	CTA_SEQADJ_CORRECTION_POS
+	CTA_SEQADJ_OFFSET_BEFORE
+	CTA_SEQADJ_OFFSET_AFTER
 )

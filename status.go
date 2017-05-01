@@ -2,22 +2,24 @@ package conntrack
 
 import (
 	"encoding/binary"
+	"fmt"
+	"github.com/gonetlink/netfilter"
 )
 
 type Status struct {
-	Expected bool
-	SeenReply bool
-	Assured bool
-	Confirmed bool
-	SrcNat bool
-	DstNat bool
-	SeqAdjust bool
-	SrcNatDone bool
-	DstNatDone bool
-	Dying bool
+	Expected     bool
+	SeenReply    bool
+	Assured      bool
+	Confirmed    bool
+	SrcNat       bool
+	DstNat       bool
+	SeqAdjust    bool
+	SrcNatDone   bool
+	DstNatDone   bool
+	Dying        bool
 	FixedTimeout bool
-	Template bool
-	Untracked bool
+	Template     bool
+	Untracked    bool
 
 	value uint32
 }
@@ -30,11 +32,9 @@ func (s Status) String() string {
 		"CONFIRMED",
 		"SRC_NAT",
 		"DST_NAT",
-		"NAT_MASK",
 		"SEQ_ADJUST",
 		"SRC_NAT_DONE",
 		"DST_NAT_DONE",
-		"NAT_DONE_MASK",
 		"DYING",
 		"FIXED_TIMEOUT",
 		"TEMPLATE",
@@ -45,7 +45,7 @@ func (s Status) String() string {
 
 	// Loop over the field's bits
 	for i, name := range names {
-		if s.value & (1 << uint32(i)) != 0 {
+		if s.value&(1<<uint32(i)) != 0 {
 			if rs != "" {
 				rs += "|"
 			}
@@ -55,40 +55,75 @@ func (s Status) String() string {
 
 	// Set default value if none of the flags were set
 	if rs == "" {
-		rs = "DEFAULT"
+		rs = fmt.Sprintf("DEFAULT|%.8b", s.value)
 	}
 
 	return rs
 }
 
-func (s *Status) UnmarshalBinary(b []byte) error {
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Status structure.
+func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if len(b) != 4 {
+	if AttributeType(attr.Type) != CTA_STATUS {
+		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_STATUS", attr.Type)
+	}
+
+	if attr.Nested {
+		return errNested
+	}
+
+	if len(attr.Data) != 4 {
 		return errIncorrectSize
 	}
 
-	si := binary.BigEndian.Uint32(b)
+	si := binary.BigEndian.Uint32(attr.Data)
 
-	if si & IPS_EXPECTED != 0 { s.Expected = true }
-	if si & IPS_SEEN_REPLY != 0 { s.SeenReply = true }
-	if si & IPS_ASSURED != 0 { s.Assured = true }
-	if si & IPS_CONFIRMED != 0 { s.Confirmed = true	}
-	if si & IPS_SRC_NAT != 0 { s.SrcNat = true }
-	if si & IPS_DST_NAT != 0 { s.DstNat = true }
-	if si & IPS_SEQ_ADJUST != 0 { s.SeqAdjust = true }
-	if si & IPS_SRC_NAT_DONE != 0 { s.SrcNatDone = true }
-	if si & IPS_DST_NAT_DONE != 0 {	s.SrcNatDone = true }
-	if si & IPS_DYING != 0 { s.Dying = true	}
-	if si & IPS_FIXED_TIMEOUT != 0 { s.FixedTimeout = true }
-	if si & IPS_TEMPLATE != 0 { s.Template = true }
-	if si & IPS_UNTRACKED != 0 { s.Untracked = true	}
+	if si&IPS_EXPECTED != 0 {
+		s.Expected = true
+	}
+	if si&IPS_SEEN_REPLY != 0 {
+		s.SeenReply = true
+	}
+	if si&IPS_ASSURED != 0 {
+		s.Assured = true
+	}
+	if si&IPS_CONFIRMED != 0 {
+		s.Confirmed = true
+	}
+	if si&IPS_SRC_NAT != 0 {
+		s.SrcNat = true
+	}
+	if si&IPS_DST_NAT != 0 {
+		s.DstNat = true
+	}
+	if si&IPS_SEQ_ADJUST != 0 {
+		s.SeqAdjust = true
+	}
+	if si&IPS_SRC_NAT_DONE != 0 {
+		s.SrcNatDone = true
+	}
+	if si&IPS_DST_NAT_DONE != 0 {
+		s.SrcNatDone = true
+	}
+	if si&IPS_DYING != 0 {
+		s.Dying = true
+	}
+	if si&IPS_FIXED_TIMEOUT != 0 {
+		s.FixedTimeout = true
+	}
+	if si&IPS_TEMPLATE != 0 {
+		s.Template = true
+	}
+	if si&IPS_UNTRACKED != 0 {
+		s.Untracked = true
+	}
 
 	s.value = si
 
 	return nil
 }
 
-func (s Status) MarshalBinary() ([]byte, error) {
+func (s Status) MarshalAttribute() ([]byte, error) {
 	return nil, errNotImplemented
 }
 

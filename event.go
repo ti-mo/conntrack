@@ -53,6 +53,12 @@ func (et EventType) String() string {
 		return "NEW"
 	case EventDestroy:
 		return "DESTROY"
+	case EventExpUpdate:
+		return "EXP_UPDATE"
+	case EventExpNew:
+		return "EXP_NEW"
+	case EventExpDestroy:
+		return "EXP_DESTROY"
 	default:
 		return "UNKNOWN"
 	}
@@ -105,7 +111,7 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 		return Event{}, err
 	}
 
-	nfa, err := UnmarshalNetfilterAttributes(attrs)
+	nfa, err := DecodeAttributes(attrs, 1<<CTA_STATUS)
 	if err != nil {
 		log.Println(netfilter.UnmarshalNetlinkHeaderType(nlmsg.Header.Type))
 		log.Println(attrs)
