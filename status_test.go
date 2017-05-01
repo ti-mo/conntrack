@@ -38,16 +38,14 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 			status: Status{value: 0xFFFF8000},
 		},
 		{
-			name:   "byte array too short",
-			b:      []byte{0xBE, 0xEF},
-			status: Status{},
-			err:    errIncorrectSize,
+			name: "byte array too short",
+			b:    []byte{0xBE, 0xEF},
+			err:  errIncorrectSize,
 		},
 		{
-			name:   "byte array too long",
-			b:      []byte{0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00},
-			status: Status{},
-			err:    errIncorrectSize,
+			name: "byte array too long",
+			b:    []byte{0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00},
+			err:  errIncorrectSize,
 		},
 	}
 
@@ -87,9 +85,12 @@ func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {
 
 	var ss Status
 	var nfa netfilter.Attribute
+	nfa.Type = uint16(CTA_STATUS)
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]
-		ss.UnmarshalAttribute(nfa)
+		if err := (&ss).UnmarshalAttribute(nfa); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
