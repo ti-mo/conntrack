@@ -19,8 +19,8 @@ var (
 // A Tuple holds an IPTuple, ProtoTuple and a Zone.
 // IP and Proto are pointers and possibly 'nil' as a result.
 type Tuple struct {
-	IP    *IPTuple
-	Proto *ProtoTuple
+	IP    IPTuple
+	Proto ProtoTuple
 	Zone  uint16
 }
 
@@ -42,17 +42,20 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 			if err := (&ti).UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
-			t.IP = &ti
+			t.IP = ti
 		case CTA_TUPLE_PROTO:
 			var tp ProtoTuple
 			if err := (&tp).UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
-			t.Proto = &tp
+			t.Proto = tp
 		case CTA_TUPLE_ZONE:
+			if len(iattr.Data) != 2 {
+				return errIncorrectSize
+			}
 			t.Zone = iattr.Uint16()
 		default:
-			return fmt.Errorf("error: DecodeTuple - unknown TupleType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalAttribute - unknown TupleType %v", iattr.Type)
 		}
 	}
 
@@ -173,7 +176,7 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 // a ProtoInfoDCCP in the DCCP field, or
 // a ProtoInfoSCTP in the SCTP field.
 type ProtoInfo struct {
-	TCP *ProtoInfoTCP
+	TCP ProtoInfoTCP
 	// TODO: DCCP *ProtoInfoDCCP
 	// TODO: SCTP *ProtoInfoSCTP
 }
@@ -199,7 +202,7 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 		if err := (&tpi).UnmarshalProtoInfo(iattr); err != nil {
 			return err
 		}
-		pi.TCP = &tpi
+		pi.TCP = tpi
 	case CTA_PROTOINFO_DCCP:
 		return errNotImplemented
 	case CTA_PROTOINFO_SCTP:
