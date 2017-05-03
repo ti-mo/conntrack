@@ -264,8 +264,8 @@ type Counter struct {
 	Bytes   uint64
 }
 
-func (c Counter) String() string {
-	return fmt.Sprintf("[%d pkts/%d B]", c.Packets, c.Bytes)
+func (ctr Counter) String() string {
+	return fmt.Sprintf("[%d pkts/%d B]", ctr.Packets, ctr.Bytes)
 }
 
 // UnmarshalAttribute unmarshals a nested counter attribute into a Counter structure.
@@ -404,7 +404,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 	for _, attr := range attrs {
 
 		// Skip decoding the attribute if the AttributeType's bit is not enabled in filter.
-		if filter&1<<attr.Type == 0 {
+		if filter&(1<<attr.Type) == 0 {
 			continue
 		}
 

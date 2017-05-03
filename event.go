@@ -42,7 +42,7 @@ const (
 	EventExpUpdate  EventType = 1 << 4
 	EventExpDestroy EventType = 1 << 5
 
-	EventAll EventType = (EventNew | EventUpdate | EventDestroy)
+	EventAll EventType = EventNew | EventUpdate | EventDestroy
 )
 
 func (et EventType) String() string {
@@ -111,7 +111,7 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 		return Event{}, err
 	}
 
-	nfa, err := DecodeAttributes(attrs, 1<<CTA_STATUS)
+	nfa, err := DecodeAttributes(attrs, 0xFFFF)
 	if err != nil {
 		log.Println(netfilter.UnmarshalNetlinkHeaderType(nlmsg.Header.Type))
 		log.Println(attrs)
