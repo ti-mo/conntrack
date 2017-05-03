@@ -16,12 +16,6 @@ var (
 	errIncorrectSize  = errors.New("binary attribute data has incorrect size")
 )
 
-type Attribute interface {
-	//String() string
-	UnmarshalAttribute(netfilter.Attribute) error
-	//MarshalAttribute() (netfilter.Attribute, error)
-}
-
 // A Tuple holds an IPTuple, ProtoTuple and a Zone.
 // IP and Proto are pointers and possibly 'nil' as a result.
 type Tuple struct {
