@@ -73,13 +73,29 @@ type IPTuple struct {
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into an IPTuple.
+// IPv4 addresses will be represented by a 4-byte net.IP, IPv6 addresses by 16-byte.
+// The net.IP object is created with the raw bytes, NOT with net.ParseIP().
+// Use IP.Equal() to compare addresses in implementations and tests.
 func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if TupleType(attr.Type) != CTA_TUPLE_IP {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TUPLE_IP", attr.Type)
 	}
 
+	if !attr.Nested {
+		return errNotNested
+	}
+
+	if len(attr.Children) != 2 {
+		return errors.New("error: UnmarshalAttribute - IPTuple expects exactly two children")
+	}
+
 	for _, iattr := range attr.Children {
+
+		if len(iattr.Data) != 4 && len(iattr.Data) != 16 {
+			return errIncorrectSize
+		}
+
 		switch IPTupleType(iattr.Type) {
 		case CTA_IP_V4_SRC, CTA_IP_V6_SRC:
 			ipt.SourceAddress = net.IP(iattr.Data)
@@ -87,7 +103,6 @@ func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 			ipt.DestinationAddress = net.IP(iattr.Data)
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown IPTupleType %s", iattr.Type)
-
 		}
 	}
 
