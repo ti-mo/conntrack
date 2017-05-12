@@ -3,7 +3,7 @@ package conntrack
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/gonetlink/netfilter"
+	"github.com/ti-mo/netfilter"
 )
 
 type Status struct {

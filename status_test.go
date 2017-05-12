@@ -1,7 +1,7 @@
 package conntrack
 
 import (
-	"github.com/gonetlink/netfilter"
+	"github.com/ti-mo/netfilter"
 	"reflect"
 	"testing"
 )

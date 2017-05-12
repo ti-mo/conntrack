@@ -2,7 +2,7 @@ package conntrack
 
 import (
 	"errors"
-	"github.com/gonetlink/netfilter"
+	"github.com/ti-mo/netfilter"
 	"github.com/mdlayher/netlink"
 	"net"
 	"reflect"

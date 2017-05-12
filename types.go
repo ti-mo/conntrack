@@ -1,6 +1,6 @@
 package conntrack
 
-import "github.com/gonetlink/netfilter"
+import "github.com/ti-mo/netfilter"
 
 // MessageType is a Conntrack-specific representation of a netfilter.MessageType.
 // It is used to specify the type of action to execute on

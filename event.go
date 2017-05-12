@@ -3,7 +3,7 @@ package conntrack
 import (
 	"errors"
 	"fmt"
-	"github.com/gonetlink/netfilter"
+	"github.com/ti-mo/netfilter"
 	"github.com/mdlayher/netlink"
 	"log"
 	"net"
