@@ -2,8 +2,8 @@ package conntrack
 
 import (
 	"errors"
-	"github.com/ti-mo/netfilter"
 	"github.com/mdlayher/netlink"
+	"github.com/ti-mo/netfilter"
 	"net"
 	"reflect"
 	"testing"
@@ -136,6 +136,34 @@ var ipTupleTests = []struct {
 		},
 		err: errIncorrectSize,
 	},
+	{
+		name: "error call iptuple unmarshal on wrong type",
+		nfa:  attrUnknown,
+		err:  errors.New("error: UnmarshalAttribute - 65535 is not a CTA_TUPLE_IP"),
+	},
+	{
+		name: "error call iptuple unmarshal with unknown IPTupleType",
+		nfa: netfilter.Attribute{
+			Attribute: netlink.Attribute{
+				// CTA_TUPLE_IP
+				Type:   0x1,
+				Nested: true,
+			},
+			Children: []netfilter.Attribute{
+				{
+					Attribute: netlink.Attribute{
+						// Unknown type
+						Type: 0xFFFF,
+						// Correct IP address length
+						Data: []byte{0, 0, 0, 0},
+					},
+				},
+				// Padding
+				attrDefault,
+			},
+		},
+		err: errors.New("error: UnmarshalAttribute - unknown IPTupleType 65535"),
+	},
 }
 
 var tupleTests = []struct {
@@ -259,6 +287,48 @@ var tupleTests = []struct {
 			},
 		},
 		err: errIncorrectSize,
+	},
+	{
+		name: "error returned from iptuple unmarshal",
+		nfa: netfilter.Attribute{
+			// CTA_TUPLE_ORIG
+			Attribute: netlink.Attribute{
+				Type:   0x1,
+				Nested: true,
+			},
+			Children: []netfilter.Attribute{
+				{
+					// CTA_TUPLE_IP
+					Attribute: netlink.Attribute{
+						Type: 0x1,
+					},
+				},
+				// Padding element
+				attrDefault,
+			},
+		},
+		err: errNotNested,
+	},
+	{
+		name: "error returned from prototuple unmarshal",
+		nfa: netfilter.Attribute{
+			// CTA_TUPLE_ORIG
+			Attribute: netlink.Attribute{
+				Type:   0x1,
+				Nested: true,
+			},
+			Children: []netfilter.Attribute{
+				{
+					// CTA_TUPLE_PROTO
+					Attribute: netlink.Attribute{
+						Type: 0x2,
+					},
+				},
+				// Padding element
+				attrDefault,
+			},
+		},
+		err: errNotNested,
 	},
 	{
 		name: "error nested flag not set on attribute",
