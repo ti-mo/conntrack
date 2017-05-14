@@ -33,17 +33,31 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 			},
 		},
 		{
+			name: "snake pattern, inverted",
+			b:    []byte{0x55, 0x55, 0x55, 0x55},
+			status: Status{
+				Expected:     true,
+				Assured:      true,
+				SrcNat:       true,
+				SeqAdjust:    true,
+				DstNatDone:   true,
+				FixedTimeout: true,
+				Untracked:    true,
+				value:        0x55555555,
+			},
+		},
+		{
 			name:   "out of range, only highest bits flipped",
 			b:      []byte{0xFF, 0xFF, 0x80, 0x00},
 			status: Status{value: 0xFFFF8000},
 		},
 		{
-			name: "byte array too short",
+			name: "error, byte array too short",
 			b:    []byte{0xBE, 0xEF},
 			err:  errIncorrectSize,
 		},
 		{
-			name: "byte array too long",
+			name: "error, byte array too long",
 			b:    []byte{0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00},
 			err:  errIncorrectSize,
 		},
