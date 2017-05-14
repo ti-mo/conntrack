@@ -137,12 +137,12 @@ var ipTupleTests = []struct {
 		err: errIncorrectSize,
 	},
 	{
-		name: "error call iptuple unmarshal on wrong type",
+		name: "error iptuple unmarshal with wrong type",
 		nfa:  attrUnknown,
 		err:  errors.New("error: UnmarshalAttribute - 65535 is not a CTA_TUPLE_IP"),
 	},
 	{
-		name: "error call iptuple unmarshal with unknown IPTupleType",
+		name: "error iptuple unmarshal with unknown IPTupleType",
 		nfa: netfilter.Attribute{
 			Attribute: netlink.Attribute{
 				// CTA_TUPLE_IP
@@ -163,6 +163,46 @@ var ipTupleTests = []struct {
 			},
 		},
 		err: errors.New("error: UnmarshalAttribute - unknown IPTupleType 65535"),
+	},
+}
+
+var protoTupleTests = []struct {
+	name string
+	nfa  netfilter.Attribute
+	cta  ProtoTuple
+	err  error
+}{
+	{
+		name: "error unmarshal with wrong type",
+		nfa:  attrUnknown,
+		err:  errors.New("error: UnmarshalAttribute - 65535 is not a CTA_TUPLE_PROTO"),
+	},
+	{
+		name: "error unmarshal with incorrect amount of children",
+		nfa: netfilter.Attribute{
+			// CTA_TUPLE_PROTO
+			Attribute: netlink.Attribute{
+				Type:   0x2,
+				Nested: true,
+			},
+		},
+		err: errors.New("error: UnmarshalAttribute - ProtoTyple expects exactly three children"),
+	},
+	{
+		name: "error unmarshal unknown ProtoTupleType",
+		nfa: netfilter.Attribute{
+			// CTA_TUPLE_PROTO
+			Attribute: netlink.Attribute{
+				Type:   0x2,
+				Nested: true,
+			},
+			Children: []netfilter.Attribute{
+				attrUnknown,
+				attrDefault,
+				attrDefault,
+			},
+		},
+		err: errors.New("error: UnmarshalAttribute - unknown ProtoTupleType 65535"),
 	},
 }
 
@@ -373,6 +413,36 @@ func TestIPTuple_UnmarshalAttribute(t *testing.T) {
 				!want.SourceAddress.Equal(got.SourceAddress) {
 				t.Fatalf("unexpected attribute:\n- want: %v (%p)\n-  got: %v (%p)",
 					want, want, got, got)
+			}
+		})
+	}
+}
+
+func TestProtoTuple_UnmarshalAttribute(t *testing.T) {
+	for _, test := range protoTupleTests {
+
+		t.Run(test.name, func(t *testing.T) {
+
+			// Unmarshal the test's netfilter.Attribute into an IPTuple
+			var attr ProtoTuple
+
+			err := (&attr).UnmarshalAttribute(test.nfa)
+
+			// Compare the error result to the test's 'err' field
+			if want, got := test.err, err; want != nil && got != nil {
+				// Both are set, try to compare their Error()s
+				if want.Error() != got.Error() {
+					t.Fatalf("mismatching errors:\n- want: %v\n-  got: %v",
+						want.Error(), got.Error())
+				}
+			} else if want != got {
+				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
+					want, got)
+			}
+
+			if want, got := test.cta, attr; !reflect.DeepEqual(want, got) {
+				t.Fatalf("unexpected attribute:\n- want: %v\n-  got: %v",
+					want, got)
 			}
 		})
 	}

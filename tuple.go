@@ -115,6 +115,10 @@ func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		return errNotNested
 	}
 
+	if len(attr.Children) != 3 {
+		return errors.New("error: UnmarshalAttribute - ProtoTyple expects exactly three children")
+	}
+
 	for _, iattr := range attr.Children {
 		switch ProtoTupleType(iattr.Type) {
 		case CTA_PROTO_NUM:
