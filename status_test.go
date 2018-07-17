@@ -1,9 +1,10 @@
 package conntrack
 
 import (
-	"github.com/ti-mo/netfilter"
 	"reflect"
 	"testing"
+
+	"github.com/ti-mo/netfilter"
 )
 
 func TestStatus_UnmarshalAttribute(t *testing.T) {
@@ -67,7 +68,7 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 
 		// Status attribute container
 		var nfa netfilter.Attribute
-		nfa.Type = uint16(CTA_STATUS)
+		nfa.Type = uint16(CTAStatus)
 
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -99,7 +100,7 @@ func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {
 
 	var ss Status
 	var nfa netfilter.Attribute
-	nfa.Type = uint16(CTA_STATUS)
+	nfa.Type = uint16(CTAStatus)
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]

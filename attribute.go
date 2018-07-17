@@ -25,8 +25,8 @@ type Helper struct {
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Helper.
 func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTA_HELP {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_HELP", attr.Type)
+	if AttributeType(attr.Type) != CTAHelp {
+		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTAHelp", attr.Type)
 	}
 
 	if !attr.Nested {
@@ -35,9 +35,9 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch HelperType(iattr.Type) {
-		case CTA_HELP_NAME:
+		case CTAHelpName:
 			hlp.Name = string(iattr.Data)
-		case CTA_HELP_INFO:
+		case CTAHelpInfo:
 			hlp.Info = iattr.Data
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown HelperType %d", iattr.Type)
@@ -73,15 +73,15 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	iattr := attr.Children[0]
 
 	switch ProtoInfoType(iattr.Type) {
-	case CTA_PROTOINFO_TCP:
+	case CTAProtoInfoTCP:
 		var tpi ProtoInfoTCP
 		if err := (&tpi).UnmarshalProtoInfo(iattr); err != nil {
 			return err
 		}
 		pi.TCP = tpi
-	case CTA_PROTOINFO_DCCP:
+	case CTAProtoInfoDCCP:
 		return errNotImplemented
-	case CTA_PROTOINFO_SCTP:
+	case CTAProtoInfoSCTP:
 		return errNotImplemented
 	default:
 		return fmt.Errorf("error: UnmarshalAttribute - unknown ProtoInfoType %v", attr.Type)
@@ -115,15 +115,15 @@ func (tpi *ProtoInfoTCP) UnmarshalProtoInfo(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch ProtoInfoTCPType(iattr.Type) {
-		case CTA_PROTOINFO_TCP_STATE:
+		case CTAProtoInfoTCPState:
 			tpi.State = iattr.Data[0]
-		case CTA_PROTOINFO_TCP_WSCALE_ORIGINAL:
+		case CTAProtoInfoTCPWScaleOriginal:
 			tpi.OriginalWindowScale = iattr.Data[0]
-		case CTA_PROTOINFO_TCP_WSCALE_REPLY:
+		case CTAProtoInfoTCPWScaleReply:
 			tpi.ReplyWindowScale = iattr.Data[0]
-		case CTA_PROTOINFO_TCP_FLAGS_ORIGINAL:
+		case CTAProtoInfoTCPFlagsOriginal:
 			tpi.OriginalFlags = iattr.Uint16()
-		case CTA_PROTOINFO_TCP_FLAGS_REPLY:
+		case CTAProtoInfoTCPFlagsReply:
 			tpi.ReplyFlags = iattr.Uint16()
 		default:
 			return fmt.Errorf("error: UnmarshalProtoInfo - unknown ProtoInfoTCPType %d", iattr.Type)
@@ -158,9 +158,9 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch CounterType(iattr.Type) {
-		case CTA_COUNTERS_PACKETS:
+		case CTACountersPackets:
 			ctr.Packets = iattr.Uint64()
-		case CTA_COUNTERS_BYTES:
+		case CTACountersBytes:
 			ctr.Bytes = iattr.Uint64()
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown CounterType %d", iattr.Type)
@@ -180,7 +180,7 @@ type Timestamp struct {
 // UnmarshalAttribute unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
 func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTA_TIMESTAMP {
+	if AttributeType(attr.Type) != CTATimestamp {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TIMESTAMP", attr.Type)
 	}
 
@@ -195,9 +195,9 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch TimestampType(iattr.Type) {
-		case CTA_TIMESTAMP_START:
+		case CTATimestampStart:
 			ts.Start = time.Unix(0, iattr.Int64())
-		case CTA_TIMESTAMP_STOP:
+		case CTATimestampStop:
 			ts.Stop = time.Unix(0, iattr.Int64())
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown TimestampType %d", iattr.Type)
@@ -216,7 +216,7 @@ type Security struct {
 // UnmarshalAttribute unmarshals a nested security attribute into a conntrack.Security structure.
 func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTA_SECCTX {
+	if AttributeType(attr.Type) != CTASecCtx {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_SECCTX", attr.Type)
 	}
 
@@ -231,7 +231,7 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch SecurityType(iattr.Type) {
-		case CTA_SECCTX_NAME:
+		case CTASecCtxName:
 			ctx.Name = string(iattr.Data)
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown SecurityType %d", iattr.Type)
@@ -263,11 +263,11 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch SequenceAdjustType(iattr.Type) {
-		case CTA_SEQADJ_CORRECTION_POS:
+		case CTASeqAdjCorrectionPos:
 			seq.Position = iattr.Uint32()
-		case CTA_SEQADJ_OFFSET_BEFORE:
+		case CTASeqAdjOffsetBefore:
 			seq.OffsetBefore = iattr.Uint32()
-		case CTA_SEQADJ_OFFSET_AFTER:
+		case CTASeqAdjOffsetAfter:
 			seq.OffsetAfter = iattr.Uint32()
 		}
 	}
@@ -293,7 +293,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 		// - the IPv4/IPv6 addresses involved
 		// - ports used in the connection
 		// - (optional) the Conntrack Zone of the originating/replying side of the flow
-		case CTA_TUPLE_ORIG, CTA_TUPLE_REPLY, CTA_TUPLE_MASTER:
+		case CTATupleOrig, CTATupleReply, CTATupleMaster:
 			var tpl Tuple
 			if err := (&tpl).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -301,7 +301,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 			ra[at] = tpl
 		// CTA_STATUS is a bitfield of the state of the connection
 		// (eg. if packets are seen in both directions, etc.)
-		case CTA_STATUS:
+		case CTAStatus:
 			var sta Status
 			if err := (&sta).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -309,13 +309,13 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 			ra[at] = sta
 		// CTA_PROTOINFO is sent for TCP, DCCP and SCTP protocols only. It conveys extra metadata
 		// about the state flags seen on the wire. Update events are sent when these change.
-		case CTA_PROTOINFO:
+		case CTAProtoInfo:
 			var pi ProtoInfo
 			if err := (&pi).UnmarshalAttribute(attr); err != nil {
 				return nil, err
 			}
 			ra[at] = pi
-		case CTA_HELP:
+		case CTAHelp:
 			var hlp Helper
 			if err := (&hlp).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -324,21 +324,21 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 		// CTA_TIMEOUT is the time until the Conntrack entry is automatically destroyed.
 		// CTA_ID is the tuple hash value generated by the kernel. It can be relied on for flow identification.
 		// CTA_USE's purpose is shrouded in mystery.
-		case CTA_TIMEOUT, CTA_ID, CTA_USE:
+		case CTATimeout, CTAID, CTAUse:
 			ra[at] = attr.Uint32()
 		// CTA_MARK is the connection's connmark
 		// CTA_MARK_MASK is never sent by the kernel, but can be used for kernel-space dump filtering!
-		case CTA_MARK, CTA_MARK_MASK:
+		case CTAMark, CTAMarkMask:
 			ra[at] = attr.Uint32()
 		// CTA_COUNTERS_* attributes are nested and contain byte and packet counters for flows in either direction.
-		case CTA_COUNTERS_ORIG, CTA_COUNTERS_REPLY:
+		case CTACountersOrig, CTACountersReply:
 			var ctr Counter
 			if err := (&ctr).UnmarshalAttribute(attr); err != nil {
 				return nil, err
 			}
 			ra[at] = ctr
 		// CTA_SECCTX is the SELinux security context of a Conntrack entry.
-		case CTA_SECCTX:
+		case CTASecCtx:
 			var sctx Security
 			if err := (&sctx).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -346,11 +346,11 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 			ra[at] = sctx
 		// CTA_ZONE describes the Conntrack zone the flow is placed in. This can be combined with a CTA_TUPLE_ZONE
 		// to specify which zone an event originates from.
-		case CTA_ZONE:
+		case CTAZone:
 			ra[at] = attr.Uint16()
 		// CTA_TIMESTAMP is a nested attribute that describes the start and end timestamp of a flow.
 		// It is sent by the kernel with dumps and DESTROY events.
-		case CTA_TIMESTAMP:
+		case CTATimestamp:
 			var ts Timestamp
 			if err := (&ts).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -359,7 +359,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 		// CTA_SEQADJ_* is generalized TCP window adjustment metadata. It is not (yet) emitted in Conntrack events.
 		// The reason for its introduction is outlined in https://lwn.net/Articles/563151.
 		// Patch set is at http://www.spinics.net/lists/netdev/msg245785.html.
-		case CTA_SEQ_ADJ_ORIG, CTA_SEQ_ADJ_REPLY:
+		case CTASeqAdjOrig, CTASeqAdjReply:
 			var sa SequenceAdjust
 			if err := (&sa).UnmarshalAttribute(attr); err != nil {
 				return nil, err
@@ -370,7 +370,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 		// CTA_LABELS_MASK is never sent by the kernel, but it can be used
 		// in set / update queries to mask label operations on the kernel state table.
 		// it needs to be exactly as wide as the CTA_LABELS field it intends to mask.
-		case CTA_LABELS, CTA_LABELS_MASK:
+		case CTALabels, CTALabelsMask:
 			ra[at] = attr.Data
 		default:
 			return nil, fmt.Errorf("error: DecodeAttributes - unknown type %s", AttributeType(attr.Type))

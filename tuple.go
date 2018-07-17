@@ -29,19 +29,19 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch TupleType(iattr.Type) {
-		case CTA_TUPLE_IP:
+		case CTATupleIP:
 			var ti IPTuple
 			if err := (&ti).UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
 			t.IP = ti
-		case CTA_TUPLE_PROTO:
+		case CTATupleProto:
 			var tp ProtoTuple
 			if err := (&tp).UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
 			t.Proto = tp
-		case CTA_TUPLE_ZONE:
+		case CTATupleZone:
 			if len(iattr.Data) != 2 {
 				return errIncorrectSize
 			}
@@ -67,7 +67,7 @@ type IPTuple struct {
 // Use IP.Equal() to compare addresses in implementations and tests.
 func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if TupleType(attr.Type) != CTA_TUPLE_IP {
+	if TupleType(attr.Type) != CTATupleIP {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TUPLE_IP", attr.Type)
 	}
 
@@ -86,9 +86,9 @@ func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		}
 
 		switch IPTupleType(iattr.Type) {
-		case CTA_IP_V4_SRC, CTA_IP_V6_SRC:
+		case CTAIPv4Src, CTAIPv6Src:
 			ipt.SourceAddress = net.IP(iattr.Data)
-		case CTA_IP_V4_DST, CTA_IP_V6_DST:
+		case CTAIPv4Dst, CTAIPv6Dst:
 			ipt.DestinationAddress = net.IP(iattr.Data)
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown IPTupleType %v", iattr.Type)
@@ -108,7 +108,7 @@ type ProtoTuple struct {
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoTuple.
 func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if TupleType(attr.Type) != CTA_TUPLE_PROTO {
+	if TupleType(attr.Type) != CTATupleProto {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TUPLE_PROTO", attr.Type)
 	}
 
@@ -122,11 +122,11 @@ func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch ProtoTupleType(iattr.Type) {
-		case CTA_PROTO_NUM:
+		case CTAProtoNum:
 			pt.Protocol = iattr.Data[0]
-		case CTA_PROTO_SRC_PORT:
+		case CTAProtoSrcPort:
 			pt.SourcePort = iattr.Uint16()
-		case CTA_PROTO_DST_PORT:
+		case CTAProtoDstPort:
 			pt.DestinationPort = iattr.Uint16()
 		default:
 			return fmt.Errorf("error: UnmarshalAttribute - unknown ProtoTupleType %v", iattr.Type)

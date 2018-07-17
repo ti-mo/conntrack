@@ -29,7 +29,7 @@ type Status struct {
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Status structure.
 func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTA_STATUS {
+	if AttributeType(attr.Type) != CTAStatus {
 		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_STATUS", attr.Type)
 	}
 

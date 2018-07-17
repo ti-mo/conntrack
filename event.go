@@ -77,7 +77,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	}
 
 	switch Messagetype(ht.MessageType) {
-	case IPCTNL_MSG_CT_NEW:
+	case CTNew:
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
 		if nlh.Flags&(netfilter.NLMFCreate|netfilter.NLMFExcl) != 0 {
@@ -86,7 +86,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 
 		return EventUpdate, nil
 
-	case IPCTNL_MSG_CT_DELETE:
+	case CTDelete:
 		return EventDestroy, nil
 	default:
 		return 0, nil
