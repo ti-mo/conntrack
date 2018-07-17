@@ -3,18 +3,19 @@ package conntrack
 import (
 	"errors"
 	"fmt"
-	"github.com/ti-mo/netfilter"
 	"net"
+
+	"github.com/ti-mo/netfilter"
 )
 
 // A Tuple holds an IPTuple, ProtoTuple and a Zone.
-// IP and Proto are pointers and possibly 'nil' as a result.
 type Tuple struct {
 	IP    IPTuple
 	Proto ProtoTuple
 	Zone  uint16
 }
 
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Tuple.
 func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if !attr.Nested {

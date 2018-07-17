@@ -4,17 +4,13 @@ package conntrack
 // netfilter.Attributes into Conntrack structures.
 type AttributeFilter uint32
 
+// CheckBit checks whether the nr'th bit of the AttributeFilter is enabled.
 func (bf AttributeFilter) CheckBit(nr uint32) bool {
-	if bf&(1<<nr) != 0 {
-		return true
-	}
-
-	return false
+	return bf&(1<<nr) != 0
 }
 
-func (bf *AttributeFilter) SetBit(nr uint32) error {
+// SetBit enables the nr'th bit of the AttributeFilter.
+func (bf *AttributeFilter) SetBit(nr uint32) {
 	nf := AttributeFilter(uint32(*bf) | 1<<nr)
 	bf = &nf
-
-	return nil
 }

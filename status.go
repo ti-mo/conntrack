@@ -3,9 +3,11 @@ package conntrack
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/ti-mo/netfilter"
 )
 
+// Status represents a snapshot of a conntrack connection's state.
 type Status struct {
 	Expected     bool
 	SeenReply    bool
@@ -41,43 +43,43 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	si := binary.BigEndian.Uint32(attr.Data)
 
-	if si&IPS_EXPECTED != 0 {
+	if si&IPSExpected != 0 {
 		s.Expected = true
 	}
-	if si&IPS_SEEN_REPLY != 0 {
+	if si&IPSSeenReply != 0 {
 		s.SeenReply = true
 	}
-	if si&IPS_ASSURED != 0 {
+	if si&IPSAssured != 0 {
 		s.Assured = true
 	}
-	if si&IPS_CONFIRMED != 0 {
+	if si&IPSConfirmed != 0 {
 		s.Confirmed = true
 	}
-	if si&IPS_SRC_NAT != 0 {
+	if si&IPSSrcNat != 0 {
 		s.SrcNat = true
 	}
-	if si&IPS_DST_NAT != 0 {
+	if si&IPSDstNat != 0 {
 		s.DstNat = true
 	}
-	if si&IPS_SEQ_ADJUST != 0 {
+	if si&IPSSeqAdjust != 0 {
 		s.SeqAdjust = true
 	}
-	if si&IPS_SRC_NAT_DONE != 0 {
+	if si&IPSSrcNatDone != 0 {
 		s.SrcNatDone = true
 	}
-	if si&IPS_DST_NAT_DONE != 0 {
+	if si&IPSDstNatDone != 0 {
 		s.DstNatDone = true
 	}
-	if si&IPS_DYING != 0 {
+	if si&IPSDying != 0 {
 		s.Dying = true
 	}
-	if si&IPS_FIXED_TIMEOUT != 0 {
+	if si&IPSFixedTimeout != 0 {
 		s.FixedTimeout = true
 	}
-	if si&IPS_TEMPLATE != 0 {
+	if si&IPSTemplate != 0 {
 		s.Template = true
 	}
-	if si&IPS_UNTRACKED != 0 {
+	if si&IPSUntracked != 0 {
 		s.Untracked = true
 	}
 
@@ -86,53 +88,50 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-func (s Status) MarshalAttribute() ([]byte, error) {
-	return nil, errNotImplemented
-}
-
-// This is based on enum ip_conntrack_status
-// Linux/uapi/linux/netfilter/nf_conntrack_common.h
+// Conntrack connection's status flags, from enum ip_conntrack_status.
+// uapi/linux/netfilter/nf_conntrack_common.h
 const (
+
 	// It's an expected connection: bit 0 set.  This bit never changed
-	IPS_EXPECTED = 1
+	IPSExpected = 1 // IPS_EXPECTED
 
 	/* We've seen packets both ways: bit 1 set.  Can be set, not unset. */
-	IPS_SEEN_REPLY = 1 << 1
+	IPSSeenReply = 1 << 1 // IPS_SEEN_REPLY
 
 	/* Conntrack should never be early-expired. */
-	IPS_ASSURED = 1 << 2
+	IPSAssured = 1 << 2 // IPS_ASSURED
 
 	/* Connection is confirmed: originating packet has left box */
-	IPS_CONFIRMED = 1 << 3
+	IPSConfirmed = 1 << 3 // IPS_CONFIRMED
 
 	/* Connection needs src nat in orig dir.  This bit never changed. */
-	IPS_SRC_NAT = 1 << 4
+	IPSSrcNat = 1 << 4 // IPS_SRC_NAT
 
 	/* Connection needs dst nat in orig dir.  This bit never changed. */
-	IPS_DST_NAT = 1 << 5
+	IPSDstNat = 1 << 5 // IPS_DST_NAT
 
 	/* Both together. */
-	IPS_NAT_MASK = IPS_DST_NAT | IPS_SRC_NAT
+	IPSNatMask = IPSDstNat | IPSSrcNat // IPS_NAT_MASK
 
 	/* Connection needs TCP sequence adjusted. */
-	IPS_SEQ_ADJUST = 1 << 6
+	IPSSeqAdjust = 1 << 6 // IPS_SEQ_ADJUST
 
 	/* NAT initialization bits. */
-	IPS_SRC_NAT_DONE = 1 << 7
-	IPS_DST_NAT_DONE = 1 << 8
+	IPSSrcNatDone = 1 << 7 // IPS_SRC_NAT_DONE
+	IPSDstNatDone = 1 << 8 // IPS_DST_NAT_DONE
 
 	/* Both together */
-	IPS_NAT_DONE_MASK = IPS_DST_NAT_DONE | IPS_SRC_NAT_DONE
+	IPSNatDoneMask = IPSDstNatDone | IPSSrcNatDone // IPS_NAT_DONE_MASK
 
 	/* Connection is dying (removed from lists), can not be unset. */
-	IPS_DYING = 1 << 9
+	IPSDying = 1 << 9
 
 	/* Connection has fixed timeout. */
-	IPS_FIXED_TIMEOUT = 1 << 10
+	IPSFixedTimeout = 1 << 10 // IPS_FIXED_TIMEOUT
 
 	/* Conntrack is a template */
-	IPS_TEMPLATE = 1 << 11
+	IPSTemplate = 1 << 11 // IPS_TEMPLATE
 
 	/* Conntrack is a fake untracked entry */
-	IPS_UNTRACKED = 1 << 12
+	IPSUntracked = 1 << 12 // IPS_UNTRACKED
 )

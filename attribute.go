@@ -3,8 +3,9 @@ package conntrack
 import (
 	"errors"
 	"fmt"
-	"github.com/ti-mo/netfilter"
 	"time"
+
+	"github.com/ti-mo/netfilter"
 )
 
 var (
@@ -21,7 +22,7 @@ type Helper struct {
 	Info []byte
 }
 
-// UnmarshalAttributes unmarshals a netfilter.Attribute into a Helper.
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Helper.
 func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTA_HELP {
@@ -39,7 +40,7 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTA_HELP_INFO:
 			hlp.Info = iattr.Data
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown HelperType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalAttribute - unknown HelperType %d", iattr.Type)
 		}
 	}
 
@@ -125,7 +126,7 @@ func (tpi *ProtoInfoTCP) UnmarshalProtoInfo(attr netfilter.Attribute) error {
 		case CTA_PROTOINFO_TCP_FLAGS_REPLY:
 			tpi.ReplyFlags = iattr.Uint16()
 		default:
-			return fmt.Errorf("error: UnmarshalProtoInfo - unknown ProtoInfoTCPType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalProtoInfo - unknown ProtoInfoTCPType %d", iattr.Type)
 		}
 	}
 
@@ -162,7 +163,7 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTA_COUNTERS_BYTES:
 			ctr.Bytes = iattr.Uint64()
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown CounterType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalAttribute - unknown CounterType %d", iattr.Type)
 		}
 	}
 
@@ -176,7 +177,7 @@ type Timestamp struct {
 	Stop  time.Time
 }
 
-// UnmarshalTimestamp unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
+// UnmarshalAttribute unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
 func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTA_TIMESTAMP {
@@ -199,7 +200,7 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTA_TIMESTAMP_STOP:
 			ts.Stop = time.Unix(0, iattr.Int64())
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown TimestampType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalAttribute - unknown TimestampType %d", iattr.Type)
 		}
 	}
 
@@ -212,6 +213,7 @@ type Security struct {
 	Name string
 }
 
+// UnmarshalAttribute unmarshals a nested security attribute into a conntrack.Security structure.
 func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTA_SECCTX {
@@ -232,19 +234,22 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTA_SECCTX_NAME:
 			ctx.Name = string(iattr.Data)
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown SecurityType %s", iattr.Type)
+			return fmt.Errorf("error: UnmarshalAttribute - unknown SecurityType %d", iattr.Type)
 		}
 	}
 
 	return nil
 }
 
+// SequenceAdjust represents a TCP sequence number adjustment event.
 type SequenceAdjust struct {
 	Position     uint32
 	OffsetBefore uint32
 	OffsetAfter  uint32
 }
 
+// UnmarshalAttribute unmarshals a nested sequence adjustment attribute into a
+// conntrack.SequenceAdjust structure.
 func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if !attr.Nested {

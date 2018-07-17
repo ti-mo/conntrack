@@ -2,7 +2,7 @@ package conntrack
 
 import "github.com/ti-mo/netfilter"
 
-// MessageType is a Conntrack-specific representation of a netfilter.MessageType.
+// Messagetype is a Conntrack-specific representation of a netfilter.MessageType.
 // It is used to specify the type of action to execute on
 // the kernel's state table (get, create, delete, etc.).
 type Messagetype netfilter.MessageType
@@ -49,7 +49,6 @@ const (
 	CTA_MARK_MASK
 	CTA_LABELS
 	CTA_LABELS_MASK
-	__CTA_MAX
 )
 
 // TupleType describes the type of tuple contained in this container.

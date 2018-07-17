@@ -3,18 +3,19 @@ package conntrack
 import (
 	"errors"
 	"fmt"
-	"github.com/ti-mo/netfilter"
-	"github.com/mdlayher/netlink"
 	"log"
 	"net"
+
+	"github.com/mdlayher/netlink"
+	"github.com/ti-mo/netfilter"
 )
 
 var (
 	errNotConntrack = errors.New("trying to decode a non-conntrack or conntrack-exp message")
 )
 
-// Shorthand for masking all Conntrack subsystems.
-const NFNL_SUBSYS_CT_ALL = netfilter.NFNL_SUBSYS_CTNETLINK | netfilter.NFNL_SUBSYS_CTNETLINK_EXP | netfilter.NFNL_SUBSYS_CTNETLINK_TIMEOUT
+// NFNLSubsysCTAll is a shorthand mask fo all Conntrack subsystems
+const NFNLSubsysCTAll = netfilter.NFNLSubsysCTNetlink | netfilter.NFNLSubsysCTNetlinkExp | netfilter.NFNLSubsysCTNetlinkTimeout
 
 // Event can hold all information needed to process a Conntrack event in userspace.
 type Event struct {
@@ -71,7 +72,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	ht := netfilter.UnmarshalNetlinkHeaderType(nlh.Type)
 
 	// Fail when the message is not a conntrack or conntrack-exp message
-	if ht.SubsystemID&NFNL_SUBSYS_CT_ALL == 0 {
+	if ht.SubsystemID&NFNLSubsysCTAll == 0 {
 		return 0, errNotConntrack
 	}
 
@@ -79,11 +80,12 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	case IPCTNL_MSG_CT_NEW:
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
-		if nlh.Flags&(netfilter.NLM_F_CREATE|netfilter.NLM_F_EXCL) != 0 {
+		if nlh.Flags&(netfilter.NLMFCreate|netfilter.NLMFExcl) != 0 {
 			return EventNew, nil
-		} else {
-			return EventUpdate, nil
 		}
+
+		return EventUpdate, nil
+
 	case IPCTNL_MSG_CT_DELETE:
 		return EventDestroy, nil
 	default:
