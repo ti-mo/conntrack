@@ -1,17 +1,12 @@
 package conntrack
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
 
 	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
-)
-
-var (
-	errNotConntrack = errors.New("trying to decode a non-conntrack or conntrack-exp message")
 )
 
 // NFSubsysCTAll is a shorthand mask fo all Conntrack subsystems
