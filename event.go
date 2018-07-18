@@ -14,8 +14,8 @@ var (
 	errNotConntrack = errors.New("trying to decode a non-conntrack or conntrack-exp message")
 )
 
-// NFNLSubsysCTAll is a shorthand mask fo all Conntrack subsystems
-const NFNLSubsysCTAll = netfilter.NFNLSubsysCTNetlink | netfilter.NFNLSubsysCTNetlinkExp | netfilter.NFNLSubsysCTNetlinkTimeout
+// NFSubsysCTAll is a shorthand mask fo all Conntrack subsystems
+const NFSubsysCTAll = netfilter.NFSubsysCTNetlink | netfilter.NFSubsysCTNetlinkExp | netfilter.NFSubsysCTNetlinkTimeout
 
 // Event can hold all information needed to process a Conntrack event in userspace.
 type Event struct {
@@ -72,7 +72,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	ht := netfilter.UnmarshalNetlinkHeaderType(nlh.Type)
 
 	// Fail when the message is not a conntrack or conntrack-exp message
-	if ht.SubsystemID&NFNLSubsysCTAll == 0 {
+	if ht.SubsystemID&NFSubsysCTAll == 0 {
 		return 0, errNotConntrack
 	}
 
