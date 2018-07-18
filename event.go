@@ -69,7 +69,8 @@ func (et EventType) String() string {
 func DecodeEventType(nlh netlink.Header) (EventType, error) {
 
 	// Get Netfilter Subsystem and MessageType from Netlink header
-	ht := netfilter.UnmarshalNetlinkHeaderType(nlh.Type)
+	var ht netfilter.HeaderType
+	ht.UnmarshalNetlink(nlh.Type)
 
 	// Fail when the message is not a conntrack or conntrack-exp message
 	if ht.SubsystemID&NFSubsysCTAll == 0 {
@@ -80,7 +81,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 	case CTNew:
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
-		if nlh.Flags&(netfilter.NLMFCreate|netfilter.NLMFExcl) != 0 {
+		if nlh.Flags&(netfilter.NLFlagCreate|netfilter.NLFlagExcl) != 0 {
 			return EventNew, nil
 		}
 
@@ -115,8 +116,12 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 
 	nfa, err := DecodeAttributes(attrs, 0xFFFF)
 	if err != nil {
-		log.Println(netfilter.UnmarshalNetlinkHeaderType(nlmsg.Header.Type))
+		var nfht netfilter.HeaderType
+		nfht.UnmarshalNetlink(nlmsg.Header.Type)
+
+		log.Println(nfht)
 		log.Println(attrs)
+
 		return Event{}, err
 	}
 
