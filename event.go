@@ -65,7 +65,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 
 	// Get Netfilter Subsystem and MessageType from Netlink header
 	var ht netfilter.HeaderType
-	ht.UnmarshalNetlink(nlh.Type)
+	ht.FromNetlinkHeader(nlh)
 
 	// Fail when the message is not a conntrack or conntrack-exp message
 	if ht.SubsystemID&NFSubsysCTAll == 0 {
@@ -92,7 +92,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 // DecodeEventAttributes generates and populates an Event from a netlink.Message.
 // Pure function, pointer argument for performance purposes.
 // TODO: name this something proper, this is a helper that needs to be broken up
-func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
+func DecodeEventAttributes(nlmsg netlink.Message) (Event, error) {
 
 	// Decode the header to make sure we're dealing with a Conntrack event
 	et, err := DecodeEventType(nlmsg.Header)
@@ -104,7 +104,7 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 	e := Event{Type: et}
 
 	// Unmarshal a netlink.Message into netfilter.Attributes
-	attrs, err := netfilter.UnmarshalMessage(*nlmsg)
+	attrs, err := netfilter.AttributesFromNetlink(nlmsg)
 	if err != nil {
 		return Event{}, err
 	}
@@ -112,7 +112,7 @@ func DecodeEventAttributes(nlmsg *netlink.Message) (Event, error) {
 	nfa, err := DecodeAttributes(attrs, 0xFFFF)
 	if err != nil {
 		var nfht netfilter.HeaderType
-		nfht.UnmarshalNetlink(nlmsg.Header.Type)
+		nfht.FromNetlinkHeader(nlmsg.Header)
 
 		log.Println(nfht)
 		log.Println(attrs)
