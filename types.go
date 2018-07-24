@@ -25,6 +25,7 @@ const (
 
 // AttributeType defines the meaning of a root-level Type
 // value of a Conntrack-specific Netfilter attribute.
+//go:generate stringer -type=AttributeType
 type AttributeType uint8
 
 // enum ctattr_type
