@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -18,9 +17,9 @@ var (
 	// Nested attribute with one child
 	attrOneChild = netfilter.Attribute{Nested: true, Children: []netfilter.Attribute{attrDefault}}
 	// Attribute with random, unused type 65535
-	attrUnknown = netfilter.Attribute{Attribute: netlink.Attribute{Type: 0xFFFF}}
+	attrUnknown = netfilter.Attribute{Type: 0xFFFF}
 	// Nested structure of attributes with random, unused type 65535
-	attrUnknownNested = netfilter.Attribute{Attribute: netlink.Attribute{Type: 0xFFFF}, Nested: true,
+	attrUnknownNested = netfilter.Attribute{Type: 0xFFFF, Nested: true,
 		Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
 )
 
@@ -33,24 +32,18 @@ var ipTupleTests = []struct {
 	{
 		name: "correct ipv4 tuple",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_IP_V4_SRC
-					Attribute: netlink.Attribute{
-						Type: 0x1,
-						Data: []byte{0x1, 0x2, 0x3, 0x4},
-					},
+					Type: 0x1,
+					Data: []byte{0x1, 0x2, 0x3, 0x4},
 				},
 				{
 					// CTA_IP_V4_DST
-					Attribute: netlink.Attribute{
-						Type: 0x2,
-						Data: []byte{0x4, 0x3, 0x2, 0x1},
-					},
+					Type: 0x2,
+					Data: []byte{0x4, 0x3, 0x2, 0x1},
 				},
 			},
 		},
@@ -62,32 +55,26 @@ var ipTupleTests = []struct {
 	{
 		name: "correct ipv6 tuple",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_IP_V6_SRC
-					Attribute: netlink.Attribute{
-						Length: 0x14,
-						Type:   0x3,
-						Data: []byte{0x0, 0x1, 0x0, 0x1,
-							0x0, 0x2, 0x0, 0x2,
-							0x0, 0x3, 0x0, 0x3,
-							0x0, 0x4, 0x0, 0x4},
-					},
+					Length: 0x14,
+					Type:   0x3,
+					Data: []byte{0x0, 0x1, 0x0, 0x1,
+						0x0, 0x2, 0x0, 0x2,
+						0x0, 0x3, 0x0, 0x3,
+						0x0, 0x4, 0x0, 0x4},
 				},
 				{
 					// CTA_IP_V6_DST
-					Attribute: netlink.Attribute{
-						Length: 0x14,
-						Type:   0x4,
-						Data: []byte{0x0, 0x4, 0x0, 0x4,
-							0x0, 0x3, 0x0, 0x3,
-							0x0, 0x2, 0x0, 0x2,
-							0x0, 0x1, 0x0, 0x1},
-					},
+					Length: 0x14,
+					Type:   0x4,
+					Data: []byte{0x0, 0x4, 0x0, 0x4,
+						0x0, 0x3, 0x0, 0x3,
+						0x0, 0x2, 0x0, 0x2,
+						0x0, 0x1, 0x0, 0x1},
 				},
 			},
 		},
@@ -99,9 +86,7 @@ var ipTupleTests = []struct {
 	{
 		name: "error nested flag not set on attribute",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: false,
 		},
 		err: errNotNested,
@@ -109,9 +94,7 @@ var ipTupleTests = []struct {
 	{
 		name: "error incorrect amount of children",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:     0x1,
 			Nested:   true,
 			Children: []netfilter.Attribute{attrDefault},
 		},
@@ -120,17 +103,13 @@ var ipTupleTests = []struct {
 	{
 		name: "error child incorrect length",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_IP_V4_SRC
-					Attribute: netlink.Attribute{
-						Type: 0x1,
-						Data: []byte{0x1, 0x2, 0x3, 0x4, 0x5},
-					},
+					Type: 0x1,
+					Data: []byte{0x1, 0x2, 0x3, 0x4, 0x5},
 				},
 				attrDefault,
 			},
@@ -145,19 +124,15 @@ var ipTupleTests = []struct {
 	{
 		name: "error iptuple unmarshal with unknown IPTupleType",
 		nfa: netfilter.Attribute{
-			Attribute: netlink.Attribute{
-				// CTA_TUPLE_IP
-				Type: 0x1,
-			},
+			// CTA_TUPLE_IP
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Attribute: netlink.Attribute{
-						// Unknown type
-						Type: 0xFFFF,
-						// Correct IP address length
-						Data: []byte{0, 0, 0, 0},
-					},
+					// Unknown type
+					Type: 0xFFFF,
+					// Correct IP address length
+					Data: []byte{0, 0, 0, 0},
 				},
 				// Padding
 				attrDefault,
@@ -182,9 +157,7 @@ var protoTupleTests = []struct {
 		name: "error unmarshal with incorrect amount of children",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_PROTO
-			Attribute: netlink.Attribute{
-				Type: 0x2,
-			},
+			Type:   0x2,
 			Nested: true,
 		},
 		err: errors.New("error: UnmarshalAttribute - ProtoTyple expects exactly three children"),
@@ -193,9 +166,7 @@ var protoTupleTests = []struct {
 		name: "error unmarshal unknown ProtoTupleType",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_PROTO
-			Attribute: netlink.Attribute{
-				Type: 0x2,
-			},
+			Type:   0x2,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				attrUnknown,
@@ -217,82 +188,64 @@ var tupleTests = []struct {
 		name: "complete orig dir tuple with ip, proto and zone",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_ORIG
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_TUPLE_IP
-					Attribute: netlink.Attribute{
-						Type: 0x1,
-					},
+					Type:   0x1,
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
 							// CTA_IP_V6_SRC
-							Attribute: netlink.Attribute{
-								Length: 0x14,
-								Type:   0x3,
-								Data: []byte{0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x1},
-							},
+							Length: 0x14,
+							Type:   0x3,
+							Data: []byte{0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x1},
 						},
 						{
 							// CTA_IP_V6_DST
-							Attribute: netlink.Attribute{
-								Length: 0x14,
-								Type:   0x4,
-								Data: []byte{0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x0,
-									0x0, 0x0, 0x0, 0x1},
-							},
+							Length: 0x14,
+							Type:   0x4,
+							Data: []byte{0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x0,
+								0x0, 0x0, 0x0, 0x1},
 						},
 					},
 				},
 				{
 					// CTA_TUPLE_PROTO
-					Attribute: netlink.Attribute{
-						Type: 0x2,
-					},
+					Type:   0x2,
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
 							// CTA_PROTO_NUM
-							Attribute: netlink.Attribute{
-								Length: 0x5,
-								Type:   0x1,
-								Data:   []byte{0x6},
-							},
+							Length: 0x5,
+							Type:   0x1,
+							Data:   []byte{0x6},
 						},
 						{
 							// CTA_PROTO_SRC_PORT
-							Attribute: netlink.Attribute{
-								Length: 0x6,
-								Type:   0x2,
-								Data:   []byte{0x80, 0xc},
-							},
+							Length: 0x6,
+							Type:   0x2,
+							Data:   []byte{0x80, 0xc},
 						},
 						{
 							// CTA_PROTO_DST_PORT
-							Attribute: netlink.Attribute{
-								Length: 0x6,
-								Type:   0x3,
-								Data:   []byte{0x0, 0x50},
-							},
+							Length: 0x6,
+							Type:   0x3,
+							Data:   []byte{0x0, 0x50},
 						},
 					},
 				},
 				{
 					// CTA_TUPLE_ZONE
-					Attribute: netlink.Attribute{
-						Length: 0x5,
-						Type:   0x3,
-						Data:   []byte{0x00, 0x7B}, // Zone 123
-					},
+					Length: 0x5,
+					Type:   0x3,
+					Data:   []byte{0x00, 0x7B}, // Zone 123
 				},
 			},
 		},
@@ -309,18 +262,14 @@ var tupleTests = []struct {
 		name: "error reply tuple with incorrect zone size",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_REPLY
-			Attribute: netlink.Attribute{
-				Type: 0x2,
-			},
+			Type:   0x2,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_TUPLE_ZONE
-					Attribute: netlink.Attribute{
-						Length: 0x8,
-						Type:   0x3,
-						Data:   []byte{0xAB, 0xCD, 0xEF, 0x01},
-					},
+					Length: 0x8,
+					Type:   0x3,
+					Data:   []byte{0xAB, 0xCD, 0xEF, 0x01},
 				},
 				// Order-dependent, this is to pad the length of Children.
 				// Test should error before this attribute is parsed.
@@ -333,16 +282,12 @@ var tupleTests = []struct {
 		name: "error returned from iptuple unmarshal",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_ORIG
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_TUPLE_IP
-					Attribute: netlink.Attribute{
-						Type: 0x1,
-					},
+					Type: 0x1,
 				},
 				// Padding element
 				attrDefault,
@@ -354,16 +299,12 @@ var tupleTests = []struct {
 		name: "error returned from prototuple unmarshal",
 		nfa: netfilter.Attribute{
 			// CTA_TUPLE_ORIG
-			Attribute: netlink.Attribute{
-				Type: 0x1,
-			},
+			Type:   0x1,
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// CTA_TUPLE_PROTO
-					Attribute: netlink.Attribute{
-						Type: 0x2,
-					},
+					Type: 0x2,
 				},
 				// Padding element
 				attrDefault,
