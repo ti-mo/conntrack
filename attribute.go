@@ -344,7 +344,7 @@ func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[
 	for _, attr := range attrs {
 
 		// Skip decoding the attribute if the AttributeType's bit is not enabled in filter.
-		if !filter.CheckType(AttributeType(attr.Type)) {
+		if !filter.Check(AttributeType(attr.Type)) {
 			continue
 		}
 
