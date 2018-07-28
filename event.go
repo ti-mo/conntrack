@@ -109,7 +109,7 @@ func DecodeEventAttributes(nlmsg netlink.Message) (Event, error) {
 		return Event{}, err
 	}
 
-	nfa, err := DecodeAttributes(attrs, 0xFFFF)
+	nfa, err := UnmarshalAttributes(attrs, 0xFFFF)
 	if err != nil {
 		var nfht netfilter.HeaderType
 		nfht.FromNetlinkHeader(nlmsg.Header)

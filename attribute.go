@@ -335,9 +335,9 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// DecodeAttributes calls unmarshal operations on all given netfilter.Attributes.
+// UnmarshalAttributes calls unmarshal operations on all given netfilter.Attributes.
 // It returns a map of AttributeTypes to their respective values.
-func DecodeAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[AttributeType]interface{}, error) {
+func UnmarshalAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[AttributeType]interface{}, error) {
 
 	ra := make(map[AttributeType]interface{})
 
