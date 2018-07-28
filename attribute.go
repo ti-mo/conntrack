@@ -9,11 +9,17 @@ import (
 )
 
 var (
-	errNotImplemented = errors.New("sorry, not implemented yet")
-	errNested         = errors.New("unexpected Nested attribute")
-	errNotNested      = errors.New("need a Nested attribute to decode this structure")
-	errNeedChildren   = errors.New("need at least 2 child attributes")
-	errIncorrectSize  = errors.New("binary attribute data has incorrect size")
+	errNotImplemented  = errors.New("sorry, not implemented yet")
+	errNested          = errors.New("unexpected Nested attribute")
+	errNotNested       = errors.New("need a Nested attribute to decode this structure")
+	errNeedSingleChild = errors.New("need exactly 1 child attribute")
+	errNeedChildren    = errors.New("need at least 2 child attributes")
+	errIncorrectSize   = errors.New("binary attribute data has incorrect size")
+)
+
+const (
+	errAttributeWrongType = "Attribute Type '%d' is not a %s"
+	errAttributeChild     = "Child Type '%d' unknown for attribute type %s"
 )
 
 // A Helper holds the name and info the helper that creates a related connection.
@@ -26,7 +32,7 @@ type Helper struct {
 func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTAHelp {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTAHelp", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAHelp)
 	}
 
 	if !attr.Nested {
@@ -40,7 +46,7 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTAHelpInfo:
 			hlp.Info = iattr.Data
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown HelperType %d", iattr.Type)
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTAHelp)
 		}
 	}
 
@@ -62,7 +68,7 @@ type ProtoInfo struct {
 func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTAProtoInfo {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTAProtoInfo", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfo)
 	}
 
 	if !attr.Nested {
@@ -70,7 +76,7 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if len(attr.Children) != 1 {
-		return errors.New("error: UnmarshalAttribute - decode expects exactly one child")
+		return errNeedSingleChild
 	}
 
 	// Step into the single nested child
@@ -88,7 +94,7 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	case CTAProtoInfoSCTP:
 		return errNotImplemented
 	default:
-		return fmt.Errorf("error: UnmarshalAttribute - unknown ProtoInfoType %v", attr.Type)
+		return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfo)
 	}
 
 	return nil
