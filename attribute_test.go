@@ -147,3 +147,56 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaUnknownChild), fmt.Sprintf(errAttributeChild, CTAProtoInfoUnspec, CTAProtoInfo))
 }
+
+func TestAttribute_ProtoInfoTCP(t *testing.T) {
+
+	pit := ProtoInfoTCP{}
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTAProtoInfoTCP)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTAProtoInfoTCP), Nested: true}
+
+	assert.EqualError(t, pit.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAProtoInfoTCP))
+	assert.EqualError(t, pit.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, pit.UnmarshalAttribute(nfaNestedNoChildren), errNeedChildren.Error())
+
+	nfaProtoInfoTCP := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoTCP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTAProtoInfoTCPState),
+				Data: []byte{1},
+			},
+			{
+				Type: uint16(CTAProtoInfoTCPFlagsOriginal),
+				Data: []byte{0, 2},
+			},
+			{
+				Type: uint16(CTAProtoInfoTCPFlagsReply),
+				Data: []byte{0, 3},
+			},
+			{
+				Type: uint16(CTAProtoInfoTCPWScaleOriginal),
+				Data: []byte{0, 4},
+			},
+			{
+				Type: uint16(CTAProtoInfoTCPWScaleReply),
+				Data: []byte{0, 5},
+			},
+		},
+	}
+
+	nfaProtoInfoTCPError := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoTCP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTAProtoInfoTCPUnspec)},
+			{Type: uint16(CTAProtoInfoTCPUnspec)},
+			{Type: uint16(CTAProtoInfoTCPUnspec)},
+		},
+	}
+
+	assert.Nil(t, pit.UnmarshalAttribute(nfaProtoInfoTCP))
+	assert.EqualError(t, pit.UnmarshalAttribute(nfaProtoInfoTCPError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, CTAProtoInfoTCP))
+
+}
