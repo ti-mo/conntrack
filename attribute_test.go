@@ -3,22 +3,22 @@ package conntrack
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/ti-mo/netfilter"
+)
+
+var (
+	nfaBadType = netfilter.Attribute{Type: 0}
 )
 
 func TestAttribute_Helper(t *testing.T) {
 
 	hlp := Helper{}
 
-	nfaBadType := netfilter.Attribute{Type: 0}
 	nfaNotNested := netfilter.Attribute{Type: uint16(CTAHelp)}
 
-	if err := hlp.UnmarshalAttribute(nfaBadType); err == nil {
-		t.Fatal("expected error")
-	}
-	if err := hlp.UnmarshalAttribute(nfaNotNested); err != errNotNested {
-		t.Fatalf("expected errNotNested")
-	}
+	assert.NotNil(t, hlp.UnmarshalAttribute(nfaBadType))
+	assert.EqualError(t, hlp.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
 
 	nfaNameInfo := netfilter.Attribute{
 		Type:   uint16(CTAHelp),
@@ -35,10 +35,7 @@ func TestAttribute_Helper(t *testing.T) {
 		},
 	}
 
-	err := hlp.UnmarshalAttribute(nfaNameInfo)
-	if err != nil {
-		t.Fatalf("unmarshal failed with error: %s", err.Error())
-	}
+	assert.Nil(t, hlp.UnmarshalAttribute(nfaNameInfo))
 
 	nfaUnknown := netfilter.Attribute{
 		Type:   uint16(CTAHelp),
@@ -50,7 +47,5 @@ func TestAttribute_Helper(t *testing.T) {
 		},
 	}
 
-	if err := hlp.UnmarshalAttribute(nfaUnknown); err == nil {
-		t.Fatal("expected error")
-	}
+	assert.NotNil(t, hlp.UnmarshalAttribute(nfaUnknown))
 }
