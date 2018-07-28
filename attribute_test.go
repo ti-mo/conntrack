@@ -242,7 +242,7 @@ func TestAttribute_Counters(t *testing.T) {
 			}
 
 			assert.Nil(t, ctr.UnmarshalAttribute(nfaCounter))
-			assert.EqualError(t, ctr.UnmarshalAttribute(nfaCounterError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, ctaCountersOrigReplyCat))
+			assert.EqualError(t, ctr.UnmarshalAttribute(nfaCounterError), fmt.Sprintf(errAttributeChild, CTACountersUnspec, ctaCountersOrigReplyCat))
 
 			if at == CTACountersOrig {
 				assert.Equal(t, "[orig: 0 pkts/0 B]", ctr.String())
@@ -251,4 +251,43 @@ func TestAttribute_Counters(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAttribute_Timestamp(t *testing.T) {
+
+	ts := Timestamp{}
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTATimestamp)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTATimestamp), Nested: true}
+
+	assert.EqualError(t, ts.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTATimestamp))
+	assert.EqualError(t, ts.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, ts.UnmarshalAttribute(nfaNestedNoChildren), errNeedSingleChild.Error())
+
+	nfaCounter := netfilter.Attribute{
+		Type:   uint16(CTATimestamp),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTATimestampStart),
+				Data: make([]byte, 8),
+			},
+			{
+				Type: uint16(CTATimestampStop),
+				Data: make([]byte, 8),
+			},
+		},
+	}
+
+	nfaTimestampError := netfilter.Attribute{
+		Type:   uint16(CTATimestamp),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTATimestampUnspec)},
+		},
+	}
+
+	assert.Nil(t, ts.UnmarshalAttribute(nfaCounter))
+	assert.EqualError(t, ts.UnmarshalAttribute(nfaTimestampError), fmt.Sprintf(errAttributeChild, CTATimestampUnspec, CTATimestamp))
+
 }

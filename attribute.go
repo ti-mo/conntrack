@@ -216,7 +216,7 @@ type Timestamp struct {
 func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTATimestamp {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TIMESTAMP", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATimestamp)
 	}
 
 	if !attr.Nested {
@@ -225,7 +225,7 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	// A Timestamp will always have at least a start time
 	if len(attr.Children) < 1 {
-		return errNeedChildren
+		return errNeedSingleChild
 	}
 
 	for _, iattr := range attr.Children {
@@ -235,7 +235,7 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTATimestampStop:
 			ts.Stop = time.Unix(0, iattr.Int64())
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown TimestampType %d", iattr.Type)
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTATimestamp)
 		}
 	}
 
