@@ -200,3 +200,55 @@ func TestAttribute_ProtoInfoTCP(t *testing.T) {
 	assert.EqualError(t, pit.UnmarshalAttribute(nfaProtoInfoTCPError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, CTAProtoInfoTCP))
 
 }
+
+func TestAttribute_Counters(t *testing.T) {
+
+	ctr := Counter{}
+
+	// Counters can be unmarshaled from both CTACountersOrig and CTACountersReply
+	attrTypes := []AttributeType{CTACountersOrig, CTACountersReply}
+
+	for _, at := range attrTypes {
+		t.Run(at.String(), func(t *testing.T) {
+			nfaNotNested := netfilter.Attribute{Type: uint16(at)}
+			nfaNestedNoChildren := netfilter.Attribute{Type: uint16(at), Nested: true}
+
+			assert.EqualError(t, ctr.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, ctaCountersOrigReplyCat))
+			assert.EqualError(t, ctr.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+			assert.EqualError(t, ctr.UnmarshalAttribute(nfaNestedNoChildren), fmt.Sprintf(errExactChildren, 2, ctaCountersOrigReplyCat))
+
+			nfaCounter := netfilter.Attribute{
+				Type:   uint16(at),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{
+						Type: uint16(CTACountersBytes),
+						Data: make([]byte, 8),
+					},
+					{
+						Type: uint16(CTACountersPackets),
+						Data: make([]byte, 8),
+					},
+				},
+			}
+
+			nfaCounterError := netfilter.Attribute{
+				Type:   uint16(at),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{Type: uint16(CTACountersUnspec)},
+					{Type: uint16(CTACountersUnspec)},
+				},
+			}
+
+			assert.Nil(t, ctr.UnmarshalAttribute(nfaCounter))
+			assert.EqualError(t, ctr.UnmarshalAttribute(nfaCounterError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, ctaCountersOrigReplyCat))
+
+			if at == CTACountersOrig {
+				assert.Equal(t, "[orig: 0 pkts/0 B]", ctr.String())
+			} else {
+				assert.Equal(t, "[reply: 0 pkts/0 B]", ctr.String())
+			}
+		})
+	}
+}

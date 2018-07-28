@@ -15,11 +15,14 @@ var (
 	errNeedSingleChild = errors.New("need exactly 1 child attribute")
 	errNeedChildren    = errors.New("need at least 2 child attributes")
 	errIncorrectSize   = errors.New("binary attribute data has incorrect size")
+
+	ctaCountersOrigReplyCat = fmt.Sprintf("%s/%s", CTACountersOrig, CTACountersReply)
 )
 
 const (
-	errAttributeWrongType = "Attribute Type '%d' is not a %s"
-	errAttributeChild     = "Child Type '%d' unknown for attribute type %s"
+	errAttributeWrongType = "attribute Type '%d' is not a %s"
+	errAttributeChild     = "child Type '%d' unknown for attribute type %s"
+	errExactChildren      = "need exactly %d child attributes for attribute type %s"
 )
 
 // A Helper holds the name and info the helper that creates a related connection.
@@ -147,19 +150,34 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// A Counter holds a pair of counters that represent
-// packets and bytes sent over a Conntrack connection.
+// A Counter holds a pair of counters that represent packets and bytes sent over
+// a Conntrack connection. Direction is true when it's a reply counter.
 type Counter struct {
+
+	// true means it's a reply counter,
+	// false is the original direction
+	Direction bool
+
 	Packets uint64
 	Bytes   uint64
 }
 
 func (ctr Counter) String() string {
-	return fmt.Sprintf("[%d pkts/%d B]", ctr.Packets, ctr.Bytes)
+	dir := "orig"
+	if ctr.Direction {
+		dir = "reply"
+	}
+
+	return fmt.Sprintf("[%s: %d pkts/%d B]", dir, ctr.Packets, ctr.Bytes)
 }
 
 // UnmarshalAttribute unmarshals a nested counter attribute into a Counter structure.
 func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if AttributeType(attr.Type) != CTACountersOrig &&
+		AttributeType(attr.Type) != CTACountersReply {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaCountersOrigReplyCat)
+	}
 
 	if !attr.Nested {
 		return errNotNested
@@ -167,8 +185,11 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	// A Counter will always consist of packet and byte attributes
 	if len(attr.Children) != 2 {
-		return errNeedChildren
+		return fmt.Errorf(errExactChildren, 2, ctaCountersOrigReplyCat)
 	}
+
+	// Set Direction to true if it's a reply counter
+	ctr.Direction = AttributeType(attr.Type) == CTACountersReply
 
 	for _, iattr := range attr.Children {
 		switch CounterType(iattr.Type) {
@@ -177,7 +198,7 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTACountersBytes:
 			ctr.Bytes = iattr.Uint64()
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown CounterType %d", iattr.Type)
+			return fmt.Errorf(errAttributeChild, iattr.Type, ctaCountersOrigReplyCat)
 		}
 	}
 
