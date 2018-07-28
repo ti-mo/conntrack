@@ -61,6 +61,10 @@ type ProtoInfo struct {
 // one of three ProtoInfo types; TCP, DCCP or SCTP.
 func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 
+	if AttributeType(attr.Type) != CTAProtoInfo {
+		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTAProtoInfo", attr.Type)
+	}
+
 	if !attr.Nested {
 		return errNotNested
 	}
