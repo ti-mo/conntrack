@@ -12,11 +12,12 @@ var (
 	errNotImplemented  = errors.New("sorry, not implemented yet")
 	errNested          = errors.New("unexpected Nested attribute")
 	errNotNested       = errors.New("need a Nested attribute to decode this structure")
-	errNeedSingleChild = errors.New("need exactly 1 child attribute")
+	errNeedSingleChild = errors.New("need (at least) 1 child attribute")
 	errNeedChildren    = errors.New("need at least 2 child attributes")
 	errIncorrectSize   = errors.New("binary attribute data has incorrect size")
 
 	ctaCountersOrigReplyCat = fmt.Sprintf("%s/%s", CTACountersOrig, CTACountersReply)
+	ctaSeqAdjOrigReplyCat   = fmt.Sprintf("%s/%s", CTASeqAdjOrig, CTASeqAdjReply)
 )
 
 const (
@@ -277,15 +278,34 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 }
 
 // SequenceAdjust represents a TCP sequence number adjustment event.
+// Direction is true when it's a reply adjustment.
 type SequenceAdjust struct {
+	// true means it's a reply adjustment,
+	// false is the original direction
+	Direction bool
+
 	Position     uint32
 	OffsetBefore uint32
 	OffsetAfter  uint32
 }
 
+func (seq SequenceAdjust) String() string {
+	dir := "orig"
+	if seq.Direction {
+		dir = "reply"
+	}
+
+	return fmt.Sprintf("[dir: %s, pos: %d, before: %d, after: %d]", dir, seq.Position, seq.OffsetBefore, seq.OffsetAfter)
+}
+
 // UnmarshalAttribute unmarshals a nested sequence adjustment attribute into a
 // conntrack.SequenceAdjust structure.
 func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if AttributeType(attr.Type) != CTASeqAdjOrig &&
+		AttributeType(attr.Type) != CTASeqAdjReply {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaSeqAdjOrigReplyCat)
+	}
 
 	if !attr.Nested {
 		return errNotNested
@@ -293,8 +313,11 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	// A SequenceAdjust message should come with at least 1 child.
 	if len(attr.Children) < 1 {
-		return errNeedChildren
+		return errNeedSingleChild
 	}
+
+	// Set Direction to true if it's a reply adjustment
+	seq.Direction = AttributeType(attr.Type) == CTASeqAdjReply
 
 	for _, iattr := range attr.Children {
 		switch SequenceAdjustType(iattr.Type) {
@@ -304,6 +327,8 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 			seq.OffsetBefore = iattr.Uint32()
 		case CTASeqAdjOffsetAfter:
 			seq.OffsetAfter = iattr.Uint32()
+		default:
+			return fmt.Errorf(errAttributeChild, iattr.Type, ctaSeqAdjOrigReplyCat)
 		}
 	}
 

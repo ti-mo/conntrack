@@ -264,7 +264,7 @@ func TestAttribute_Timestamp(t *testing.T) {
 	assert.EqualError(t, ts.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
 	assert.EqualError(t, ts.UnmarshalAttribute(nfaNestedNoChildren), errNeedSingleChild.Error())
 
-	nfaCounter := netfilter.Attribute{
+	nfaTimestamp := netfilter.Attribute{
 		Type:   uint16(CTATimestamp),
 		Nested: true,
 		Children: []netfilter.Attribute{
@@ -287,7 +287,7 @@ func TestAttribute_Timestamp(t *testing.T) {
 		},
 	}
 
-	assert.Nil(t, ts.UnmarshalAttribute(nfaCounter))
+	assert.Nil(t, ts.UnmarshalAttribute(nfaTimestamp))
 	assert.EqualError(t, ts.UnmarshalAttribute(nfaTimestampError), fmt.Sprintf(errAttributeChild, CTATimestampUnspec, CTATimestamp))
 
 }
@@ -325,4 +325,60 @@ func TestAttribute_SecCtx(t *testing.T) {
 	assert.Nil(t, sc.UnmarshalAttribute(nfaSecurity))
 	assert.EqualError(t, sc.UnmarshalAttribute(nfaSecurityError), fmt.Sprintf(errAttributeChild, CTASecCtxUnspec, CTASecCtx))
 
+}
+
+func TestAttribute_SeqAdj(t *testing.T) {
+
+	sa := SequenceAdjust{}
+
+	// SequenceAdjust can be unmarshaled from both CTASeqAdjOrig and CTASeqAdjReply
+	attrTypes := []AttributeType{CTASeqAdjOrig, CTASeqAdjReply}
+
+	for _, at := range attrTypes {
+		t.Run(at.String(), func(t *testing.T) {
+			nfaNotNested := netfilter.Attribute{Type: uint16(at)}
+			nfaNestedNoChildren := netfilter.Attribute{Type: uint16(at), Nested: true}
+
+			assert.EqualError(t, sa.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, ctaSeqAdjOrigReplyCat))
+			assert.EqualError(t, sa.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+			assert.EqualError(t, sa.UnmarshalAttribute(nfaNestedNoChildren), errNeedSingleChild.Error())
+
+			nfaSeqAdj := netfilter.Attribute{
+				Type:   uint16(at),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{
+						Type: uint16(CTASeqAdjCorrectionPos),
+						Data: make([]byte, 4),
+					},
+					{
+						Type: uint16(CTASeqAdjOffsetBefore),
+						Data: make([]byte, 4),
+					},
+					{
+						Type: uint16(CTASeqAdjOffsetAfter),
+						Data: make([]byte, 4),
+					},
+				},
+			}
+
+			nfaSeqAdjError := netfilter.Attribute{
+				Type:   uint16(at),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{Type: uint16(CTASeqAdjUnspec)},
+					{Type: uint16(CTASeqAdjUnspec)},
+				},
+			}
+
+			assert.Nil(t, sa.UnmarshalAttribute(nfaSeqAdj))
+			assert.EqualError(t, sa.UnmarshalAttribute(nfaSeqAdjError), fmt.Sprintf(errAttributeChild, CTASeqAdjUnspec, ctaSeqAdjOrigReplyCat))
+
+			if at == CTASeqAdjOrig {
+				assert.Equal(t, "[dir: orig, pos: 0, before: 0, after: 0]", sa.String())
+			} else {
+				assert.Equal(t, "[dir: reply, pos: 0, before: 0, after: 0]", sa.String())
+			}
+		})
+	}
 }
