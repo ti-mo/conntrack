@@ -64,9 +64,9 @@ type TupleType uint8
 const (
 	CTATupleUnspec TupleType = iota //CTA_TUPLE_UNSPEC
 
-	CTATupleIP    //CTA_TUPLE_IP
-	CTATupleProto //CTA_TUPLE_PROTO
-	CTATupleZone  //CTA_TUPLE_ZONE
+	CTATupleIP    // CTA_TUPLE_IP
+	CTATupleProto // CTA_TUPLE_PROTO
+	CTATupleZone  // CTA_TUPLE_ZONE
 )
 
 // TODO: ctnl_exp_msg_types
