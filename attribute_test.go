@@ -291,3 +291,38 @@ func TestAttribute_Timestamp(t *testing.T) {
 	assert.EqualError(t, ts.UnmarshalAttribute(nfaTimestampError), fmt.Sprintf(errAttributeChild, CTATimestampUnspec, CTATimestamp))
 
 }
+
+func TestAttribute_SecCtx(t *testing.T) {
+
+	sc := Security{}
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTASecCtx)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTASecCtx), Nested: true}
+
+	assert.EqualError(t, sc.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTASecCtx))
+	assert.EqualError(t, sc.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, sc.UnmarshalAttribute(nfaNestedNoChildren), errNeedChildren.Error())
+
+	nfaSecurity := netfilter.Attribute{
+		Type:   uint16(CTASecCtx),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTASecCtxName),
+				Data: []byte("foo"),
+			},
+		},
+	}
+
+	nfaSecurityError := netfilter.Attribute{
+		Type:   uint16(CTASecCtx),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTASecCtxUnspec)},
+		},
+	}
+
+	assert.Nil(t, sc.UnmarshalAttribute(nfaSecurity))
+	assert.EqualError(t, sc.UnmarshalAttribute(nfaSecurityError), fmt.Sprintf(errAttributeChild, CTASecCtxUnspec, CTASecCtx))
+
+}

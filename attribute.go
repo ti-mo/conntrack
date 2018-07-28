@@ -252,7 +252,7 @@ type Security struct {
 func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTASecCtx {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_SECCTX", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTASecCtx)
 	}
 
 	if !attr.Nested {
@@ -269,7 +269,7 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTASecCtxName:
 			ctx.Name = string(iattr.Data)
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown SecurityType %d", iattr.Type)
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTASecCtx)
 		}
 	}
 
