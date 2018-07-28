@@ -146,6 +146,7 @@ const (
 )
 
 // ProtoInfoType describes the kind of protocol info in this container.
+//go:generate stringer -type=ProtoInfoType
 type ProtoInfoType uint8
 
 // enum ctattr_protoinfo

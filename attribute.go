@@ -85,7 +85,7 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	switch ProtoInfoType(iattr.Type) {
 	case CTAProtoInfoTCP:
 		var tpi ProtoInfoTCP
-		if err := (&tpi).UnmarshalProtoInfo(iattr); err != nil {
+		if err := (&tpi).UnmarshalAttribute(iattr); err != nil {
 			return err
 		}
 		pi.TCP = tpi
@@ -110,8 +110,12 @@ type ProtoInfoTCP struct {
 	ReplyFlags          uint16
 }
 
-// UnmarshalProtoInfo unmarshals a netfilter.Attribute into a ProtoInfoTCP.
-func (tpi *ProtoInfoTCP) UnmarshalProtoInfo(attr netfilter.Attribute) error {
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoTCP.
+func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if ProtoInfoType(attr.Type) != CTAProtoInfoTCP {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoTCP)
+	}
 
 	if !attr.Nested {
 		return errNotNested
@@ -136,7 +140,7 @@ func (tpi *ProtoInfoTCP) UnmarshalProtoInfo(attr netfilter.Attribute) error {
 		case CTAProtoInfoTCPFlagsReply:
 			tpi.ReplyFlags = iattr.Uint16()
 		default:
-			return fmt.Errorf("error: UnmarshalProtoInfo - unknown ProtoInfoTCPType %d", iattr.Type)
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfoTCP)
 		}
 	}
 
