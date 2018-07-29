@@ -357,11 +357,17 @@ func UnmarshalAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (m
 		// CTA_MARK is the connection's connmark
 		// CTA_MARK_MASK is never sent by the kernel, but can be used for kernel-space dump filtering!
 		case CTATimeout, CTAID, CTAUse, CTAMark, CTAMarkMask:
+			if len(attr.Data) != 4 {
+				return nil, errIncorrectSize
+			}
 			ra[at] = attr.Uint32()
 
 		// CTA_ZONE describes the Conntrack zone the flow is placed in. This can be combined with a CTA_TUPLE_ZONE
 		// to specify which zone an event originates from.
 		case CTAZone:
+			if len(attr.Data) != 2 {
+				return nil, errIncorrectSize
+			}
 			ra[at] = attr.Uint16()
 
 		// CTA_LABELS is a binary bitfield attached to a connection that is sent in
