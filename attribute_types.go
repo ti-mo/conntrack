@@ -336,8 +336,9 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// UnmarshalAttributes calls unmarshal operations on all given netfilter.Attributes.
-// It returns a map of AttributeTypes to their respective values.
+// UnmarshalAttributes calls unmarshal operations on a list of netfilter.Attributes.
+// It returns a map of AttributeTypes to their respective values. Each attribute type should only occur once in the list,
+// since multiple occurrences will overwrite each other.
 func UnmarshalAttributes(attrs []netfilter.Attribute, filter AttributeFilter) (map[AttributeType]interface{}, error) {
 
 	ra := make(map[AttributeType]interface{})
