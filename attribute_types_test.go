@@ -12,6 +12,16 @@ var (
 	nfaBadType = netfilter.Attribute{Type: uint16(CTAUnspec)}
 )
 
+func TestAttributeType_String(t *testing.T) {
+	ssid := AttributeType(255)
+
+	ssidStr := ssid.String()
+
+	if ssidStr == "" {
+		t.Fatal("AttributeType string representation empty - did you run `go generate`?")
+	}
+}
+
 func TestAttribute_Helper(t *testing.T) {
 
 	hlp := Helper{}
