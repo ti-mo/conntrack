@@ -5,14 +5,14 @@ import "github.com/ti-mo/netfilter"
 // All enums in this file are translated from the Linux kernel source at
 // include/uapi/linux/netfilter/nfnetlink_conntrack.h
 
-// Messagetype is a Conntrack-specific representation of a netfilter.MessageType.
+// MessageType is a Conntrack-specific representation of a netfilter.MessageType.
 // It is used to specify the type of action to execute on
 // the kernel's state table (get, create, delete, etc.).
-type Messagetype netfilter.MessageType
+type MessageType netfilter.MessageType
 
 // enum cntl_msg_types
 const (
-	CTNew Messagetype = iota // IPCTNL_MSG_CT_NEW
+	CTNew MessageType = iota // IPCTNL_MSG_CT_NEW
 
 	CTGet            // IPCTNL_MSG_CT_GET
 	CTDelete         // IPCTNL_MSG_CT_DELETE
@@ -68,8 +68,6 @@ const (
 	CTATupleProto // CTA_TUPLE_PROTO
 	CTATupleZone  // CTA_TUPLE_ZONE
 )
-
-// TODO: ctnl_exp_msg_types
 
 // ProtoTupleType describes the type of Layer 4 protocol metadata in this container.
 type ProtoTupleType uint8

@@ -72,7 +72,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 		return 0, errNotConntrack
 	}
 
-	switch Messagetype(ht.MessageType) {
+	switch MessageType(ht.MessageType) {
 	case CTNew:
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
