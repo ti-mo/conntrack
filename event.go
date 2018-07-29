@@ -61,6 +61,7 @@ func (et EventType) String() string {
 }
 
 // DecodeEventType derives a Conntrack EventType from a Netlink message header.
+// TODO: Support ExpMessageType
 func DecodeEventType(nlh netlink.Header) (EventType, error) {
 
 	// Get Netfilter Subsystem and MessageType from Netlink header

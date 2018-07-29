@@ -23,6 +23,19 @@ const (
 	CTGetUnconfirmed // IPCTNL_MSG_CT_GET_UNCONFIRMED
 )
 
+// ExpMessageType is a Conntrack-specific representation of a netfilter.MessageType.
+// It holds information about Conntrack Expect events; state created by Conntrack helpers.
+type ExpMessageType netfilter.MessageType
+
+// enum ctnl_exp_msg_types
+const (
+	CTExpNew ExpMessageType = iota // IPCTNL_MSG_EXP_NEW
+
+	CTExpGet         // IPCTNL_MSG_EXP_GET
+	CTExpDelete      // IPCTNL_MSG_EXP_DELETE
+	CTExpGetStatsCPU // IPCTNL_MSG_EXP_GET_STATS_CPU
+)
+
 // AttributeType defines the meaning of a root-level Type
 // value of a Conntrack-specific Netfilter attribute.
 //go:generate stringer -type=AttributeType
