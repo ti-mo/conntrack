@@ -27,6 +27,66 @@ const (
 	errExactChildren      = "need exactly %d child attributes for attribute type %s"
 )
 
+// Attribute is an interface implemented by all Conntrack attribute types.
+type Attribute interface {
+	UnmarshalAttribute(netfilter.Attribute) error
+}
+
+// Num16 is a generic numeric attribute. It is represented by a uint32
+// and holds its own AttributeType.
+type Num16 struct {
+	Type  AttributeType
+	Value uint16
+}
+
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Num16.
+func (i *Num16) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if len(attr.Data) != 2 {
+		return errIncorrectSize
+	}
+
+	i.Type = AttributeType(attr.Type)
+	i.Value = attr.Uint16()
+
+	return nil
+}
+
+// Num32 is a generic numeric attribute. It is represented by a uint32
+// and holds its own AttributeType.
+type Num32 struct {
+	Type  AttributeType
+	Value uint32
+}
+
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Num32.
+func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if len(attr.Data) != 4 {
+		return errIncorrectSize
+	}
+
+	i.Type = AttributeType(attr.Type)
+	i.Value = attr.Uint32()
+
+	return nil
+}
+
+// Bitfield is an attribute that contains a bitfield of any size.
+type Bitfield struct {
+	Type AttributeType
+	Data []byte
+}
+
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Bitfield.
+func (b *Bitfield) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	b.Type = AttributeType(attr.Type)
+	b.Data = attr.Data
+
+	return nil
+}
+
 // A Helper holds the name and info the helper that creates a related connection.
 type Helper struct {
 	Name string

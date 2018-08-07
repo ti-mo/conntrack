@@ -254,7 +254,7 @@ func TestAttribute_Unmarshal(t *testing.T) {
 	}
 }
 
-var tb map[AttributeType]interface{}
+var tb map[AttributeType]Attribute
 
 func BenchmarkAttribute_UnmarshalAttribute(b *testing.B) {
 
