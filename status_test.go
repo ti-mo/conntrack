@@ -1,11 +1,23 @@
 package conntrack
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/ti-mo/netfilter"
 )
+
+func TestStatus_Error(t *testing.T) {
+
+	nfaNested := netfilter.Attribute{Type: uint16(CTAStatus), Nested: true}
+
+	var s Status
+
+	assert.EqualError(t, s.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAStatus))
+	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errNested.Error())
+}
 
 func TestStatus_UnmarshalAttribute(t *testing.T) {
 
@@ -19,33 +31,6 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 			name:   "default values",
 			b:      []byte{0x00, 0x00, 0x00, 0x00},
 			status: Status{},
-		},
-		{
-			name: "snake pattern",
-			b:    []byte{0xAA, 0xAA, 0xAA, 0xAA},
-			status: Status{
-				SeenReply:  true,
-				Confirmed:  true,
-				DstNat:     true,
-				SrcNatDone: true,
-				Dying:      true,
-				Template:   true,
-				value:      0xAAAAAAAA,
-			},
-		},
-		{
-			name: "snake pattern, inverted",
-			b:    []byte{0x55, 0x55, 0x55, 0x55},
-			status: Status{
-				Expected:     true,
-				Assured:      true,
-				SrcNat:       true,
-				SeqAdjust:    true,
-				DstNatDone:   true,
-				FixedTimeout: true,
-				Untracked:    true,
-				value:        0x55555555,
-			},
 		},
 		{
 			name:   "out of range, only highest bits flipped",
@@ -90,6 +75,53 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStatus_FieldTest(t *testing.T) {
+
+	var s Status
+
+	s.value = IPSExpected
+	assert.Equal(t, true, s.Expected(), "expected")
+
+	s.value = IPSSeenReply
+	assert.Equal(t, true, s.SeenReply(), "seenreply")
+
+	s.value = IPSAssured
+	assert.Equal(t, true, s.Assured(), "assured")
+
+	s.value = IPSConfirmed
+	assert.Equal(t, true, s.Confirmed(), "confirmed")
+
+	s.value = IPSSrcNat
+	assert.Equal(t, true, s.SrcNAT(), "srcnat")
+
+	s.value = IPSDstNat
+	assert.Equal(t, true, s.DstNAT(), "dstnat")
+
+	s.value = IPSSeqAdjust
+	assert.Equal(t, true, s.SeqAdjust(), "seqadjust")
+
+	s.value = IPSSrcNatDone
+	assert.Equal(t, true, s.SrcNATDone(), "srcnatdone")
+
+	s.value = IPSDstNatDone
+	assert.Equal(t, true, s.DstNATDone(), "dstnatdone")
+
+	s.value = IPSDying
+	assert.Equal(t, true, s.Dying(), "dying")
+
+	s.value = IPSFixedTimeout
+	assert.Equal(t, true, s.FixedTimeout(), "fixedtimeout")
+
+	s.value = IPSTemplate
+	assert.Equal(t, true, s.Template(), "template")
+
+	s.value = IPSHelper
+	assert.Equal(t, true, s.Helper(), "helper")
+
+	s.value = IPSOffload
+	assert.Equal(t, true, s.Offload(), "offload")
 }
 
 func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {

@@ -22,6 +22,8 @@ func (s Status) String() string {
 		"FIXED_TIMEOUT",
 		"TEMPLATE",
 		"UNTRACKED",
+		"HELPER",
+		"OFFLOAD",
 	}
 
 	var rs string
