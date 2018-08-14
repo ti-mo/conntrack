@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	nfaBadType = netfilter.Attribute{Type: uint16(CTAUnspec)}
+	nfaBadType  = netfilter.Attribute{Type: uint16(CTAUnspec)}
+	nfaTooShort = netfilter.Attribute{}
 )
 
 func TestAttributeType_String(t *testing.T) {
@@ -20,6 +21,40 @@ func TestAttributeType_String(t *testing.T) {
 	if ssidStr == "" {
 		t.Fatal("AttributeType string representation empty - did you run `go generate`?")
 	}
+}
+
+func TestAttribute_Num16(t *testing.T) {
+
+	n16 := Num16{}
+
+	assert.EqualError(t, n16.UnmarshalAttribute(nfaTooShort), errIncorrectSize.Error())
+
+	nfa := netfilter.Attribute{
+		Type: uint16(CTAZone),
+		Data: []byte{0, 1},
+	}
+
+	assert.Nil(t, n16.UnmarshalAttribute(nfa))
+}
+
+func TestAttribute_Num32(t *testing.T) {
+
+	n32 := Num32{}
+
+	assert.EqualError(t, n32.UnmarshalAttribute(nfaTooShort), errIncorrectSize.Error())
+
+	nfa := netfilter.Attribute{
+		Type: uint16(CTAMark),
+		Data: []byte{0, 1, 2, 3},
+	}
+
+	assert.Nil(t, n32.UnmarshalAttribute(nfa))
+}
+
+func TestAttribute_Bitfield(t *testing.T) {
+	bf := Bitfield{}
+
+	assert.Nil(t, bf.UnmarshalAttribute(netfilter.Attribute{}))
 }
 
 func TestAttribute_Helper(t *testing.T) {
