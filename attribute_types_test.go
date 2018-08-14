@@ -158,6 +158,16 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaUnknownChild), fmt.Sprintf(errAttributeChild, CTAProtoInfoUnspec, CTAProtoInfo))
 }
 
+func TestProtoInfoType_String(t *testing.T) {
+	ssid := ProtoInfoType(255)
+
+	ssidStr := ssid.String()
+
+	if ssidStr == "" {
+		t.Fatal("ProtoInfoType string representation empty - did you run `go generate`?")
+	}
+}
+
 func TestAttribute_ProtoInfoTCP(t *testing.T) {
 
 	pit := ProtoInfoTCP{}
