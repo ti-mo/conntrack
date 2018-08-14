@@ -243,10 +243,13 @@ var (
 	}
 )
 
-func TestAttribute_Unmarshal(t *testing.T) {
+func TestAttribute_UnmarshalFlow(t *testing.T) {
+
+	var f Flow
+
 	for _, tt := range corpus {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := UnmarshalAttributes(tt.attrs, tt.filter)
+			err := f.UnmarshalAttributes(tt.attrs)
 			if err != nil {
 				t.Fatalf("unmarshal error: %v", err)
 			}
@@ -254,11 +257,10 @@ func TestAttribute_Unmarshal(t *testing.T) {
 	}
 }
 
-var tb map[AttributeType]Attribute
-
 func BenchmarkAttribute_UnmarshalAttribute(b *testing.B) {
 
 	var tests []netfilter.Attribute
+	var f Flow
 
 	// Collect all tests from corpus that aren't expected to fail
 	for _, test := range corpus {
@@ -268,6 +270,6 @@ func BenchmarkAttribute_UnmarshalAttribute(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		tb, _ = UnmarshalAttributes(tests, AttributeFilter(0))
+		f.UnmarshalAttributes(tests)
 	}
 }
