@@ -1,11 +1,4 @@
-//+build !test
-
 package conntrack
-
-import "fmt"
-
-// This file contains string representation composition
-// of all structures in the package. It's excluded from test coverage.
 
 func (s Status) String() string {
 	names := []string{
@@ -38,9 +31,8 @@ func (s Status) String() string {
 		}
 	}
 
-	// Set default value if none of the flags were set
 	if rs == "" {
-		rs = fmt.Sprintf("DEFAULT|%.8b", s.value)
+		rs = "NONE"
 	}
 
 	return rs

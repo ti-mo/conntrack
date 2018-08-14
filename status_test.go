@@ -124,6 +124,22 @@ func TestStatus_FieldTest(t *testing.T) {
 	assert.Equal(t, true, s.Offload(), "offload")
 }
 
+func TestStatus_String(t *testing.T) {
+	full := Status{value: 0xffffffff}
+	empty := Status{}
+
+	wantFull := "EXPECTED|SEEN_REPLY|ASSURED|CONFIRMED|SRC_NAT|DST_NAT|SEQ_ADJUST|SRC_NAT_DONE|DST_NAT_DONE|DYING|FIXED_TIMEOUT|TEMPLATE|UNTRACKED|HELPER|OFFLOAD"
+	if want, got := wantFull, full.String(); want != got {
+		t.Errorf("unexpected string:\n- want: %s\n-  got: %s", wantFull, got)
+	}
+
+	wantEmpty := "NONE"
+	if want, got := wantEmpty, empty.String(); wantEmpty != got {
+		t.Errorf("unexpected string:\n- want: %s\n-  got: %s", want, got)
+	}
+
+}
+
 func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {
 	inputs := [][]byte{
 		{0x00, 0x00, 0x00, 0x01}, {0x00, 0x00, 0x00, 0x02}, {0x00, 0x00, 0x00, 0x03}, {0x00, 0x00, 0x00, 0x04},
