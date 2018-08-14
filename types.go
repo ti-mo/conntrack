@@ -150,7 +150,7 @@ const (
 // SecurityType describes the type of SecCtx value in this container.
 type SecurityType uint8
 
-// enum enum ctattr_secctx
+// enum ctattr_secctx
 const (
 	CTASecCtxUnspec SecurityType = iota // CTA_SECCTX_UNSPEC
 	CTASecCtxName                       // CTA_SECCTX_NAME
