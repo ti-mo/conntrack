@@ -2,8 +2,6 @@ package conntrack
 
 import (
 	"fmt"
-	"log"
-	"net"
 
 	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
@@ -14,12 +12,8 @@ const NFSubsysCTAll = netfilter.NFSubsysCTNetlink | netfilter.NFSubsysCTNetlinkE
 
 // Event can hold all information needed to process a Conntrack event in userspace.
 type Event struct {
-	Type       EventType
-	Proto      int
-	SrcAddress net.IP
-	SrcPort    uint16
-	DstAddress net.IP
-	DstPort    uint16
+	Type EventType
+	Flow Flow
 }
 
 // EventType is a type of Conntrack event derived from the Netlink header.
@@ -60,9 +54,9 @@ func (et EventType) String() string {
 	}
 }
 
-// DecodeEventType derives a Conntrack EventType from a Netlink message header.
+// FromNetlinkHeader unmarshals a Conntrack EventType from a Netlink message header.
 // TODO: Support ExpMessageType
-func DecodeEventType(nlh netlink.Header) (EventType, error) {
+func (et *EventType) FromNetlinkHeader(nlh netlink.Header) error {
 
 	// Get Netfilter Subsystem and MessageType from Netlink header
 	var ht netfilter.HeaderType
@@ -70,7 +64,7 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 
 	// Fail when the message is not a conntrack or conntrack-exp message
 	if ht.SubsystemID&NFSubsysCTAll == 0 {
-		return 0, errNotConntrack
+		return errNotConntrack
 	}
 
 	switch MessageType(ht.MessageType) {
@@ -78,50 +72,42 @@ func DecodeEventType(nlh netlink.Header) (EventType, error) {
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
 		if nlh.Flags&(netfilter.NLFlagCreate|netfilter.NLFlagExcl) != 0 {
-			return EventNew, nil
+			*et = EventNew
 		}
 
-		return EventUpdate, nil
+		*et = EventUpdate
 
 	case CTDelete:
-		return EventDestroy, nil
+		*et = EventDestroy
 	default:
-		return 0, nil
+		return fmt.Errorf(errUnknownEventType, ht.MessageType)
 	}
+
+	return nil
 }
 
-// DecodeEventAttributes generates and populates an Event from a netlink.Message.
-// Pure function, pointer argument for performance purposes.
-// TODO: name this something proper, this is a helper that needs to be broken up
-func DecodeEventAttributes(nlmsg netlink.Message) (Event, error) {
+// FromNetlink unmarshals a Netlink message into an Event structure.
+func (e *Event) FromNetlink(nlmsg netlink.Message) error {
+
+	var err error
 
 	// Decode the header to make sure we're dealing with a Conntrack event
-	et, err := DecodeEventType(nlmsg.Header)
+	err = e.Type.FromNetlinkHeader(nlmsg.Header)
 	if err != nil {
-		return Event{}, err
+		return err
 	}
-
-	// Successfully decoded Conntrack event header, allocate Event
-	e := Event{Type: et}
 
 	// Unmarshal a netlink.Message into netfilter.Attributes
 	attrs, err := netfilter.AttributesFromNetlink(nlmsg)
 	if err != nil {
-		return Event{}, err
+		return err
 	}
 
-	nfa, err := UnmarshalAttributes(attrs, 0xFFFF)
+	var f Flow
+	err = f.UnmarshalAttributes(attrs)
 	if err != nil {
-		var nfht netfilter.HeaderType
-		nfht.FromNetlinkHeader(nlmsg.Header)
-
-		log.Println(nfht)
-		log.Println(attrs)
-
-		return Event{}, err
+		return err
 	}
 
-	fmt.Println(nfa)
-
-	return e, nil
+	return nil
 }
