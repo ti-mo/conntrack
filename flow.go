@@ -141,6 +141,9 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 			if err := f.SeqAdjReply.UnmarshalAttribute(attr); err != nil {
 				return err
 			}
+		// TODO: Implement CTASynProxy
+		case CTASynProxy:
+			return errNotImplemented
 		default:
 			return fmt.Errorf(errAttributeUnknown, at)
 		}

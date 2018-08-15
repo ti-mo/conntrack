@@ -4,9 +4,9 @@ package conntrack
 
 import "strconv"
 
-const _AttributeType_name = "CTAUnspecCTATupleOrigCTATupleReplyCTAStatusCTAProtoInfoCTAHelpCTANatSrcCTATimeoutCTAMarkCTACountersOrigCTACountersReplyCTAUseCTAIDCTANatDstCTATupleMasterCTASeqAdjOrigCTASeqAdjReplyCTASecMarkCTAZoneCTASecCtxCTATimestampCTAMarkMaskCTALabelsCTALabelsMask"
+const _AttributeType_name = "CTAUnspecCTATupleOrigCTATupleReplyCTAStatusCTAProtoInfoCTAHelpCTANatSrcCTATimeoutCTAMarkCTACountersOrigCTACountersReplyCTAUseCTAIDCTANatDstCTATupleMasterCTASeqAdjOrigCTASeqAdjReplyCTASecMarkCTAZoneCTASecCtxCTATimestampCTAMarkMaskCTALabelsCTALabelsMaskCTASynProxy"
 
-var _AttributeType_index = [...]uint8{0, 9, 21, 34, 43, 55, 62, 71, 81, 88, 103, 119, 125, 130, 139, 153, 166, 180, 190, 197, 206, 218, 229, 238, 251}
+var _AttributeType_index = [...]uint16{0, 9, 21, 34, 43, 55, 62, 71, 81, 88, 103, 119, 125, 130, 139, 153, 166, 180, 190, 197, 206, 218, 229, 238, 251, 262}
 
 func (i AttributeType) String() string {
 	if i >= AttributeType(len(_AttributeType_index)-1) {

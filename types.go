@@ -68,6 +68,7 @@ const (
 	CTAMarkMask      // CTA_MARK_MASK
 	CTALabels        // CTA_LABELS
 	CTALabelsMask    // CTA_LABELS_MASK
+	CTASynProxy      // CTA_SYNPROXY
 )
 
 // TupleType describes the type of tuple contained in this container.
@@ -169,7 +170,7 @@ const (
 	CTAProtoInfoSCTP // CTA_PROTOINFO_SCTP
 )
 
-// ProtoInfoTCPType describes the kind of TCP protocol info in this container.
+// ProtoInfoTCPType describes the kind of TCP protocol info attribute in this container.
 type ProtoInfoTCPType uint8
 
 // enum ctattr_protoinfo_tcp
@@ -183,8 +184,30 @@ const (
 	CTAProtoInfoTCPFlagsReply     // CTA_PROTOINFO_TCP_FLAGS_REPLY
 )
 
-// TODO: ctattr_protoinfo_dccp
-// TODO: ctattr_protoinfo_sctp
+// ProtoInfoDCCPType describes the kind of DCCP protocol info attribute in this container.
+type ProtoInfoDCCPType uint8
+
+// enum ctattr_protoinfo_dccp
+const (
+	CTAPProtoInfoDCCPUnspec ProtoInfoDCCPType = iota // CTA_PROTOINFO_DCCP_UNSPEC
+
+	CTAPProtoInfoDCCPState        // CTA_PROTOINFO_DCCP_STATE
+	CTAPProtoInfoDCCPRole         // CTA_PROTOINFO_DCCP_ROLE
+	CTAPProtoInfoDCCPHandshakeSeq // CTA_PROTOINFO_DCCP_HANDSHAKE_SEQ
+	CTAPProtoInfoDCCPPad          // CTA_PROTOINFO_DCCP_PAD
+)
+
+// ProtoInfoDCCPType describes the kind of SCTP protocol info attribute in this container.
+type ProtoInfoSCTPType uint8
+
+// enum ctattr_protoinfo_sctp
+const (
+	CTAProtoInfoSCTPUnspec ProtoInfoSCTPType = iota // CTA_PROTOINFO_SCTP_UNSPEC
+
+	CTAProtoInfoSCTPState        // CTA_PROTOINFO_SCTP_STATE
+	CTAProtoInfoSCTPVTagOriginal // CTA_PROTOINFO_SCTP_VTAG_ORIGINAL
+	CTAProtoInfoSCTPVtagReply    // CTA_PROTOINFO_SCTP_VTAG_REPLY
+)
 
 // SequenceAdjustType describes the type of sequence adjustment in this container.
 type SequenceAdjustType uint8
@@ -198,9 +221,91 @@ const (
 	CTASeqAdjOffsetAfter   // CTA_SEQADJ_OFFSET_AFTER
 )
 
-// TODO: ctattr_natseq
-// TODO: ctattr_expect
-// TODO: ctattr_expect_nat
-// TODO: ctattr_stats_cpu
-// TODO: ctattr_stats_global
-// TODO: ctattr_expect_stats
+// SynProxyType describes the type of SYNproxy attribute in this container.
+type SynProxyType uint8
+
+// enum ctattr_synproxy
+const (
+	CTASynProxyUnspec SynProxyType = iota // CTA_SYNPROXY_UNSPEC
+
+	CTASynProxyISN   // CTA_SYNPROXY_ISN
+	CTASynProxyITS   // CTA_SYNPROXY_ITS
+	CTASynProxyTSOff // CTA_SYNPROXY_TSOFF
+)
+
+// ExpectType describes the type of expect attribute in this container.
+type ExpectType uint8
+
+// enum ctattr_expect
+const (
+	CTAExpectUnspec ExpectType = iota // CTA_EXPECT_UNSPEC
+
+	CTAExpectMaster   // CTA_EXPECT_MASTER
+	CTAExpectTuple    // CTA_EXPECT_TUPLE
+	CTAExpectMask     // CTA_EXPECT_MASK
+	CTAExpectTimeout  // CTA_EXPECT_TIMEOUT
+	CTAExpectID       // CTA_EXPECT_ID
+	CTAExpectHelpName // CTA_EXPECT_HELP_NAME
+	CTAExpectZone     // CTA_EXPECT_ZONE
+	CTAExpectFlags    // CTA_EXPECT_FLAGS
+	CTAExpectClass    // CTA_EXPECT_CLASS
+	CTAExpectNAT      // CTA_EXPECT_NAT
+	CTAExpectFN       // CTA_EXPECT_FN
+)
+
+// ExpectNATType describes the type of NAT expect attribute in this container.
+type ExpectNATType uint8
+
+// enum ctattr_expect_nat
+const (
+	CTAExpectNATUnspec ExpectNATType = iota // CTA_EXPECT_NAT_UNSPEC
+
+	CTAExpectNATDir   // CTA_EXPECT_NAT_DIR
+	CTAExpectNATTuple // CTA_EXPECT_NAT_TUPLE
+)
+
+// CPUStatsType describes the type of CPU-specific conntrack statistics attribute in this container.
+type CPUStatsType uint8
+
+// ctattr_stats_cpu
+const (
+	CTAStatsUnspec CPUStatsType = iota // CTA_STATS_UNSPEC
+
+	CTAStatsSearched      // CTA_STATS_SEARCHED, no longer used
+	CTAStatsFound         // CTA_STATS_FOUND
+	CTAStatsNew           // CTA_STATS_NEW, no longer used
+	CTAStatsInvalid       // CTA_STATS_INVALID
+	CTAStatsIgnore        // CTA_STATS_IGNORE
+	CTAStatsDelete        // CTA_STATS_DELETE, no longer used
+	CTAStatsDeleteList    // CTA_STATS_DELETE_LIST, no longer used
+	CTAStatsInsert        // CTA_STATS_INSERT
+	CTAStatsInsertFailed  // CTA_STATS_INSERT_FAILED
+	CTAStatsDrop          // CTA_STATS_DROP
+	CTAStatsEarlyDrop     // CTA_STATS_EARLY_DROP
+	CTAStatsError         // CTA_STATS_ERROR
+	CTAStatsSearchRestart // CTA_STATS_SEARCH_RESTART
+)
+
+// GlobalStatsType describes the type of global conntrack statistics attribute in this container.
+type GlobalStatsType uint8
+
+// enum ctattr_stats_global
+const (
+	CTAStatsGlobalUnspec GlobalStatsType = iota // CTA_STATS_GLOBAL_UNSPEC
+
+	CTAStatsGlobalEntries // CTA_STATS_GLOBAL_ENTRIES
+)
+
+// ExpectStatsType describes the type of expectation statistics attribute in this container.
+type ExpectStatsType uint8
+
+// enum ctattr_expect_stats
+const (
+	CTAStatsExpUnspec ExpectStatsType = iota // CTA_STATS_EXP_UNSPEC
+
+	CTAStatsExpNew    // CTA_STATS_EXP_NEW
+	CTAStatsExpCreate // CTA_STATS_EXP_CREATE
+	CTAStatsExpDelete // CTA_STATS_EXP_DELETE
+)
+
+// enum ctattr_natseq is unused in the kernel source
