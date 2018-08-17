@@ -71,7 +71,7 @@ func (et *EventType) FromNetlinkHeader(nlh netlink.Header) error {
 	case CTNew:
 		// Since the MessageType is only of kind new, get or delete,
 		// the header's flags are used to distinguish between NEW and UPDATE.
-		if nlh.Flags&(netfilter.NLFlagCreate|netfilter.NLFlagExcl) != 0 {
+		if nlh.Flags&(netlink.HeaderFlagsCreate|netlink.HeaderFlagsExcl) != 0 {
 			*et = EventNew
 		}
 
