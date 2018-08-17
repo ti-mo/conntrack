@@ -197,7 +197,7 @@ const (
 	CTAPProtoInfoDCCPPad          // CTA_PROTOINFO_DCCP_PAD
 )
 
-// ProtoInfoDCCPType describes the kind of SCTP protocol info attribute in this container.
+// ProtoInfoSCTPType describes the kind of SCTP protocol info attribute in this container.
 type ProtoInfoSCTPType uint8
 
 // enum ctattr_protoinfo_sctp
