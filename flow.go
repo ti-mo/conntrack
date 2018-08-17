@@ -3,6 +3,8 @@ package conntrack
 import (
 	"fmt"
 
+	"github.com/mdlayher/netlink"
+
 	"github.com/ti-mo/netfilter"
 )
 
@@ -150,4 +152,30 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 	}
 
 	return nil
+}
+
+// FlowsFromNetlink unmarshals a list of flows from a list of Netlink messages.
+// This method can be used to parse the result of a dump or get query.
+func FlowsFromNetlink(nlm []netlink.Message) ([]Flow, error) {
+
+	// Pre-allocate to avoid extending output slice on every op
+	out := make([]Flow, len(nlm))
+
+	for i := 0; i < len(nlm); i++ {
+
+		attrs, err := netfilter.AttributesFromNetlink(nlm[i])
+		if err != nil {
+			return nil, err
+		}
+
+		var f Flow
+		err = f.UnmarshalAttributes(attrs)
+		if err != nil {
+			return nil, err
+		}
+
+		out[i] = f
+	}
+
+	return out, nil
 }
