@@ -16,43 +16,18 @@ type Event struct {
 	Flow Flow
 }
 
-// EventType is a type of Conntrack event derived from the Netlink header.
-// It describes an action to the state table in the kernel.
+// EventType is a custom type that describes the Conntrack event type.
+//go:generate stringer -type=EventType
 type EventType uint8
 
-// From libnfnetlink/include/libnfnetlink/linux_nfnetlink_compat.h, NF_NETLINK_CONNTRACK_*
-// This table is still actively used in upstream conntrack-tools and libnfnetlink
-// It is in a _compat file because these values presumably stem from a time where there were
-// only 32 multicast Netlink groups available. (before genetlink?)
+// List of all types of Conntrack events.
 const (
-	EventNew        EventType = 1
-	EventUpdate     EventType = 1 << 1
-	EventDestroy    EventType = 1 << 2
-	EventExpNew     EventType = 1 << 3
-	EventExpUpdate  EventType = 1 << 4
-	EventExpDestroy EventType = 1 << 5
-
-	EventAll EventType = EventNew | EventUpdate | EventDestroy
+	EventNew EventType = iota
+	EventUpdate
+	EventDestroy
+	EventExpNew
+	EventExpDestroy
 )
-
-func (et EventType) String() string {
-	switch et {
-	case EventUpdate:
-		return "UPDATE"
-	case EventNew:
-		return "NEW"
-	case EventDestroy:
-		return "DESTROY"
-	case EventExpUpdate:
-		return "EXP_UPDATE"
-	case EventExpNew:
-		return "EXP_NEW"
-	case EventExpDestroy:
-		return "EXP_DESTROY"
-	default:
-		return "UNKNOWN"
-	}
-}
 
 // FromNetlinkHeader unmarshals a Conntrack EventType from a Netlink message header.
 // TODO: Support ExpMessageType
