@@ -57,8 +57,8 @@ func (et *EventType) FromNetlinkHeader(nlh netlink.Header) error {
 	return nil
 }
 
-// FromNetlink unmarshals a Netlink message into an Event structure.
-func (e *Event) FromNetlink(nlmsg netlink.Message) error {
+// FromNetlinkMessage unmarshals a Netlink message into an Event structure.
+func (e *Event) FromNetlinkMessage(nlmsg netlink.Message) error {
 
 	var err error
 
@@ -74,8 +74,8 @@ func (e *Event) FromNetlink(nlmsg netlink.Message) error {
 		return err
 	}
 
-	var f Flow
-	err = f.UnmarshalAttributes(attrs)
+	// Unmarshal Netfilter attributes into the event's Flow
+	err = e.Flow.UnmarshalAttributes(attrs)
 	if err != nil {
 		return err
 	}
