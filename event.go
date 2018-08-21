@@ -7,9 +7,6 @@ import (
 	"github.com/ti-mo/netfilter"
 )
 
-// NFSubsysCTAll is a shorthand mask fo all Conntrack subsystems
-const NFSubsysCTAll = netfilter.NFSubsysCTNetlink | netfilter.NFSubsysCTNetlinkExp | netfilter.NFSubsysCTNetlinkTimeout
-
 // Event can hold all information needed to process a Conntrack event in userspace.
 type Event struct {
 	Type EventType
@@ -30,15 +27,15 @@ const (
 )
 
 // FromNetlinkHeader unmarshals a Conntrack EventType from a Netlink message header.
-// TODO: Support ExpMessageType
+// TODO: Support conntrack-exp
 func (et *EventType) FromNetlinkHeader(nlh netlink.Header) error {
 
 	// Get Netfilter Subsystem and MessageType from Netlink header
 	var ht netfilter.HeaderType
 	ht.FromNetlinkHeader(nlh)
 
-	// Fail when the message is not a conntrack or conntrack-exp message
-	if ht.SubsystemID&NFSubsysCTAll == 0 {
+	// Fail when the message is not a conntrack message
+	if ht.SubsystemID != netfilter.NFSubsysCTNetlink {
 		return errNotConntrack
 	}
 
@@ -48,10 +45,9 @@ func (et *EventType) FromNetlinkHeader(nlh netlink.Header) error {
 		// the header's flags are used to distinguish between NEW and UPDATE.
 		if nlh.Flags&(netlink.HeaderFlagsCreate|netlink.HeaderFlagsExcl) != 0 {
 			*et = EventNew
+		} else {
+			*et = EventUpdate
 		}
-
-		*et = EventUpdate
-
 	case CTDelete:
 		*et = EventDestroy
 	default:
