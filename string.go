@@ -1,5 +1,7 @@
 package conntrack
 
+import "fmt"
+
 func (s Status) String() string {
 	names := []string{
 		"EXPECTED",
@@ -36,4 +38,20 @@ func (s Status) String() string {
 	}
 
 	return rs
+}
+
+func (e Event) String() string {
+
+	rt := fmt.Sprintf("[%s] ", e.Type)
+
+	if !e.Flow.Status.SeenReply() {
+		rt += "(Unreplied) "
+	}
+
+	rt += fmt.Sprintf("%d ", e.Flow.TupleOrig.Proto.Protocol)
+
+	rt += fmt.Sprintf("Source: <%v:%v> Dest: <%v:%v>", e.Flow.TupleOrig.IP.SourceAddress, e.Flow.TupleOrig.Proto.SourcePort,
+		e.Flow.TupleOrig.IP.DestinationAddress, e.Flow.TupleOrig.Proto.DestinationPort)
+
+	return rt
 }
