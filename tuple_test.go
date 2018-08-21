@@ -160,7 +160,7 @@ var protoTupleTests = []struct {
 			Type:   0x2,
 			Nested: true,
 		},
-		err: errors.New("error: UnmarshalAttribute - ProtoTyple expects exactly three children"),
+		err: errors.New("error: UnmarshalAttribute - ProtoTuple expects exactly three children"),
 	},
 	{
 		name: "error unmarshal unknown ProtoTupleType",
