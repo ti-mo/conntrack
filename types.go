@@ -6,11 +6,14 @@ import "github.com/ti-mo/netfilter"
 // include/uapi/linux/netfilter/nfnetlink_conntrack.h
 
 // MessageType is a Conntrack-specific representation of a netfilter.MessageType.
-// It is used to specify the type of action to execute on
-// the kernel's state table (get, create, delete, etc.).
+// It is used to specify the type of action to execute on the kernel's state table
+// (get, create, delete, etc.).
 type MessageType netfilter.MessageType
 
-// enum cntl_msg_types
+// enum cntl_msg_types (typo)
+// The first three members are similar to NF_NETLINK_CONNTRACK_*, which is still used
+// in libnetfilter_conntrack. They can still be used to subscribe to Netlink groups with bind(),
+// but subscribing using setsockopt() (like mdlayher/netlink) requires the NFNLGRP_* enum.
 const (
 	CTNew MessageType = iota // IPCTNL_MSG_CT_NEW
 
