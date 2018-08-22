@@ -39,6 +39,15 @@ type Num16 struct {
 	Value uint16
 }
 
+// Filled returns true if the Num16's type is non-zero.
+func (i Num16) Filled() bool {
+	return i.Type != 0
+}
+
+func (i Num16) String() string {
+	return fmt.Sprintf("%d", i.Value)
+}
+
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Num16.
 func (i *Num16) UnmarshalAttribute(attr netfilter.Attribute) error {
 
@@ -59,6 +68,15 @@ type Num32 struct {
 	Value uint32
 }
 
+// Filled returns true if the Num32's type is non-zero.
+func (i Num32) Filled() bool {
+	return i.Type != 0
+}
+
+func (i Num32) String() string {
+	return fmt.Sprintf("%d", i.Value)
+}
+
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Num32.
 func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
 
@@ -76,6 +94,11 @@ func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
 type Bitfield struct {
 	Type AttributeType
 	Data []byte
+}
+
+// Filled returns true if the bitfield's values are non-zero.
+func (b Bitfield) Filled() bool {
+	return len(b.Data) != 0
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Bitfield.
@@ -233,6 +256,11 @@ func (ctr Counter) String() string {
 	return fmt.Sprintf("[%s: %d pkts/%d B]", dir, ctr.Packets, ctr.Bytes)
 }
 
+// Filled returns true if the counter's values are non-zero.
+func (ctr Counter) Filled() bool {
+	return ctr.Bytes != 0 && ctr.Packets != 0
+}
+
 // UnmarshalAttribute unmarshals a nested counter attribute into a Counter structure.
 func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 
@@ -357,6 +385,12 @@ func (seq SequenceAdjust) String() string {
 	}
 
 	return fmt.Sprintf("[dir: %s, pos: %d, before: %d, after: %d]", dir, seq.Position, seq.OffsetBefore, seq.OffsetAfter)
+}
+
+// Filled returns true if the SequenceAdjust's values are non-zero.
+// SeqAdj qualify as filled if one of its members is non-zero.
+func (seq SequenceAdjust) Filled() bool {
+	return seq.Position != 0 || seq.OffsetAfter != 0 || seq.OffsetBefore != 0
 }
 
 // UnmarshalAttribute unmarshals a nested sequence adjustment attribute into a
