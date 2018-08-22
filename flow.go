@@ -50,7 +50,7 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 			if err := f.ID.UnmarshalAttribute(attr); err != nil {
 				return err
 			}
-		// CTA_USE's purpose is shrouded in mystery.
+		// CTA_USE is the flow's kernel-internal refcount.
 		case CTAUse:
 			if err := f.Use.UnmarshalAttribute(attr); err != nil {
 				return err
