@@ -28,7 +28,7 @@ type Flow struct {
 
 	SeqAdjOrig, SeqAdjReply SequenceAdjust
 
-	Labels, LabelsMask Bitfield
+	Labels, LabelsMask Binary
 
 	Mark, MarkMask, Use Num32
 }

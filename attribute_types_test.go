@@ -52,7 +52,7 @@ func TestAttribute_Num32(t *testing.T) {
 }
 
 func TestAttribute_Bitfield(t *testing.T) {
-	bf := Bitfield{}
+	bf := Binary{}
 
 	assert.Nil(t, bf.UnmarshalAttribute(netfilter.Attribute{}))
 }

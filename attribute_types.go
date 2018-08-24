@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -9,22 +8,8 @@ import (
 )
 
 var (
-	errNotImplemented  = errors.New("sorry, not implemented yet")
-	errNested          = errors.New("unexpected Nested attribute")
-	errNotNested       = errors.New("need a Nested attribute to decode this structure")
-	errNeedSingleChild = errors.New("need (at least) 1 child attribute")
-	errNeedChildren    = errors.New("need at least 2 child attributes")
-	errIncorrectSize   = errors.New("binary attribute data has incorrect size")
-
 	ctaCountersOrigReplyCat = fmt.Sprintf("%s/%s", CTACountersOrig, CTACountersReply)
 	ctaSeqAdjOrigReplyCat   = fmt.Sprintf("%s/%s", CTASeqAdjOrig, CTASeqAdjReply)
-)
-
-const (
-	errAttributeWrongType = "attribute type '%d' is not a %s"
-	errAttributeChild     = "child Type '%d' unknown for attribute type %s"
-	errAttributeUnknown   = "attribute type '%d' unknown"
-	errExactChildren      = "need exactly %d child attributes for attribute type %s"
 )
 
 // Attribute is an interface implemented by all Conntrack attribute types.
@@ -90,19 +75,19 @@ func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// Bitfield is an attribute that contains a bitfield of any size.
-type Bitfield struct {
+// Binary is a binary attribute that is backed by a byte slice.
+type Binary struct {
 	Type AttributeType
 	Data []byte
 }
 
 // Filled returns true if the bitfield's values are non-zero.
-func (b Bitfield) Filled() bool {
+func (b Binary) Filled() bool {
 	return len(b.Data) != 0
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Bitfield.
-func (b *Bitfield) UnmarshalAttribute(attr netfilter.Attribute) error {
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a Binary struct.
+func (b *Binary) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	b.Type = AttributeType(attr.Type)
 	b.Data = attr.Data
@@ -209,8 +194,7 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 		return errNotNested
 	}
 
-	// A ProtoInfoTCP has at least 3 members,
-	// TCP_STATE and TCP_FLAGS_ORIG/REPLY
+	// A ProtoInfoTCP has at least 3 members, TCP_STATE and TCP_FLAGS_ORIG/REPLY.
 	if len(attr.Children) < 3 {
 		return errNeedChildren
 	}
@@ -314,7 +298,7 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	// A Timestamp will always have at least a start time
-	if len(attr.Children) < 1 {
+	if len(attr.Children) == 0 {
 		return errNeedSingleChild
 	}
 
@@ -350,7 +334,7 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	// A SecurityContext has at least a name
-	if len(attr.Children) < 1 {
+	if len(attr.Children) == 0 {
 		return errNeedChildren
 	}
 
@@ -407,7 +391,7 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	// A SequenceAdjust message should come with at least 1 child.
-	if len(attr.Children) < 1 {
+	if len(attr.Children) == 0 {
 		return errNeedSingleChild
 	}
 
@@ -429,3 +413,9 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	return nil
 }
+
+// TODO: CTASynProxy
+// TODO: CTAExpect
+// TODO: CTAStats
+// TODO: CTAStatsGlobal
+// TODO: CTAStatsExp

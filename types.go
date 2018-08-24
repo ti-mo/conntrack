@@ -75,6 +75,7 @@ const (
 )
 
 // TupleType describes the type of tuple contained in this container.
+//go:generate stringer -type=TupleType
 type TupleType uint8
 
 // enum ctattr_tuple

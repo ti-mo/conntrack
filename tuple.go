@@ -1,11 +1,22 @@
 package conntrack
 
 import (
-	"errors"
 	"fmt"
 	"net"
 
+	"github.com/pkg/errors"
+
 	"github.com/ti-mo/netfilter"
+)
+
+var (
+	ctaTupleOrigReplyMasterCat = fmt.Sprintf("%s/%s/%s", CTATupleOrig, CTATupleReply, CTATupleMaster)
+)
+
+const (
+	opUnTup   = "Tuple unmarshal"
+	opUnIPTup = "IPTuple unmarshal"
+	opUnPTup  = "ProtoTuple unmarshal"
 )
 
 // A Tuple holds an IPTuple, ProtoTuple and a Zone.
@@ -18,13 +29,19 @@ type Tuple struct {
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Tuple.
 func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
+	if AttributeType(attr.Type) != CTATupleOrig &&
+		AttributeType(attr.Type) != CTATupleReply &&
+		AttributeType(attr.Type) != CTATupleMaster {
+		return errors.Wrap(fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleOrigReplyMasterCat), opUnTup)
+	}
+
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnTup)
 	}
 
 	// A Tuple will always consist of more than one child attribute
 	if len(attr.Children) < 2 {
-		return errNeedChildren
+		return errors.Wrap(errNeedChildren, opUnTup)
 	}
 
 	for _, iattr := range attr.Children {
@@ -47,7 +64,7 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 			}
 			t.Zone = iattr.Uint16()
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown TupleType %v", iattr.Type)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, AttributeType(attr.Type)), opUnTup)
 		}
 	}
 
@@ -68,15 +85,15 @@ type IPTuple struct {
 func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if TupleType(attr.Type) != CTATupleIP {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TUPLE_IP", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATupleIP)
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnIPTup)
 	}
 
 	if len(attr.Children) != 2 {
-		return errors.New("error: UnmarshalAttribute - IPTuple expects exactly two children")
+		return errors.Wrap(errNeedChildren, opUnIPTup)
 	}
 
 	for _, iattr := range attr.Children {
@@ -91,7 +108,7 @@ func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		case CTAIPv4Dst, CTAIPv6Dst:
 			ipt.DestinationAddress = net.IP(iattr.Data)
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown IPTupleType %v", iattr.Type)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, CTATupleIP), opUnIPTup)
 		}
 	}
 
@@ -103,21 +120,28 @@ type ProtoTuple struct {
 	Protocol        uint8
 	SourcePort      uint16
 	DestinationPort uint16
+
+	ICMPv4 bool
+	ICMPv6 bool
+
+	ICMPID   uint16
+	ICMPType uint8
+	ICMPCode uint8
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoTuple.
 func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if TupleType(attr.Type) != CTATupleProto {
-		return fmt.Errorf("error: UnmarshalAttribute - %v is not a CTA_TUPLE_PROTO", attr.Type)
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATupleProto)
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnPTup)
 	}
 
-	if len(attr.Children) != 3 {
-		return errors.New("error: UnmarshalAttribute - ProtoTuple expects exactly three children")
+	if len(attr.Children) == 0 {
+		return errors.Wrap(errNeedSingleChild, opUnPTup)
 	}
 
 	for _, iattr := range attr.Children {
@@ -128,8 +152,20 @@ func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 			pt.SourcePort = iattr.Uint16()
 		case CTAProtoDstPort:
 			pt.DestinationPort = iattr.Uint16()
+		case CTAProtoICMPID:
+			pt.ICMPv4 = true
+			pt.ICMPID = iattr.Uint16()
+		case CTAProtoICMPv6ID:
+			pt.ICMPv6 = true
+			pt.ICMPID = iattr.Uint16()
+		case CTAProtoICMPType:
+		case CTAProtoICMPv6Type:
+			pt.ICMPType = iattr.Data[0]
+		case CTAProtoICMPCode:
+		case CTAProtoICMPv6Code:
+			pt.ICMPCode = iattr.Data[0]
 		default:
-			return fmt.Errorf("error: UnmarshalAttribute - unknown ProtoTupleType %v", iattr.Type)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, CTATupleProto), opUnPTup)
 		}
 	}
 

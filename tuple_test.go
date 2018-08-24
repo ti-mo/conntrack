@@ -1,10 +1,12 @@
 package conntrack
 
 import (
-	"errors"
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/ti-mo/netfilter"
 )
@@ -19,8 +21,12 @@ var (
 	// Attribute with random, unused type 65535
 	attrUnknown = netfilter.Attribute{Type: 0xFFFF}
 	// Nested structure of attributes with random, unused type 65535
-	attrUnknownNested = netfilter.Attribute{Type: 0xFFFF, Nested: true,
+	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(CTATupleOrig), Nested: true,
 		Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
+	// Tuple attribute without Nested flag
+	attrTupleNotNested = netfilter.Attribute{Type: uint16(CTATupleOrig)}
+	// Tuple attribute with Nested flag
+	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(CTATupleOrig), Nested: true, Children: []netfilter.Attribute{attrDefault}}
 )
 
 var ipTupleTests = []struct {
@@ -89,7 +95,7 @@ var ipTupleTests = []struct {
 			Type:   0x1,
 			Nested: false,
 		},
-		err: errNotNested,
+		err: errors.Wrap(errNotNested, opUnIPTup),
 	},
 	{
 		name: "error incorrect amount of children",
@@ -98,7 +104,7 @@ var ipTupleTests = []struct {
 			Nested:   true,
 			Children: []netfilter.Attribute{attrDefault},
 		},
-		err: errors.New("error: UnmarshalAttribute - IPTuple expects exactly two children"),
+		err: errors.Wrap(errNeedChildren, opUnIPTup),
 	},
 	{
 		name: "error child incorrect length",
@@ -119,7 +125,7 @@ var ipTupleTests = []struct {
 	{
 		name: "error iptuple unmarshal with wrong type",
 		nfa:  attrUnknown,
-		err:  errors.New("error: UnmarshalAttribute - 65535 is not a CTA_TUPLE_IP"),
+		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, CTATupleIP),
 	},
 	{
 		name: "error iptuple unmarshal with unknown IPTupleType",
@@ -138,7 +144,7 @@ var ipTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.New("error: UnmarshalAttribute - unknown IPTupleType 65535"),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0xFFFF, CTATupleIP), opUnIPTup),
 	},
 }
 
@@ -151,7 +157,7 @@ var protoTupleTests = []struct {
 	{
 		name: "error unmarshal with wrong type",
 		nfa:  attrUnknown,
-		err:  errors.New("error: UnmarshalAttribute - 65535 is not a CTA_TUPLE_PROTO"),
+		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, CTATupleProto),
 	},
 	{
 		name: "error unmarshal with incorrect amount of children",
@@ -160,7 +166,7 @@ var protoTupleTests = []struct {
 			Type:   0x2,
 			Nested: true,
 		},
-		err: errors.New("error: UnmarshalAttribute - ProtoTuple expects exactly three children"),
+		err: errors.Wrap(errNeedSingleChild, opUnPTup),
 	},
 	{
 		name: "error unmarshal unknown ProtoTupleType",
@@ -174,7 +180,7 @@ var protoTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.New("error: UnmarshalAttribute - unknown ProtoTupleType 65535"),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type, CTATupleProto), opUnPTup),
 	},
 }
 
@@ -254,7 +260,7 @@ var tupleTests = []struct {
 				net.ParseIP("::1"),
 				net.ParseIP("::1"),
 			},
-			Proto: ProtoTuple{6, 32780, 80},
+			Proto: ProtoTuple{6, 32780, 80, false, false, 0, 0, 0},
 			Zone:  0x7B, // Zone 123
 		},
 	},
@@ -293,7 +299,7 @@ var tupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errNotNested,
+		err: errors.Wrap(errNotNested, opUnIPTup),
 	},
 	{
 		name: "error returned from prototuple unmarshal",
@@ -310,22 +316,27 @@ var tupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errNotNested,
+		err: errors.Wrap(errNotNested, opUnPTup),
 	},
 	{
-		name: "error nested flag not set on attribute",
+		name: "error wrong tuple type",
 		nfa:  attrDefault,
-		err:  errNotNested,
+		err:  errors.Wrap(fmt.Errorf(errAttributeWrongType, attrDefault.Type, ctaTupleOrigReplyMasterCat), opUnTup),
+	},
+	{
+		name: "error nested flag not set on tuple",
+		nfa:  attrTupleNotNested,
+		err:  errors.Wrap(errNotNested, opUnTup),
 	},
 	{
 		name: "error too few children",
-		nfa:  attrOneChild,
-		err:  errNeedChildren,
+		nfa:  attrTupleNestedOneChild,
+		err:  errors.Wrap(errNeedChildren, opUnTup),
 	},
 	{
-		name: "error unknown tuple type",
-		nfa:  attrUnknownNested,
-		err:  errors.New("error: UnmarshalAttribute - unknown TupleType 65535"),
+		name: "error unknown nested tuple type",
+		nfa:  attrTupleUnknownNested,
+		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type, CTATupleOrig), opUnTup),
 	},
 }
 
