@@ -31,6 +31,8 @@ type Flow struct {
 	Labels, LabelsMask Binary
 
 	Mark, MarkMask, Use Num32
+
+	SynProxy SynProxy
 }
 
 // UnmarshalAttributes calls unmarshal operations on a list of netfilter.Attributes.
@@ -143,9 +145,11 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 			if err := f.SeqAdjReply.UnmarshalAttribute(attr); err != nil {
 				return err
 			}
-		// TODO: Implement CTASynProxy
+		// CTA_SYNPROXY are the connection's SYN proxy parameters
 		case CTASynProxy:
-			return errNotImplemented
+			if err := f.SynProxy.UnmarshalAttribute(attr); err != nil {
+				return err
+			}
 		default:
 			return fmt.Errorf(errAttributeUnknown, at)
 		}

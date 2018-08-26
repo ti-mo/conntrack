@@ -414,7 +414,50 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// TODO: CTASynProxy
+// SynProxy represents the SYN proxy parameters of a Conntrack flow.
+type SynProxy struct {
+	ISN   uint32
+	ITS   uint32
+	TSOff uint32
+}
+
+// Filled returns true if the SynProxy's values are non-zero.
+// SynProxy qualifies as filled if one of its members is non-zero.
+func (sp SynProxy) Filled() bool {
+	return sp.ISN != 0 || sp.ITS != 0 || sp.TSOff != 0
+}
+
+// UnmarshalAttribute unmarshals a SYN proxy attribute into a SynProxy structure.
+func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if AttributeType(attr.Type) != CTASynProxy {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTASynProxy)
+	}
+
+	if !attr.Nested {
+		return errNotNested
+	}
+
+	if len(attr.Children) == 0 {
+		return errNeedSingleChild
+	}
+
+	for _, iattr := range attr.Children {
+		switch SynProxyType(iattr.Type) {
+		case CTASynProxyISN:
+			sp.ISN = iattr.Uint32()
+		case CTASynProxyITS:
+			sp.ITS = iattr.Uint32()
+		case CTASynProxyTSOff:
+			sp.TSOff = iattr.Uint32()
+		default:
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTASynProxy)
+		}
+	}
+
+	return nil
+}
+
 // TODO: CTAExpect
 // TODO: CTAStats
 // TODO: CTAStatsGlobal
