@@ -319,11 +319,6 @@ var tupleTests = []struct {
 		err: errors.Wrap(errNotNested, opUnPTup),
 	},
 	{
-		name: "error wrong tuple type",
-		nfa:  attrDefault,
-		err:  errors.Wrap(fmt.Errorf(errAttributeWrongType, attrDefault.Type, ctaTupleOrigReplyMasterCat), opUnTup),
-	},
-	{
 		name: "error nested flag not set on tuple",
 		nfa:  attrTupleNotNested,
 		err:  errors.Wrap(errNotNested, opUnTup),
