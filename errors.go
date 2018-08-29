@@ -12,6 +12,7 @@ var (
 	errNeedSingleChild  = errors.New("need (at least) 1 child attribute")
 	errNeedChildren     = errors.New("need (at least) 2 child attributes")
 	errIncorrectSize    = errors.New("binary attribute data has incorrect size")
+	errReusedEvent      = errors.New("cannot to unmarshal into existing event")
 )
 
 const (
