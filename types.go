@@ -238,6 +238,7 @@ const (
 )
 
 // ExpectType describes the type of expect attribute in this container.
+//go:generate stringer -type=ExpectType
 type ExpectType uint8
 
 // enum ctattr_expect
