@@ -9,10 +9,6 @@ import (
 	"github.com/ti-mo/netfilter"
 )
 
-var (
-	ctaTupleOrigReplyMasterCat = fmt.Sprintf("%s/%s/%s", CTATupleOrig, CTATupleReply, CTATupleMaster)
-)
-
 const (
 	opUnTup   = "Tuple unmarshal"
 	opUnIPTup = "IPTuple unmarshal"
@@ -29,17 +25,10 @@ type Tuple struct {
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Tuple.
 func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTATupleOrig &&
-		AttributeType(attr.Type) != CTATupleReply &&
-		AttributeType(attr.Type) != CTATupleMaster {
-		return errors.Wrap(fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleOrigReplyMasterCat), opUnTup)
-	}
-
 	if !attr.Nested {
 		return errors.Wrap(errNotNested, opUnTup)
 	}
 
-	// A Tuple will always consist of more than one child attribute
 	if len(attr.Children) < 2 {
 		return errors.Wrap(errNeedChildren, opUnTup)
 	}
