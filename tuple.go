@@ -3,6 +3,7 @@ package conntrack
 import (
 	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/pkg/errors"
 
@@ -20,6 +21,15 @@ type Tuple struct {
 	IP    IPTuple
 	Proto ProtoTuple
 	Zone  uint16
+}
+
+// String returns a string representation of a Tuple.
+func (t Tuple) String() string {
+	return fmt.Sprintf("<%s, Src: %s, Dst: %s>",
+		ProtoLookup(t.Proto.Protocol),
+		net.JoinHostPort(t.IP.SourceAddress.String(), strconv.Itoa(int(t.Proto.SourcePort))),
+		net.JoinHostPort(t.IP.DestinationAddress.String(), strconv.Itoa(int(t.Proto.DestinationPort))),
+	)
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Tuple.

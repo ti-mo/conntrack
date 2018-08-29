@@ -35,7 +35,7 @@ type Flow struct {
 	SynProxy SynProxy
 }
 
-// UnmarshalAttributes calls unmarshal operations on a list of netfilter.Attributes.
+// UnmarshalAttributes unmarshals a list of netfilter.Attributes into a Flow structure.
 func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 
 	for _, attr := range attrs {
