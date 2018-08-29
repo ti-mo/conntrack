@@ -56,19 +56,19 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 
 	// Start numWorkers amount of worker goroutines
 	for id := uint8(0); id < numWorkers; id++ {
-		go c.listenWorker(id, evChan, errChan)
+		go c.eventWorker(id, evChan, errChan)
 	}
 
 	return errChan, nil
 }
 
-// listenWorker is a worker function that decodes Netlink messages into Events.
-func (c *Conn) listenWorker(workerID uint8, evChan chan<- Event, errChan chan<- error) {
+// eventWorker is a worker function that decodes Netlink messages into Events.
+func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- error) {
 
 	// Recover from panics in Receive when closing the Conn
 	defer func() {
 		if r := recover(); r != nil {
-			errChan <- fmt.Errorf(errRecover, "listenWorker", r)
+			errChan <- fmt.Errorf(errRecover, "eventWorker", r)
 			return
 		}
 	}()
@@ -92,6 +92,7 @@ func (c *Conn) listenWorker(workerID uint8, evChan chan<- Event, errChan chan<- 
 		}
 
 		// Decode event and send on channel
+		ev = *new(Event)
 		err := ev.FromNetlinkMessage(recv[0])
 		if err != nil {
 			errChan <- err
