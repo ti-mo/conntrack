@@ -4,9 +4,9 @@ package conntrack
 
 import "strconv"
 
-const _EventType_name = "EventNewEventUpdateEventDestroyEventExpNewEventExpDestroy"
+const _EventType_name = "EventUnknownEventNewEventUpdateEventDestroyEventExpNewEventExpDestroy"
 
-var _EventType_index = [...]uint8{0, 8, 19, 31, 42, 57}
+var _EventType_index = [...]uint8{0, 12, 20, 31, 43, 54, 69}
 
 func (i EventType) String() string {
 	if i >= EventType(len(_EventType_index)-1) {

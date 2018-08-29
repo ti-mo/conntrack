@@ -458,7 +458,6 @@ func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// TODO: CTAExpect
 // TODO: CTAStats
 // TODO: CTAStatsGlobal
 // TODO: CTAStatsExp
