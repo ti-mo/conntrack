@@ -12,6 +12,7 @@ func ProtoLookup(p uint8) string {
 		2:   "igmp",
 		6:   "tcp",
 		17:  "udp",
+		33:  "dccp",
 		47:  "gre",
 		58:  "ipv6-icmp",
 		94:  "ipip",

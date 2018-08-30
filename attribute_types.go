@@ -126,19 +126,22 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// The ProtoInfo structure holds one of three types:
-// a ProtoInfoTCP in the TCP field,
-// a ProtoInfoDCCP in the DCCP field, or
-// a ProtoInfoSCTP in the SCTP field.
+// The ProtoInfo structure holds a pointer to
+// one of ProtoInfoTCP, ProtoInfoDCCP or ProtoInfoSCTP.
 type ProtoInfo struct {
-	TCP ProtoInfoTCP
-	// TODO: DCCP *ProtoInfoDCCP
-	// TODO: SCTP *ProtoInfoSCTP
+	TCP  *ProtoInfoTCP
+	DCCP *ProtoInfoDCCP
+	SCTP *ProtoInfoSCTP
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfo structure.
 // one of three ProtoInfo types; TCP, DCCP or SCTP.
 func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	// Make sure we don't unmarshal into the same ProtoInfo twice.
+	if pi.TCP != nil || pi.DCCP != nil || pi.SCTP != nil {
+		return errReusedProtoInfo
+	}
 
 	if AttributeType(attr.Type) != CTAProtoInfo {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfo)
@@ -161,11 +164,19 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 		if err := (&tpi).UnmarshalAttribute(iattr); err != nil {
 			return err
 		}
-		pi.TCP = tpi
+		pi.TCP = &tpi
 	case CTAProtoInfoDCCP:
-		return errNotImplemented
+		var dpi ProtoInfoDCCP
+		if err := (&dpi).UnmarshalAttribute(iattr); err != nil {
+			return err
+		}
+		pi.DCCP = &dpi
 	case CTAProtoInfoSCTP:
-		return errNotImplemented
+		var spi ProtoInfoSCTP
+		if err := (&spi).UnmarshalAttribute(iattr); err != nil {
+			return err
+		}
+		pi.SCTP = &spi
 	default:
 		return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfo)
 	}
@@ -213,6 +224,80 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 			tpi.ReplyFlags = iattr.Uint16()
 		default:
 			return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfoTCP)
+		}
+	}
+
+	return nil
+}
+
+// ProtoInfoDCCP describes the state of a DCCP connection.
+type ProtoInfoDCCP struct {
+	State, Role  uint8
+	HandshakeSeq uint64
+}
+
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoTCP.
+func (dpi *ProtoInfoDCCP) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if ProtoInfoType(attr.Type) != CTAProtoInfoDCCP {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoDCCP)
+	}
+
+	if !attr.Nested {
+		return errNotNested
+	}
+
+	if len(attr.Children) == 0 {
+		return errNeedChildren
+	}
+
+	for _, iattr := range attr.Children {
+		switch ProtoInfoDCCPType(iattr.Type) {
+		case CTAProtoInfoDCCPState:
+			dpi.State = iattr.Data[0]
+		case CTAProtoInfoDCCPRole:
+			dpi.Role = iattr.Data[0]
+		case CTAProtoInfoDCCPHandshakeSeq:
+			dpi.HandshakeSeq = iattr.Uint64()
+		default:
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfoDCCP)
+		}
+	}
+
+	return nil
+}
+
+// ProtoInfoSCTP describes the state of an SCTP connection.
+type ProtoInfoSCTP struct {
+	State                   uint8
+	VTagOriginal, VTagReply uint32
+}
+
+// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoSCTP.
+func (spi *ProtoInfoSCTP) UnmarshalAttribute(attr netfilter.Attribute) error {
+
+	if ProtoInfoType(attr.Type) != CTAProtoInfoSCTP {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoSCTP)
+	}
+
+	if !attr.Nested {
+		return errNotNested
+	}
+
+	if len(attr.Children) == 0 {
+		return errNeedChildren
+	}
+
+	for _, iattr := range attr.Children {
+		switch ProtoInfoSCTPType(iattr.Type) {
+		case CTAProtoInfoSCTPState:
+			spi.State = iattr.Data[0]
+		case CTAProtoInfoSCTPVTagOriginal:
+			spi.VTagOriginal = iattr.Uint32()
+		case CTAProtoInfoSCTPVtagReply:
+			spi.VTagReply = iattr.Uint32()
+		default:
+			return fmt.Errorf(errAttributeChild, iattr.Type, CTAProtoInfoSCTP)
 		}
 	}
 

@@ -141,6 +141,11 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 		},
 	}
 
+	// Full ProtoInfoTCP unmarshal
+	var tpi ProtoInfo
+	assert.Nil(t, tpi.UnmarshalAttribute(nfaInfoTCP))
+
+	// Error during ProtoInfoTCP unmarshal
 	nfaInfoTCPError := netfilter.Attribute{
 		Type:   uint16(CTAProtoInfo),
 		Nested: true,
@@ -152,32 +157,94 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 		},
 	}
 
-	assert.Nil(t, pi.UnmarshalAttribute(nfaInfoTCP))
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoTCPError), errNotNested.Error())
 
-	// Not implemented
+	// DCCP protocol info
 	nfaInfoDCCP := netfilter.Attribute{
 		Type:   uint16(CTAProtoInfo),
 		Nested: true,
 		Children: []netfilter.Attribute{
 			{
-				Type: uint16(CTAProtoInfoDCCP),
+				Type:   uint16(CTAProtoInfoDCCP),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{
+						Type: uint16(CTAProtoInfoDCCPState),
+						Data: []byte{1},
+					},
+					{
+						Type: uint16(CTAProtoInfoDCCPRole),
+						Data: []byte{2},
+					},
+					{
+						Type: uint16(CTAProtoInfoDCCPHandshakeSeq),
+						Data: []byte{3, 4, 5, 6, 7, 8, 9, 10},
+					},
+				},
 			},
 		},
 	}
+
+	// Error during ProtoInfoDCCP unmarshal
+	nfaInfoDCCPError := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfo),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type:   uint16(CTAProtoInfoDCCP),
+				Nested: false,
+			},
+		},
+	}
+
+	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoDCCPError), errNotNested.Error())
+
+	// Full ProtoInfoDCCP unmarshal
+	var dpi ProtoInfo
+	assert.Nil(t, dpi.UnmarshalAttribute(nfaInfoDCCP))
 
 	nfaInfoSCTP := netfilter.Attribute{
 		Type:   uint16(CTAProtoInfo),
 		Nested: true,
 		Children: []netfilter.Attribute{
 			{
-				Type: uint16(CTAProtoInfoSCTP),
+				Type:   uint16(CTAProtoInfoSCTP),
+				Nested: true,
+				Children: []netfilter.Attribute{
+					{
+						Type: uint16(CTAProtoInfoSCTPState),
+						Data: []byte{1},
+					},
+					{
+						Type: uint16(CTAProtoInfoSCTPVTagOriginal),
+						Data: []byte{2, 3, 4, 5},
+					},
+					{
+						Type: uint16(CTAProtoInfoSCTPVtagReply),
+						Data: []byte{6, 7, 8, 9},
+					},
+				},
 			},
 		},
 	}
 
-	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoDCCP), errNotImplemented.Error())
-	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoSCTP), errNotImplemented.Error())
+	// Full ProtoInfoSCTP unmarshal
+	var spi ProtoInfo
+	assert.Nil(t, spi.UnmarshalAttribute(nfaInfoSCTP))
+
+	// Error during ProtoInfoSCTP unmarshal
+	nfaInfoSCTPError := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfo),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type:   uint16(CTAProtoInfoSCTP),
+				Nested: false,
+			},
+		},
+	}
+
+	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoSCTPError), errNotNested.Error())
 
 	// Unknown child attribute type
 	nfaUnknownChild := netfilter.Attribute{
@@ -191,6 +258,10 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	}
 
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaUnknownChild), fmt.Sprintf(errAttributeChild, CTAProtoInfoUnspec, CTAProtoInfo))
+
+	// Attempt to unmarshal into re-used ProtoInfo
+	pi.TCP = &ProtoInfoTCP{}
+	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoTCP), errReusedProtoInfo.Error())
 }
 
 func TestProtoInfoType_String(t *testing.T) {
@@ -253,6 +324,96 @@ func TestAttribute_ProtoInfoTCP(t *testing.T) {
 
 	assert.Nil(t, pit.UnmarshalAttribute(nfaProtoInfoTCP))
 	assert.EqualError(t, pit.UnmarshalAttribute(nfaProtoInfoTCPError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, CTAProtoInfoTCP))
+
+}
+
+func TestAttribute_ProtoInfoDCCP(t *testing.T) {
+
+	pid := ProtoInfoDCCP{}
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCP)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCP), Nested: true}
+
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAProtoInfoDCCP))
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaNestedNoChildren), errNeedChildren.Error())
+
+	nfaProtoInfoDCCP := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoDCCP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTAProtoInfoDCCPState),
+				Data: []byte{1},
+			},
+			{
+				Type: uint16(CTAProtoInfoDCCPRole),
+				Data: []byte{2},
+			},
+			{
+				Type: uint16(CTAProtoInfoDCCPHandshakeSeq),
+				Data: []byte{3, 4, 5, 6, 7, 8, 9, 10},
+			},
+		},
+	}
+
+	nfaProtoInfoDCCPError := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoDCCP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTAProtoInfoDCCPUnspec)},
+			{Type: uint16(CTAProtoInfoDCCPUnspec)},
+			{Type: uint16(CTAProtoInfoDCCPUnspec)},
+		},
+	}
+
+	assert.Nil(t, pid.UnmarshalAttribute(nfaProtoInfoDCCP))
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaProtoInfoDCCPError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, CTAProtoInfoDCCP))
+
+}
+
+func TestAttribute_ProtoInfoSCTP(t *testing.T) {
+
+	pid := ProtoInfoSCTP{}
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTP)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTP), Nested: true}
+
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAProtoInfoSCTP))
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaNestedNoChildren), errNeedChildren.Error())
+
+	nfaProtoInfoSCTP := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoSCTP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTAProtoInfoSCTPState),
+				Data: []byte{1},
+			},
+			{
+				Type: uint16(CTAProtoInfoSCTPVTagOriginal),
+				Data: []byte{2, 3, 4, 5},
+			},
+			{
+				Type: uint16(CTAProtoInfoSCTPVtagReply),
+				Data: []byte{6, 7, 8, 9},
+			},
+		},
+	}
+
+	nfaProtoInfoSCTPError := netfilter.Attribute{
+		Type:   uint16(CTAProtoInfoSCTP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTAProtoInfoSCTPUnspec)},
+			{Type: uint16(CTAProtoInfoSCTPUnspec)},
+			{Type: uint16(CTAProtoInfoSCTPUnspec)},
+		},
+	}
+
+	assert.Nil(t, pid.UnmarshalAttribute(nfaProtoInfoSCTP))
+	assert.EqualError(t, pid.UnmarshalAttribute(nfaProtoInfoSCTPError), fmt.Sprintf(errAttributeChild, CTAProtoInfoTCPUnspec, CTAProtoInfoSCTP))
 
 }
 

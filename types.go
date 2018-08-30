@@ -193,12 +193,12 @@ type ProtoInfoDCCPType uint8
 
 // enum ctattr_protoinfo_dccp
 const (
-	CTAPProtoInfoDCCPUnspec ProtoInfoDCCPType = iota // CTA_PROTOINFO_DCCP_UNSPEC
+	CTAProtoInfoDCCPUnspec ProtoInfoDCCPType = iota // CTA_PROTOINFO_DCCP_UNSPEC
 
-	CTAPProtoInfoDCCPState        // CTA_PROTOINFO_DCCP_STATE
-	CTAPProtoInfoDCCPRole         // CTA_PROTOINFO_DCCP_ROLE
-	CTAPProtoInfoDCCPHandshakeSeq // CTA_PROTOINFO_DCCP_HANDSHAKE_SEQ
-	CTAPProtoInfoDCCPPad          // CTA_PROTOINFO_DCCP_PAD
+	CTAProtoInfoDCCPState        // CTA_PROTOINFO_DCCP_STATE
+	CTAProtoInfoDCCPRole         // CTA_PROTOINFO_DCCP_ROLE
+	CTAProtoInfoDCCPHandshakeSeq // CTA_PROTOINFO_DCCP_HANDSHAKE_SEQ
+	CTAProtoInfoDCCPPad          // CTA_PROTOINFO_DCCP_PAD (never sent by kernel)
 )
 
 // ProtoInfoSCTPType describes the kind of SCTP protocol info attribute in this container.
