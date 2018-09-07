@@ -66,6 +66,7 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- error) {
 
 	// Recover from panics in Receive when closing the Conn
+	// TODO: Fix in mdlayher/netlink.
 	defer func() {
 		if r := recover(); r != nil {
 			errChan <- fmt.Errorf(errRecover, "eventWorker", r)
@@ -128,4 +129,72 @@ func (c *Conn) Dump() ([]Flow, error) {
 	}
 
 	return FlowsFromNetlink(nlm)
+}
+
+// Flush empties the Conntrack table.
+func (c *Conn) Flush() error {
+
+	req := netlink.Message{
+		Header: netlink.Header{
+			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+		},
+	}
+
+	netfilter.HeaderType{
+		SubsystemID: netfilter.NFSubsysCTNetlink,
+		MessageType: netfilter.MessageType(CTDelete),
+	}.ToNetlinkHeader(&req.Header)
+
+	netfilter.Header{
+		Family: netfilter.ProtoInet,
+	}.ToNetlinkMessage(&req)
+
+	_, err := c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Create creates a new Conntrack entry.
+func (c *Conn) Create(f Flow) error {
+
+	// Conntrack create requires timeout to be set
+	if !f.Timeout.Filled() {
+		return errNeedTimeout
+	}
+
+	req := netlink.Message{
+		Header: netlink.Header{
+			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
+				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+		},
+	}
+
+	netfilter.HeaderType{
+		SubsystemID: netfilter.NFSubsysCTNetlink,
+		MessageType: netfilter.MessageType(CTNew),
+	}.ToNetlinkHeader(&req.Header)
+
+	netfilter.Header{
+		Family: netfilter.ProtoFamily(2),
+	}.ToNetlinkMessage(&req)
+
+	attrs, err := f.MarshalAttributes()
+	if err != nil {
+		return err
+	}
+
+	err = netfilter.AttributesToNetlink(attrs, &req)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
