@@ -46,6 +46,23 @@ func (i *Num16) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a Num16 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
+// it is used as Attribute's type; otherwise, the Num16's Type field is used.
+func (i Num16) MarshalAttribute(t AttributeType) netfilter.Attribute {
+
+	var nfa netfilter.Attribute
+
+	if t == 0 {
+		nfa.Type = uint16(i.Type)
+	} else {
+		nfa.Type = uint16(t)
+	}
+
+	nfa.PutUint16(i.Value)
+
+	return nfa
+}
+
 // Num32 is a generic numeric attribute. It is represented by a uint32
 // and holds its own AttributeType.
 type Num32 struct {
@@ -75,6 +92,23 @@ func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a Num32 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
+// it is used as Attribute's type; otherwise, the Num32's Type field is used.
+func (i Num32) MarshalAttribute(t AttributeType) netfilter.Attribute {
+
+	var nfa netfilter.Attribute
+
+	if t == 0 {
+		nfa.Type = uint16(i.Type)
+	} else {
+		nfa.Type = uint16(t)
+	}
+
+	nfa.PutUint32(i.Value)
+
+	return nfa
+}
+
 // Binary is a binary attribute that is backed by a byte slice.
 type Binary struct {
 	Type AttributeType
@@ -99,6 +133,11 @@ func (b *Binary) UnmarshalAttribute(attr netfilter.Attribute) error {
 type Helper struct {
 	Name string
 	Info []byte
+}
+
+// Filled returns true if the Helper's values are non-zero.
+func (hlp Helper) Filled() bool {
+	return hlp.Name != "" || len(hlp.Info) > 0
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Helper.
@@ -126,12 +165,35 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a Helper into a netfilter.Attribute.
+func (hlp Helper) MarshalAttribute() netfilter.Attribute {
+
+	var nfa netfilter.Attribute
+	nfa.Type = uint16(CTAHelp)
+	nfa.Nested = true
+
+	nfa.Children = []netfilter.Attribute{
+		{Type: uint16(CTAHelpName), Data: []byte(hlp.Name)},
+	}
+
+	if len(hlp.Info) > 0 {
+		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(CTAHelpInfo), Data: hlp.Info})
+	}
+
+	return nfa
+}
+
 // The ProtoInfo structure holds a pointer to
 // one of ProtoInfoTCP, ProtoInfoDCCP or ProtoInfoSCTP.
 type ProtoInfo struct {
 	TCP  *ProtoInfoTCP
 	DCCP *ProtoInfoDCCP
 	SCTP *ProtoInfoSCTP
+}
+
+// Filled returns true if one of the ProtoInfo's values are non-zero.
+func (pi ProtoInfo) Filled() bool {
+	return pi.TCP != nil || pi.DCCP != nil || pi.SCTP != nil
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfo structure.
@@ -184,6 +246,24 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a ProtoInfo into a netfilter.Attribute.
+func (pi ProtoInfo) MarshalAttribute() (netfilter.Attribute, error) {
+
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true}
+
+	if pi.TCP != nil {
+		nfa.Children[0] = pi.TCP.MarshalAttribute()
+	} else if pi.DCCP != nil {
+		nfa.Children[0] = pi.DCCP.MarshalAttribute()
+	} else if pi.SCTP != nil {
+		nfa.Children[0] = pi.SCTP.MarshalAttribute()
+	} else {
+		return netfilter.Attribute{}, errEmptyProtoInfo
+	}
+
+	return nfa, nil
+}
+
 // A ProtoInfoTCP describes the state of a TCP session in both directions.
 // It contains state, window scale and TCP flags.
 type ProtoInfoTCP struct {
@@ -230,6 +310,29 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a ProtoInfoTCP into a netfilter.Attribute.
+func (tpi ProtoInfoTCP) MarshalAttribute() netfilter.Attribute {
+
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoTCP), Nested: true, Children: make([]netfilter.Attribute, 3, 5)}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAProtoInfoTCPState), Data: []byte{tpi.State}}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTAProtoInfoTCPWScaleOriginal), Data: []byte{tpi.OriginalWindowScale}}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTAProtoInfoTCPWScaleReply), Data: []byte{tpi.ReplyWindowScale}}
+
+	// Only append TCP flags to attributes when either of them is non-zero.
+	if tpi.OriginalFlags != 0 || tpi.ReplyFlags != 0 {
+
+		of := netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsOriginal)}
+		of.PutUint16(tpi.OriginalFlags)
+		rf := netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsReply)}
+		rf.PutUint16(tpi.ReplyFlags)
+
+		nfa.Children = append(nfa.Children, of, rf)
+	}
+
+	return nfa
+}
+
 // ProtoInfoDCCP describes the state of a DCCP connection.
 type ProtoInfoDCCP struct {
 	State, Role  uint8
@@ -265,6 +368,21 @@ func (dpi *ProtoInfoDCCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	return nil
+}
+
+// MarshalAttribute marshals a ProtoInfoDCCP into a netfilter.Attribute.
+func (dpi ProtoInfoDCCP) MarshalAttribute() netfilter.Attribute {
+
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCP), Nested: true, Children: make([]netfilter.Attribute, 3)}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPState), Data: []byte{dpi.State}}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPRole), Data: []byte{dpi.Role}}
+
+	hs := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPHandshakeSeq)}
+	hs.PutUint64(dpi.HandshakeSeq)
+	nfa.Children[2] = hs
+
+	return nfa
 }
 
 // ProtoInfoSCTP describes the state of an SCTP connection.
@@ -304,8 +422,25 @@ func (spi *ProtoInfoSCTP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a ProtoInfoSCTP into a netfilter.Attribute.
+func (spi ProtoInfoSCTP) MarshalAttribute() netfilter.Attribute {
+
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTP), Nested: true, Children: make([]netfilter.Attribute, 3)}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPState), Data: []byte{spi.State}}
+
+	vto := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVTagOriginal)}
+	vtr := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVtagReply)}
+
+	vto.PutUint32(spi.VTagOriginal)
+	vtr.PutUint32(spi.VTagReply)
+
+	return nfa
+}
+
 // A Counter holds a pair of counters that represent packets and bytes sent over
 // a Conntrack connection. Direction is true when it's a reply counter.
+// This attribute cannot be changed on a connection and thus cannot be marshaled.
 type Counter struct {
 
 	// true means it's a reply counter,
@@ -366,6 +501,7 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 // A Timestamp represents the start and end time of a flow.
 // The timer resolution in the kernel is in nanosecond-epoch.
+// This attribute cannot be changed on a connection and thus cannot be marshaled.
 type Timestamp struct {
 	Start time.Time
 	Stop  time.Time
@@ -403,6 +539,7 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 // A Security structure holds the security info belonging to a connection.
 // Kernel uses this to store and match SELinux context name.
+// This attribute cannot be changed on a connection and thus cannot be marshaled.
 type Security struct {
 	Name string
 }
@@ -499,6 +636,28 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a SequenceAdjust into a netfilter.Attribute.
+func (seq SequenceAdjust) MarshalAttribute() netfilter.Attribute {
+
+	// Set orig/reply AttributeType
+	at := CTASeqAdjOrig
+	if seq.Direction {
+		at = CTASeqAdjReply
+	}
+
+	nfa := netfilter.Attribute{Type: uint16(at), Nested: true, Children: make([]netfilter.Attribute, 3)}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASeqAdjCorrectionPos)}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetBefore)}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetAfter)}
+
+	nfa.Children[0].PutUint32(seq.Position)
+	nfa.Children[1].PutUint32(seq.OffsetBefore)
+	nfa.Children[2].PutUint32(seq.OffsetAfter)
+
+	return nfa
+}
+
 // SynProxy represents the SYN proxy parameters of a Conntrack flow.
 type SynProxy struct {
 	ISN   uint32
@@ -541,6 +700,22 @@ func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	return nil
+}
+
+// MarshalAttribute marshals a SynProxy into a netfilter.Attribute.
+func (sp SynProxy) MarshalAttribute() netfilter.Attribute {
+
+	nfa := netfilter.Attribute{Type: uint16(CTASynProxy), Nested: true, Children: make([]netfilter.Attribute, 3)}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASynProxyISN)}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASynProxyITS)}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASynProxyTSOff)}
+
+	nfa.Children[0].PutUint32(sp.ISN)
+	nfa.Children[1].PutUint32(sp.ITS)
+	nfa.Children[2].PutUint32(sp.TSOff)
+
+	return nfa
 }
 
 // TODO: CTAStats

@@ -32,6 +32,19 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
+// MarshalAttribute marshals a Status into a netfilter.Attribute.
+func (s Status) MarshalAttribute() netfilter.Attribute {
+
+	nfa := netfilter.Attribute{
+		Type: uint16(CTAStatus),
+		Data: make([]byte, 4),
+	}
+
+	binary.BigEndian.PutUint32(nfa.Data, s.value)
+
+	return nfa
+}
+
 // Expected indicates that this connection is an expected connection,
 // created by Conntrack helpers based on the state of another, related connection.
 func (s Status) Expected() bool {
