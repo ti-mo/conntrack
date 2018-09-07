@@ -594,9 +594,9 @@ func (seq SequenceAdjust) String() string {
 }
 
 // Filled returns true if the SequenceAdjust's values are non-zero.
-// SeqAdj qualify as filled if one of its members is non-zero.
+// SeqAdj qualify as filled if all of its members are non-zero.
 func (seq SequenceAdjust) Filled() bool {
-	return seq.Position != 0 || seq.OffsetAfter != 0 || seq.OffsetBefore != 0
+	return seq.Position != 0 && seq.OffsetAfter != 0 && seq.OffsetBefore != 0
 }
 
 // UnmarshalAttribute unmarshals a nested sequence adjustment attribute into a
