@@ -2,6 +2,7 @@ package conntrack
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/mdlayher/netlink"
 
@@ -154,6 +155,104 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
+
+	return nil
+}
+
+// MarshalAttributes marshals a Flow object into a list of netfilter.Attributes.
+func (f Flow) MarshalAttributes() ([]netfilter.Attribute, error) {
+
+	// Each connection sent to the kernel should have at least an original and reply tuple.
+	if !f.TupleOrig.Filled() || !f.TupleReply.Filled() {
+		return nil, errNeedTuples
+	}
+
+	attrs := make([]netfilter.Attribute, 2, 12)
+
+	to, err := f.TupleOrig.MarshalAttribute(CTATupleOrig)
+	if err != nil {
+		return nil, err
+	}
+	attrs[0] = to
+
+	tr, err := f.TupleReply.MarshalAttribute(CTATupleReply)
+	if err != nil {
+		return nil, err
+	}
+	attrs[1] = tr
+
+	// Optional attributes appended to the list when filled
+	if f.Timeout.Filled() {
+		attrs = append(attrs, f.Timeout.MarshalAttribute(CTATimeout))
+	}
+
+	if f.Status.value != 0 {
+		attrs = append(attrs, f.Status.MarshalAttribute())
+	}
+
+	if f.Mark.Filled() {
+		attrs = append(attrs, f.Mark.MarshalAttribute(CTAMark))
+	}
+
+	if f.Zone.Filled() {
+		attrs = append(attrs, f.Zone.MarshalAttribute(CTAZone))
+	}
+
+	if f.ProtoInfo.Filled() {
+		pi, err := f.ProtoInfo.MarshalAttribute()
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, pi)
+	}
+
+	if f.Helper.Filled() {
+		attrs = append(attrs, f.Helper.MarshalAttribute())
+	}
+
+	if f.TupleMaster.Filled() {
+		tm, err := f.TupleMaster.MarshalAttribute(CTATupleMaster)
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, tm)
+	}
+
+	if f.SeqAdjOrig.Filled() {
+		attrs = append(attrs, f.SeqAdjOrig.MarshalAttribute())
+	}
+
+	if f.SeqAdjReply.Filled() {
+		attrs = append(attrs, f.SeqAdjReply.MarshalAttribute())
+	}
+
+	if f.SynProxy.Filled() {
+		attrs = append(attrs, f.SynProxy.MarshalAttribute())
+	}
+
+	return attrs, nil
+}
+
+// Build sets up a Flow object with the minimum necessary attributes
+// to create a Conntrack entry in the kernel.
+func (f *Flow) Build(proto uint8, status uint32, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
+
+	f.Status = Status{value: status}
+
+	f.Timeout = Num32{Type: CTATimeout, Value: timeout}
+
+	f.TupleOrig.IP.SourceAddress = srcAddr
+	f.TupleOrig.IP.DestinationAddress = destAddr
+	f.TupleOrig.Proto.SourcePort = srcPort
+	f.TupleOrig.Proto.DestinationPort = destPort
+	f.TupleOrig.Proto.Protocol = proto
+
+	// Set up TupleReply with the function parameters inverted
+	f.TupleReply.IP.SourceAddress = destAddr
+	f.TupleReply.IP.DestinationAddress = srcAddr
+	f.TupleReply.Proto.SourcePort = destPort
+	f.TupleReply.Proto.DestinationPort = srcPort
+	f.TupleReply.Proto.Protocol = proto
 
 	return nil
 }
