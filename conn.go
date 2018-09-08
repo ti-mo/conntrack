@@ -65,15 +65,6 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 // eventWorker is a worker function that decodes Netlink messages into Events.
 func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- error) {
 
-	// Recover from panics in Receive when closing the Conn
-	// TODO: Fix in mdlayher/netlink.
-	defer func() {
-		if r := recover(); r != nil {
-			errChan <- fmt.Errorf(errRecover, "eventWorker", r)
-			return
-		}
-	}()
-
 	var err error
 	var recv []netlink.Message
 	var ev Event
@@ -160,7 +151,7 @@ func (c *Conn) Flush() error {
 // Create creates a new Conntrack entry.
 func (c *Conn) Create(f Flow) error {
 
-	// Conntrack create requires timeout to be set
+	// Conntrack create requires timeout to be set.
 	if !f.Timeout.Filled() {
 		return errNeedTimeout
 	}
@@ -178,7 +169,7 @@ func (c *Conn) Create(f Flow) error {
 	}.ToNetlinkHeader(&req.Header)
 
 	netfilter.Header{
-		Family: netfilter.ProtoFamily(2),
+		Family: netfilter.ProtoFamily(2), //TODO: Family constant
 	}.ToNetlinkMessage(&req)
 
 	attrs, err := f.MarshalAttributes()

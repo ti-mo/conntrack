@@ -247,7 +247,7 @@ func (f *Flow) Build(proto uint8, status uint32, srcAddr, destAddr net.IP, srcPo
 	f.TupleOrig.Proto.DestinationPort = destPort
 	f.TupleOrig.Proto.Protocol = proto
 
-	// Set up TupleReply with the function parameters inverted
+	// Set up TupleReply with source and destination inverted
 	f.TupleReply.IP.SourceAddress = destAddr
 	f.TupleReply.IP.DestinationAddress = srcAddr
 	f.TupleReply.Proto.SourcePort = destPort
