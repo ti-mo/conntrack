@@ -14,10 +14,10 @@ type Conn struct {
 	conn *netfilter.Conn
 }
 
-// Open opens a new Netfilter Netlink connection and returns it
+// Dial opens a new Netfilter Netlink connection and returns it
 // wrapped in a Conn structure that implements the Conntrack API.
-func Open() (*Conn, error) {
-	c, err := netfilter.Open()
+func Dial(config *netlink.Config) (*Conn, error) {
+	c, err := netfilter.Dial(config)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +43,7 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 	}
 
 	// Prevent Listen() from being called twice on the same Conn.
+	// This is checked again in JoinGroups(), but an early failure is preferred.
 	if c.conn.IsMulticast() {
 		return nil, errConnHasListeners
 	}
