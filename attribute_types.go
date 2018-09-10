@@ -26,7 +26,7 @@ type Num16 struct {
 
 // Filled returns true if the Num16's type is non-zero.
 func (i Num16) Filled() bool {
-	return i.Type != 0
+	return i.Type != 0 || i.Value != 0
 }
 
 func (i Num16) String() string {
@@ -72,7 +72,7 @@ type Num32 struct {
 
 // Filled returns true if the Num32's type is non-zero.
 func (i Num32) Filled() bool {
-	return i.Type != 0
+	return i.Type != 0 || i.Value != 0
 }
 
 func (i Num32) String() string {
@@ -117,7 +117,7 @@ type Binary struct {
 
 // Filled returns true if the bitfield's values are non-zero.
 func (b Binary) Filled() bool {
-	return len(b.Data) != 0
+	return b.Type != 0 || len(b.Data) != 0
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Binary struct.
@@ -137,7 +137,7 @@ type Helper struct {
 
 // Filled returns true if the Helper's values are non-zero.
 func (hlp Helper) Filled() bool {
-	return hlp.Name != "" || len(hlp.Info) > 0
+	return hlp.Name != "" || len(hlp.Info) != 0
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Helper.
@@ -168,13 +168,9 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 // MarshalAttribute marshals a Helper into a netfilter.Attribute.
 func (hlp Helper) MarshalAttribute() netfilter.Attribute {
 
-	var nfa netfilter.Attribute
-	nfa.Type = uint16(CTAHelp)
-	nfa.Nested = true
+	nfa := netfilter.Attribute{Type: uint16(CTAHelp), Nested: true, Children: make([]netfilter.Attribute, 1, 2)}
 
-	nfa.Children = []netfilter.Attribute{
-		{Type: uint16(CTAHelpName), Data: []byte(hlp.Name)},
-	}
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAHelpName), Data: []byte(hlp.Name)}
 
 	if len(hlp.Info) > 0 {
 		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(CTAHelpInfo), Data: hlp.Info})
@@ -201,7 +197,7 @@ func (pi ProtoInfo) Filled() bool {
 func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	// Make sure we don't unmarshal into the same ProtoInfo twice.
-	if pi.TCP != nil || pi.DCCP != nil || pi.SCTP != nil {
+	if pi.Filled() {
 		return errReusedProtoInfo
 	}
 
@@ -249,7 +245,7 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 // MarshalAttribute marshals a ProtoInfo into a netfilter.Attribute.
 func (pi ProtoInfo) MarshalAttribute() (netfilter.Attribute, error) {
 
-	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true}
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true, Children: make([]netfilter.Attribute, 1)}
 
 	if pi.TCP != nil {
 		nfa.Children[0] = pi.TCP.MarshalAttribute()
@@ -321,13 +317,9 @@ func (tpi ProtoInfoTCP) MarshalAttribute() netfilter.Attribute {
 
 	// Only append TCP flags to attributes when either of them is non-zero.
 	if tpi.OriginalFlags != 0 || tpi.ReplyFlags != 0 {
-
-		of := netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsOriginal)}
-		of.PutUint16(tpi.OriginalFlags)
-		rf := netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsReply)}
-		rf.PutUint16(tpi.ReplyFlags)
-
-		nfa.Children = append(nfa.Children, of, rf)
+		nfa.Children = append(nfa.Children,
+			netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsOriginal), Data: netfilter.Uint16Bytes(tpi.OriginalFlags)},
+			netfilter.Attribute{Type: uint16(CTAProtoInfoTCPFlagsReply), Data: netfilter.Uint16Bytes(tpi.ReplyFlags)})
 	}
 
 	return nfa
@@ -377,10 +369,7 @@ func (dpi ProtoInfoDCCP) MarshalAttribute() netfilter.Attribute {
 
 	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPState), Data: []byte{dpi.State}}
 	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPRole), Data: []byte{dpi.Role}}
-
-	hs := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPHandshakeSeq)}
-	hs.PutUint64(dpi.HandshakeSeq)
-	nfa.Children[2] = hs
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTAProtoInfoDCCPHandshakeSeq), Data: netfilter.Uint64Bytes(dpi.HandshakeSeq)}
 
 	return nfa
 }
@@ -428,12 +417,8 @@ func (spi ProtoInfoSCTP) MarshalAttribute() netfilter.Attribute {
 	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTP), Nested: true, Children: make([]netfilter.Attribute, 3)}
 
 	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPState), Data: []byte{spi.State}}
-
-	vto := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVTagOriginal)}
-	vtr := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVtagReply)}
-
-	vto.PutUint32(spi.VTagOriginal)
-	vtr.PutUint32(spi.VTagReply)
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVTagOriginal), Data: netfilter.Uint32Bytes(spi.VTagOriginal)}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTAProtoInfoSCTPVtagReply), Data: netfilter.Uint32Bytes(spi.VTagReply)}
 
 	return nfa
 }
@@ -647,13 +632,9 @@ func (seq SequenceAdjust) MarshalAttribute() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(at), Nested: true, Children: make([]netfilter.Attribute, 3)}
 
-	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASeqAdjCorrectionPos)}
-	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetBefore)}
-	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetAfter)}
-
-	nfa.Children[0].PutUint32(seq.Position)
-	nfa.Children[1].PutUint32(seq.OffsetBefore)
-	nfa.Children[2].PutUint32(seq.OffsetAfter)
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASeqAdjCorrectionPos), Data: netfilter.Uint32Bytes(seq.Position)}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetBefore), Data: netfilter.Uint32Bytes(seq.OffsetBefore)}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASeqAdjOffsetAfter), Data: netfilter.Uint32Bytes(seq.OffsetAfter)}
 
 	return nfa
 }
@@ -707,13 +688,9 @@ func (sp SynProxy) MarshalAttribute() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTASynProxy), Nested: true, Children: make([]netfilter.Attribute, 3)}
 
-	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASynProxyISN)}
-	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASynProxyITS)}
-	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASynProxyTSOff)}
-
-	nfa.Children[0].PutUint32(sp.ISN)
-	nfa.Children[1].PutUint32(sp.ITS)
-	nfa.Children[2].PutUint32(sp.TSOff)
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTASynProxyISN), Data: netfilter.Uint32Bytes(sp.ISN)}
+	nfa.Children[1] = netfilter.Attribute{Type: uint16(CTASynProxyITS), Data: netfilter.Uint32Bytes(sp.ITS)}
+	nfa.Children[2] = netfilter.Attribute{Type: uint16(CTASynProxyTSOff), Data: netfilter.Uint32Bytes(sp.TSOff)}
 
 	return nfa
 }

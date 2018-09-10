@@ -26,6 +26,9 @@ func TestAttributeType_String(t *testing.T) {
 func TestAttribute_Num16(t *testing.T) {
 
 	n16 := Num16{}
+	assert.Equal(t, false, n16.Filled())
+	assert.Equal(t, true, Num16{Type: 1}.Filled())
+	assert.Equal(t, true, Num16{Value: 1}.Filled())
 
 	assert.EqualError(t, n16.UnmarshalAttribute(nfaTooShort), errIncorrectSize.Error())
 
@@ -33,13 +36,21 @@ func TestAttribute_Num16(t *testing.T) {
 		Type: uint16(CTAZone),
 		Data: []byte{0, 1},
 	}
-
 	assert.Nil(t, n16.UnmarshalAttribute(nfa))
+	assert.Equal(t, n16.String(), "1")
+
+	// Marshal with zero type (auto-fill from struct)
+	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAZone), Data: []byte{0, 1}}, n16.MarshalAttribute(0))
+	// Marshal with explicit type parameter
+	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAZone), Data: []byte{0, 1}}, n16.MarshalAttribute(CTAZone))
 }
 
 func TestAttribute_Num32(t *testing.T) {
 
 	n32 := Num32{}
+	assert.Equal(t, false, n32.Filled())
+	assert.Equal(t, true, Num32{Type: 1}.Filled())
+	assert.Equal(t, true, Num32{Value: 1}.Filled())
 
 	assert.EqualError(t, n32.UnmarshalAttribute(nfaTooShort), errIncorrectSize.Error())
 
@@ -47,19 +58,30 @@ func TestAttribute_Num32(t *testing.T) {
 		Type: uint16(CTAMark),
 		Data: []byte{0, 1, 2, 3},
 	}
-
 	assert.Nil(t, n32.UnmarshalAttribute(nfa))
+	assert.Equal(t, n32.String(), "66051")
+
+	// Marshal with zero type (auto-fill from struct)
+	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAMark), Data: []byte{0, 1, 2, 3}}, n32.MarshalAttribute(0))
+	// Marshal with explicit type parameter
+	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAMark), Data: []byte{0, 1, 2, 3}}, n32.MarshalAttribute(CTAMark))
 }
 
 func TestAttribute_Bitfield(t *testing.T) {
-	bf := Binary{}
+	bin := Binary{}
+	assert.Equal(t, false, bin.Filled())
+	assert.Equal(t, true, Binary{Type: 1}.Filled())
+	assert.Equal(t, true, Binary{Data: []byte{1}}.Filled())
 
-	assert.Nil(t, bf.UnmarshalAttribute(netfilter.Attribute{}))
+	assert.Nil(t, bin.UnmarshalAttribute(netfilter.Attribute{}))
 }
 
 func TestAttribute_Helper(t *testing.T) {
 
 	hlp := Helper{}
+	assert.Equal(t, false, hlp.Filled())
+	assert.Equal(t, true, Helper{Info: []byte{1}}.Filled())
+	assert.Equal(t, true, Helper{Name: "1"}.Filled())
 
 	nfaNotNested := netfilter.Attribute{Type: uint16(CTAHelp)}
 
@@ -80,8 +102,9 @@ func TestAttribute_Helper(t *testing.T) {
 			},
 		},
 	}
-
 	assert.Nil(t, hlp.UnmarshalAttribute(nfaNameInfo))
+
+	assert.EqualValues(t, hlp.MarshalAttribute(), nfaNameInfo)
 
 	nfaUnknownChild := netfilter.Attribute{
 		Type:   uint16(CTAHelp),
@@ -92,13 +115,16 @@ func TestAttribute_Helper(t *testing.T) {
 			},
 		},
 	}
-
 	assert.EqualError(t, hlp.UnmarshalAttribute(nfaUnknownChild), fmt.Sprintf(errAttributeChild, CTAHelpUnspec, CTAHelp))
 }
 
 func TestAttribute_ProtoInfo(t *testing.T) {
 
 	pi := ProtoInfo{}
+	assert.Equal(t, false, pi.Filled())
+	assert.Equal(t, true, ProtoInfo{DCCP: &ProtoInfoDCCP{}}.Filled())
+	assert.Equal(t, true, ProtoInfo{TCP: &ProtoInfoTCP{}}.Filled())
+	assert.Equal(t, true, ProtoInfo{SCTP: &ProtoInfoSCTP{}}.Filled())
 
 	nfaNotNested := netfilter.Attribute{Type: uint16(CTAProtoInfo)}
 	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true}
@@ -106,6 +132,10 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAProtoInfo))
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaNestedNoChildren), errNeedSingleChild.Error())
+
+	// Attempt marshal of empty ProtoInfo
+	_, err := pi.MarshalAttribute()
+	assert.EqualError(t, err, errEmptyProtoInfo.Error())
 
 	// TCP protocol info
 	nfaInfoTCP := netfilter.Attribute{
@@ -121,19 +151,19 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 						Data: []byte{1},
 					},
 					{
-						Type: uint16(CTAProtoInfoTCPFlagsOriginal),
-						Data: []byte{0, 2},
-					},
-					{
-						Type: uint16(CTAProtoInfoTCPFlagsReply),
-						Data: []byte{0, 3},
-					},
-					{
 						Type: uint16(CTAProtoInfoTCPWScaleOriginal),
-						Data: []byte{0, 4},
+						Data: []byte{2},
 					},
 					{
 						Type: uint16(CTAProtoInfoTCPWScaleReply),
+						Data: []byte{3},
+					},
+					{
+						Type: uint16(CTAProtoInfoTCPFlagsOriginal),
+						Data: []byte{0, 4},
+					},
+					{
+						Type: uint16(CTAProtoInfoTCPFlagsReply),
 						Data: []byte{0, 5},
 					},
 				},
@@ -144,6 +174,11 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	// Full ProtoInfoTCP unmarshal
 	var tpi ProtoInfo
 	assert.Nil(t, tpi.UnmarshalAttribute(nfaInfoTCP))
+
+	// Re-marshal into netfilter Attribute
+	mtpi, err := tpi.MarshalAttribute()
+	assert.Nil(t, err)
+	assert.EqualValues(t, nfaInfoTCP, mtpi)
 
 	// Error during ProtoInfoTCP unmarshal
 	nfaInfoTCPError := netfilter.Attribute{
@@ -203,6 +238,11 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	var dpi ProtoInfo
 	assert.Nil(t, dpi.UnmarshalAttribute(nfaInfoDCCP))
 
+	// Re-marshal into netfilter Attribute
+	mdpi, err := dpi.MarshalAttribute()
+	assert.Nil(t, err)
+	assert.EqualValues(t, nfaInfoDCCP, mdpi)
+
 	nfaInfoSCTP := netfilter.Attribute{
 		Type:   uint16(CTAProtoInfo),
 		Nested: true,
@@ -231,6 +271,11 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	// Full ProtoInfoSCTP unmarshal
 	var spi ProtoInfo
 	assert.Nil(t, spi.UnmarshalAttribute(nfaInfoSCTP))
+
+	// Re-marshal into netfilter Attribute
+	mspi, err := spi.MarshalAttribute()
+	assert.Nil(t, err)
+	assert.EqualValues(t, nfaInfoSCTP, mspi)
 
 	// Error during ProtoInfoSCTP unmarshal
 	nfaInfoSCTPError := netfilter.Attribute{
@@ -421,6 +466,9 @@ func TestAttribute_Counters(t *testing.T) {
 
 	ctr := Counter{}
 
+	assert.Equal(t, false, ctr.Filled())
+	assert.Equal(t, true, Counter{Packets: 1, Bytes: 1}.Filled())
+
 	// Counters can be unmarshaled from both CTACountersOrig and CTACountersReply
 	attrTypes := []AttributeType{CTACountersOrig, CTACountersReply}
 
@@ -547,6 +595,9 @@ func TestAttribute_SeqAdj(t *testing.T) {
 
 	sa := SequenceAdjust{}
 
+	assert.Equal(t, false, sa.Filled())
+	assert.Equal(t, true, SequenceAdjust{Position: 1, OffsetBefore: 1, OffsetAfter: 1}.Filled())
+
 	// SequenceAdjust can be unmarshaled from both CTASeqAdjOrig and CTASeqAdjReply
 	attrTypes := []AttributeType{CTASeqAdjOrig, CTASeqAdjReply}
 
@@ -590,6 +641,8 @@ func TestAttribute_SeqAdj(t *testing.T) {
 			assert.Nil(t, sa.UnmarshalAttribute(nfaSeqAdj))
 			assert.EqualError(t, sa.UnmarshalAttribute(nfaSeqAdjError), fmt.Sprintf(errAttributeChild, CTASeqAdjUnspec, ctaSeqAdjOrigReplyCat))
 
+			assert.EqualValues(t, nfaSeqAdj, sa.MarshalAttribute())
+
 			if at == CTASeqAdjOrig {
 				assert.Equal(t, "[dir: orig, pos: 0, before: 0, after: 0]", sa.String())
 			} else {
@@ -597,4 +650,52 @@ func TestAttribute_SeqAdj(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAttribute_SynProxy(t *testing.T) {
+
+	sp := SynProxy{}
+	assert.Equal(t, false, sp.Filled())
+	assert.Equal(t, true, SynProxy{ISN: 1}.Filled())
+	assert.Equal(t, true, SynProxy{ITS: 1}.Filled())
+	assert.Equal(t, true, SynProxy{TSOff: 1}.Filled())
+
+	nfaNotNested := netfilter.Attribute{Type: uint16(CTASynProxy)}
+	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTASynProxy), Nested: true}
+
+	assert.EqualError(t, sp.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTASynProxy))
+	assert.EqualError(t, sp.UnmarshalAttribute(nfaNotNested), errNotNested.Error())
+	assert.EqualError(t, sp.UnmarshalAttribute(nfaNestedNoChildren), errNeedSingleChild.Error())
+
+	nfaSynProxy := netfilter.Attribute{
+		Type:   uint16(CTASynProxy),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				Type: uint16(CTASynProxyISN),
+				Data: []byte{0, 1, 2, 3},
+			},
+			{
+				Type: uint16(CTASynProxyITS),
+				Data: []byte{4, 5, 6, 7},
+			},
+			{
+				Type: uint16(CTASynProxyTSOff),
+				Data: []byte{8, 9, 10, 11},
+			},
+		},
+	}
+
+	nfaSynProxyError := netfilter.Attribute{
+		Type:   uint16(CTASynProxy),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{Type: uint16(CTASynProxyUnspec)},
+		},
+	}
+
+	assert.Nil(t, sp.UnmarshalAttribute(nfaSynProxy))
+	assert.EqualError(t, sp.UnmarshalAttribute(nfaSynProxyError), fmt.Sprintf(errAttributeChild, CTASynProxyUnspec, CTASynProxy))
+
+	assert.EqualValues(t, nfaSynProxy, sp.MarshalAttribute())
 }
