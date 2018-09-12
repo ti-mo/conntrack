@@ -416,3 +416,10 @@ func TestTuple_UnmarshalAttribute(t *testing.T) {
 		})
 	}
 }
+
+func TestTupleType_String(t *testing.T) {
+
+	if TupleType(255).String() == "" {
+		t.Fatal("TupleType string representation empty - did you run `go generate`?")
+	}
+}

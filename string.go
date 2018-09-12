@@ -90,14 +90,18 @@ func (e Event) String() string {
 
 		// Mark/mask
 		mark := "<No Mark>"
-		if e.Flow.Mark.Value != 0 && e.Flow.MarkMask.Value != 0 {
+		if e.Flow.Mark.Filled() && e.Flow.MarkMask.Filled() {
 			mark = fmt.Sprintf("Mark: <%#x/%#x>", e.Flow.Mark.Value, e.Flow.MarkMask.Value)
 		}
 
 		// SeqAdj
-		seqadj := "<No SeqAdj>"
-		if e.Flow.SeqAdjOrig.Filled() || e.Flow.SeqAdjReply.Filled() {
-			seqadj = fmt.Sprintf("SeqAdj: %s %s", e.Flow.SeqAdjOrig, e.Flow.SeqAdjReply)
+		seqadjo := "<No SeqAdjOrig>"
+		if e.Flow.SeqAdjOrig.Filled() {
+			seqadjo = fmt.Sprintf("SeqAdjOrig: %s", e.Flow.SeqAdjOrig)
+		}
+		seqadjr := "<No SeqAdjReply>"
+		if e.Flow.SeqAdjReply.Filled() {
+			seqadjr = fmt.Sprintf("SeqAdjReply: %s", e.Flow.SeqAdjReply)
 		}
 
 		// Security Context
@@ -106,19 +110,20 @@ func (e Event) String() string {
 			secctx = fmt.Sprintf("SecCtx: %s", e.Flow.SecurityContext.Name)
 		}
 
-		return fmt.Sprintf("[%s]%s Timeout: %d, %s, Zone %d, %s, %s, %s, %s, %s",
+		return fmt.Sprintf("[%s]%s Timeout: %d, %s, Zone %d, %s, %s, %s, %s, %s, %s",
 			e.Type, status,
 			e.Flow.Timeout.Value,
 			e.Flow.TupleOrig,
 			e.Flow.Zone.Value,
-			acct, labels, mark, seqadj, secctx)
+			acct, labels, mark,
+			seqadjo, seqadjr, secctx)
 
 	} else if e.Expect != nil {
 
-		return fmt.Sprintf("[%s] Timeout: %d, Master: %s, Tuple: %s, Mask: %s, Zone: %d, Helper: %s, Class: %#x",
+		return fmt.Sprintf("[%s] Timeout: %d, Master: %s, Tuple: %s, Mask: %s, Zone: %d, Helper: '%s', Class: %#x",
 			e.Type, e.Expect.Timeout.Value,
 			e.Expect.TupleMaster, e.Expect.Tuple, e.Expect.Mask,
-			e.Expect.Zone, e.Expect.HelpName, e.Expect.Class,
+			e.Expect.Zone.Value, e.Expect.HelpName, e.Expect.Class.Value,
 		)
 
 	} else {
