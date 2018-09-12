@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"github.com/ti-mo/netfilter"
@@ -27,22 +26,17 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 		return errIncorrectSize
 	}
 
-	s.value = binary.BigEndian.Uint32(attr.Data)
+	s.value = attr.Uint32()
 
 	return nil
 }
 
 // MarshalAttribute marshals a Status into a netfilter.Attribute.
 func (s Status) MarshalAttribute() netfilter.Attribute {
-
-	nfa := netfilter.Attribute{
+	return netfilter.Attribute{
 		Type: uint16(CTAStatus),
-		Data: make([]byte, 4),
+		Data: netfilter.Uint32Bytes(s.value),
 	}
-
-	binary.BigEndian.PutUint32(nfa.Data, s.value)
-
-	return nfa
 }
 
 // Expected indicates that this connection is an expected connection,
