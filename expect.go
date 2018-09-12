@@ -10,15 +10,15 @@ import (
 // Expect represents an 'expected' conenction, created by Conntrack/IPTables helpers.
 // Active connections created by helpers are shown by the conntrack tooling as 'RELATED'.
 type Expect struct {
-	ID, Timeout Num32
+	ID, Timeout uint32
 
 	TupleMaster, Tuple, Mask Tuple
 
-	Zone Num16
+	Zone uint16
 
 	HelpName, Function string
 
-	Flags, Class Num32
+	Flags, Class uint32
 
 	NAT ExpectNAT
 }
@@ -80,27 +80,17 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 				return err
 			}
 		case CTAExpectTimeout:
-			if err := ex.Timeout.UnmarshalAttribute(attr); err != nil {
-				return err
-			}
+			ex.Timeout = attr.Uint32()
 		case CTAExpectID:
-			if err := ex.ID.UnmarshalAttribute(attr); err != nil {
-				return err
-			}
+			ex.ID = attr.Uint32()
 		case CTAExpectHelpName:
 			ex.HelpName = string(attr.Data)
 		case CTAExpectZone:
-			if err := ex.Zone.UnmarshalAttribute(attr); err != nil {
-				return err
-			}
+			ex.Zone = attr.Uint16()
 		case CTAExpectFlags:
-			if err := ex.Flags.UnmarshalAttribute(attr); err != nil {
-				return err
-			}
+			ex.Flags = attr.Uint32()
 		case CTAExpectClass:
-			if err := ex.Class.UnmarshalAttribute(attr); err != nil {
-				return err
-			}
+			ex.Class = attr.Uint32()
 		case CTAExpectNAT:
 			if err := ex.NAT.unmarshal(attr); err != nil {
 				return err

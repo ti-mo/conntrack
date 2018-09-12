@@ -49,11 +49,11 @@ func TestEventString(t *testing.T) {
 	ef.Flow.CountersOrig.Bytes = 42
 	ef.Flow.CountersOrig.Packets = 1
 
-	ef.Flow.Labels = conntrack.Binary{Data: []byte{0xf0, 0xf0}}
-	ef.Flow.LabelsMask = conntrack.Binary{Data: []byte{0xff, 0xff}}
+	ef.Flow.Labels = []byte{0xf0, 0xf0}
+	ef.Flow.LabelsMask = []byte{0xff, 0xff}
 
-	ef.Flow.Mark = conntrack.Num32{Value: 0xf000baaa}
-	ef.Flow.MarkMask = conntrack.Num32{Value: 0xffffffff}
+	ef.Flow.Mark = 0xf000baaa
+	ef.Flow.MarkMask = 0xffffffff
 
 	ef.Flow.SeqAdjOrig = conntrack.SequenceAdjust{OffsetBefore: 80, OffsetAfter: 747811, Position: 42}
 	ef.Flow.SeqAdjReply = conntrack.SequenceAdjust{OffsetBefore: 123, OffsetAfter: 456, Position: 889999}
@@ -65,16 +65,16 @@ func TestEventString(t *testing.T) {
 		ef.String())
 
 	// Event with Expect
-	ee := conntrack.Event{Expect: &conntrack.Expect{}}
+	ee := conntrack.Event{Type: conntrack.EventExpDestroy, Expect: &conntrack.Expect{}}
 
 	ee.Expect.TupleMaster = tpl
 	ee.Expect.Tuple = tpl
 	ee.Expect.Mask = tpl
 
 	ee.Expect.HelpName = "ftp"
-	ee.Expect.Class = conntrack.Num32{Value: 0x42}
+	ee.Expect.Class = 0x42
 
 	assert.Equal(t,
-		"[EventUnknown] Timeout: 0, Master: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Tuple: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Mask: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Zone: 0, Helper: 'ftp', Class: 0x42",
+		"[EventExpDestroy] Timeout: 0, Master: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Tuple: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Mask: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Zone: 0, Helper: 'ftp', Class: 0x42",
 		ee.String())
 }

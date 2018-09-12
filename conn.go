@@ -149,7 +149,7 @@ func (c *Conn) Flush() error {
 func (c *Conn) Create(f Flow) error {
 
 	// Conntrack create requires timeout to be set.
-	if !f.Timeout.Filled() {
+	if f.Timeout == 0 {
 		return errNeedTimeout
 	}
 

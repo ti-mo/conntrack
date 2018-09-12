@@ -84,14 +84,14 @@ func (e Event) String() string {
 
 		// Labels/mask
 		labels := "<No Labels>"
-		if e.Flow.Labels.Filled() && e.Flow.LabelsMask.Filled() {
-			labels = fmt.Sprintf("Label: <%#x/%#x>", e.Flow.Labels.Data, e.Flow.LabelsMask.Data)
+		if len(e.Flow.Labels) != 0 && len(e.Flow.LabelsMask) != 0 {
+			labels = fmt.Sprintf("Label: <%#x/%#x>", e.Flow.Labels, e.Flow.LabelsMask)
 		}
 
 		// Mark/mask
 		mark := "<No Mark>"
-		if e.Flow.Mark.Filled() && e.Flow.MarkMask.Filled() {
-			mark = fmt.Sprintf("Mark: <%#x/%#x>", e.Flow.Mark.Value, e.Flow.MarkMask.Value)
+		if e.Flow.Mark != 0 && e.Flow.MarkMask != 0 {
+			mark = fmt.Sprintf("Mark: <%#x/%#x>", e.Flow.Mark, e.Flow.MarkMask)
 		}
 
 		// SeqAdj
@@ -112,18 +112,18 @@ func (e Event) String() string {
 
 		return fmt.Sprintf("[%s]%s Timeout: %d, %s, Zone %d, %s, %s, %s, %s, %s, %s",
 			e.Type, status,
-			e.Flow.Timeout.Value,
+			e.Flow.Timeout,
 			e.Flow.TupleOrig,
-			e.Flow.Zone.Value,
+			e.Flow.Zone,
 			acct, labels, mark,
 			seqadjo, seqadjr, secctx)
 
 	} else if e.Expect != nil {
 
 		return fmt.Sprintf("[%s] Timeout: %d, Master: %s, Tuple: %s, Mask: %s, Zone: %d, Helper: '%s', Class: %#x",
-			e.Type, e.Expect.Timeout.Value,
+			e.Type, e.Expect.Timeout,
 			e.Expect.TupleMaster, e.Expect.Tuple, e.Expect.Mask,
-			e.Expect.Zone.Value, e.Expect.HelpName, e.Expect.Class.Value,
+			e.Expect.Zone, e.Expect.HelpName, e.Expect.Class,
 		)
 
 	} else {
