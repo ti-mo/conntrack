@@ -66,8 +66,7 @@ var ipTupleTests = []struct {
 			Children: []netfilter.Attribute{
 				{
 					// CTA_IP_V6_SRC
-					Length: 0x14,
-					Type:   0x3,
+					Type: 0x3,
 					Data: []byte{0x0, 0x1, 0x0, 0x1,
 						0x0, 0x2, 0x0, 0x2,
 						0x0, 0x3, 0x0, 0x3,
@@ -75,8 +74,7 @@ var ipTupleTests = []struct {
 				},
 				{
 					// CTA_IP_V6_DST
-					Length: 0x14,
-					Type:   0x4,
+					Type: 0x4,
 					Data: []byte{0x0, 0x4, 0x0, 0x4,
 						0x0, 0x3, 0x0, 0x3,
 						0x0, 0x2, 0x0, 0x2,
@@ -204,8 +202,7 @@ var tupleTests = []struct {
 					Children: []netfilter.Attribute{
 						{
 							// CTA_IP_V6_SRC
-							Length: 0x14,
-							Type:   0x3,
+							Type: 0x3,
 							Data: []byte{0x0, 0x0, 0x0, 0x0,
 								0x0, 0x0, 0x0, 0x0,
 								0x0, 0x0, 0x0, 0x0,
@@ -213,8 +210,7 @@ var tupleTests = []struct {
 						},
 						{
 							// CTA_IP_V6_DST
-							Length: 0x14,
-							Type:   0x4,
+							Type: 0x4,
 							Data: []byte{0x0, 0x0, 0x0, 0x0,
 								0x0, 0x0, 0x0, 0x0,
 								0x0, 0x0, 0x0, 0x0,
@@ -229,29 +225,25 @@ var tupleTests = []struct {
 					Children: []netfilter.Attribute{
 						{
 							// CTA_PROTO_NUM
-							Length: 0x5,
-							Type:   0x1,
-							Data:   []byte{0x6},
+							Type: 0x1,
+							Data: []byte{0x6},
 						},
 						{
 							// CTA_PROTO_SRC_PORT
-							Length: 0x6,
-							Type:   0x2,
-							Data:   []byte{0x80, 0xc},
+							Type: 0x2,
+							Data: []byte{0x80, 0xc},
 						},
 						{
 							// CTA_PROTO_DST_PORT
-							Length: 0x6,
-							Type:   0x3,
-							Data:   []byte{0x0, 0x50},
+							Type: 0x3,
+							Data: []byte{0x0, 0x50},
 						},
 					},
 				},
 				{
 					// CTA_TUPLE_ZONE
-					Length: 0x5,
-					Type:   0x3,
-					Data:   []byte{0x00, 0x7B}, // Zone 123
+					Type: 0x3,
+					Data: []byte{0x00, 0x7B}, // Zone 123
 				},
 			},
 		},
@@ -273,9 +265,8 @@ var tupleTests = []struct {
 			Children: []netfilter.Attribute{
 				{
 					// CTA_TUPLE_ZONE
-					Length: 0x8,
-					Type:   0x3,
-					Data:   []byte{0xAB, 0xCD, 0xEF, 0x01},
+					Type: 0x3,
+					Data: []byte{0xAB, 0xCD, 0xEF, 0x01},
 				},
 				// Order-dependent, this is to pad the length of Children.
 				// Test should error before this attribute is parsed.

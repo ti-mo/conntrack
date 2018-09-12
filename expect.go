@@ -29,8 +29,8 @@ type ExpectNAT struct {
 	Tuple     Tuple
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into an ExpectNAT.
-func (en *ExpectNAT) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into an ExpectNAT.
+func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 
 	if ExpectType(attr.Type) != CTAExpectNAT {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAExpectNAT)
@@ -60,8 +60,8 @@ func (en *ExpectNAT) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// UnmarshalAttributes unmarshals a list of netfilter.Attributes into an Expect structure.
-func (ex *Expect) UnmarshalAttributes(attrs []netfilter.Attribute) error {
+// unmarshal unmarshals a list of netfilter.Attributes into an Expect structure.
+func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 
 	for _, attr := range attrs {
 
@@ -102,7 +102,7 @@ func (ex *Expect) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 				return err
 			}
 		case CTAExpectNAT:
-			if err := ex.NAT.UnmarshalAttribute(attr); err != nil {
+			if err := ex.NAT.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTAExpectFN:
@@ -115,22 +115,22 @@ func (ex *Expect) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 	return nil
 }
 
-// ExpectsFromNetlink unmarshals a list of expected connectinos from a list of Netlink messages.
+// unmarshalExpects unmarshals a list of expected connectinos from a list of Netlink messages.
 // This method can be used to parse the result of a dump or get query.
-func ExpectsFromNetlink(nlm []netlink.Message) ([]Expect, error) {
+func unmarshalExpects(nlm []netlink.Message) ([]Expect, error) {
 
 	// Pre-allocate to avoid extending output slice on every op
 	out := make([]Expect, len(nlm))
 
 	for i := 0; i < len(nlm); i++ {
 
-		attrs, err := netfilter.AttributesFromNetlink(nlm[i])
+		_, attrs, err := netfilter.UnmarshalNetlink(nlm[i])
 		if err != nil {
 			return nil, err
 		}
 
 		var ex Expect
-		err = ex.UnmarshalAttributes(attrs)
+		err = ex.unmarshal(attrs)
 		if err != nil {
 			return nil, err
 		}

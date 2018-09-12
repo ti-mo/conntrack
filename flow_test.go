@@ -7,11 +7,10 @@ import (
 )
 
 var (
-	corpus = []struct {
-		name   string
-		attrs  []netfilter.Attribute
-		filter AttributeFilter
-		err    error
+	corpusFlow = []struct {
+		name  string
+		attrs []netfilter.Attribute
+		err   error
 	}{
 		{
 			name: "scalar and simple binary attributes",
@@ -247,9 +246,9 @@ func TestAttribute_UnmarshalFlow(t *testing.T) {
 
 	var f Flow
 
-	for _, tt := range corpus {
+	for _, tt := range corpusFlow {
 		t.Run(tt.name, func(t *testing.T) {
-			err := f.UnmarshalAttributes(tt.attrs)
+			err := f.unmarshal(tt.attrs)
 			if err != nil {
 				t.Fatalf("unmarshal error: %v", err)
 			}
@@ -257,19 +256,21 @@ func TestAttribute_UnmarshalFlow(t *testing.T) {
 	}
 }
 
-func BenchmarkAttribute_UnmarshalAttribute(b *testing.B) {
+func BenchmarkAttribute_UnmarshalFlow(b *testing.B) {
+
+	b.ReportAllocs()
 
 	var tests []netfilter.Attribute
 	var f Flow
 
 	// Collect all tests from corpus that aren't expected to fail
-	for _, test := range corpus {
+	for _, test := range corpusFlow {
 		if test.err == nil {
 			tests = append(tests, test.attrs...)
 		}
 	}
 
 	for n := 0; n < b.N; n++ {
-		f.UnmarshalAttributes(tests)
+		f.unmarshal(tests)
 	}
 }

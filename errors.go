@@ -25,7 +25,7 @@ var (
 
 const (
 	errUnknownEventType   = "unknown event type %d"
-	errWorkerCount        = "invalid worker count %s"
+	errWorkerCount        = "invalid worker count %d"
 	errRecover            = "recovered from panic in function %s: %s"
 	errWorkerReceive      = "netlink.Receive error in listenWorker %d, exiting"
 	errAttributeWrongType = "attribute type '%d' is not a %s"

@@ -36,8 +36,32 @@ type Flow struct {
 	SynProxy SynProxy
 }
 
-// UnmarshalAttributes unmarshals a list of netfilter.Attributes into a Flow structure.
-func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
+// Build sets up a Flow object with the minimum necessary attributes
+// to create a Conntrack entry in the kernel.
+func (f *Flow) Build(proto uint8, status uint32, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
+
+	f.Status = Status{value: status}
+
+	f.Timeout = Num32{Type: CTATimeout, Value: timeout}
+
+	f.TupleOrig.IP.SourceAddress = srcAddr
+	f.TupleOrig.IP.DestinationAddress = destAddr
+	f.TupleOrig.Proto.SourcePort = srcPort
+	f.TupleOrig.Proto.DestinationPort = destPort
+	f.TupleOrig.Proto.Protocol = proto
+
+	// Set up TupleReply with source and destination inverted
+	f.TupleReply.IP.SourceAddress = destAddr
+	f.TupleReply.IP.DestinationAddress = srcAddr
+	f.TupleReply.Proto.SourcePort = destPort
+	f.TupleReply.Proto.DestinationPort = srcPort
+	f.TupleReply.Proto.Protocol = proto
+
+	return nil
+}
+
+// unmarshal unmarshals a list of netfilter.Attributes into a Flow structure.
+func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 
 	for _, attr := range attrs {
 
@@ -159,8 +183,8 @@ func (f *Flow) UnmarshalAttributes(attrs []netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttributes marshals a Flow object into a list of netfilter.Attributes.
-func (f Flow) MarshalAttributes() ([]netfilter.Attribute, error) {
+// marshal marshals a Flow object into a list of netfilter.Attributes.
+func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	// Each connection sent to the kernel should have at least an original and reply tuple.
 	if !f.TupleOrig.Filled() || !f.TupleReply.Filled() {
@@ -233,46 +257,22 @@ func (f Flow) MarshalAttributes() ([]netfilter.Attribute, error) {
 	return attrs, nil
 }
 
-// Build sets up a Flow object with the minimum necessary attributes
-// to create a Conntrack entry in the kernel.
-func (f *Flow) Build(proto uint8, status uint32, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
-
-	f.Status = Status{value: status}
-
-	f.Timeout = Num32{Type: CTATimeout, Value: timeout}
-
-	f.TupleOrig.IP.SourceAddress = srcAddr
-	f.TupleOrig.IP.DestinationAddress = destAddr
-	f.TupleOrig.Proto.SourcePort = srcPort
-	f.TupleOrig.Proto.DestinationPort = destPort
-	f.TupleOrig.Proto.Protocol = proto
-
-	// Set up TupleReply with source and destination inverted
-	f.TupleReply.IP.SourceAddress = destAddr
-	f.TupleReply.IP.DestinationAddress = srcAddr
-	f.TupleReply.Proto.SourcePort = destPort
-	f.TupleReply.Proto.DestinationPort = srcPort
-	f.TupleReply.Proto.Protocol = proto
-
-	return nil
-}
-
-// FlowsFromNetlink unmarshals a list of flows from a list of Netlink messages.
+// unmarshalFlows unmarshals a list of flows from a list of Netlink messages.
 // This method can be used to parse the result of a dump or get query.
-func FlowsFromNetlink(nlm []netlink.Message) ([]Flow, error) {
+func unmarshalFlows(nlm []netlink.Message) ([]Flow, error) {
 
 	// Pre-allocate to avoid extending output slice on every op
 	out := make([]Flow, len(nlm))
 
 	for i := 0; i < len(nlm); i++ {
 
-		attrs, err := netfilter.AttributesFromNetlink(nlm[i])
+		_, attrs, err := netfilter.UnmarshalNetlink(nlm[i])
 		if err != nil {
 			return nil, err
 		}
 
 		var f Flow
-		err = f.UnmarshalAttributes(attrs)
+		err = f.unmarshal(attrs)
 		if err != nil {
 			return nil, err
 		}

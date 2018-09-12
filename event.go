@@ -29,16 +29,16 @@ const (
 	EventExpDestroy
 )
 
-// FromHeaders unmarshals a Conntrack EventType from a Netlink header and a Netfilter header.
-func (et *EventType) FromHeaders(nlh netlink.Header, ht netfilter.HeaderType) error {
+// unmarshal unmarshals a Conntrack EventType from a Netfilter header.
+func (et *EventType) unmarshal(h netfilter.Header) error {
 
 	// Fail when the message is not a conntrack message
-	if ht.SubsystemID == netfilter.NFSubsysCTNetlink {
-		switch MessageType(ht.MessageType) {
+	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
+		switch MessageType(h.MessageType) {
 		case CTNew:
 			// Since the MessageType is only of kind new, get or delete,
 			// the header's flags are used to distinguish between NEW and UPDATE.
-			if nlh.Flags&(netlink.HeaderFlagsCreate|netlink.HeaderFlagsExcl) != 0 {
+			if h.Flags&(netlink.HeaderFlagsCreate|netlink.HeaderFlagsExcl) != 0 {
 				*et = EventNew
 			} else {
 				*et = EventUpdate
@@ -46,16 +46,16 @@ func (et *EventType) FromHeaders(nlh netlink.Header, ht netfilter.HeaderType) er
 		case CTDelete:
 			*et = EventDestroy
 		default:
-			return fmt.Errorf(errUnknownEventType, ht.MessageType)
+			return fmt.Errorf(errUnknownEventType, h.MessageType)
 		}
-	} else if ht.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
-		switch ExpMessageType(ht.MessageType) {
+	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
+		switch ExpMessageType(h.MessageType) {
 		case CTExpNew:
 			*et = EventExpNew
 		case CTExpDelete:
 			*et = EventExpDestroy
 		default:
-			return fmt.Errorf(errUnknownEventType, ht.MessageType)
+			return fmt.Errorf(errUnknownEventType, h.MessageType)
 		}
 	} else {
 		return errNotConntrack
@@ -64,8 +64,8 @@ func (et *EventType) FromHeaders(nlh netlink.Header, ht netfilter.HeaderType) er
 	return nil
 }
 
-// FromNetlinkMessage unmarshals a Netlink message into an Event structure.
-func (e *Event) FromNetlinkMessage(nlmsg netlink.Message) error {
+// unmarshal unmarshals a Netlink message into an Event structure.
+func (e *Event) unmarshal(nlmsg netlink.Message) error {
 
 	// Make sure we don't re-use an Event structure
 	if e.Expect != nil || e.Flow != nil {
@@ -74,29 +74,25 @@ func (e *Event) FromNetlinkMessage(nlmsg netlink.Message) error {
 
 	var err error
 
-	// Get Netfilter Subsystem and MessageType from Netlink header
-	var ht netfilter.HeaderType
-	ht.FromNetlinkHeader(nlmsg.Header)
-
-	// Decode the header to make sure we're dealing with a Conntrack event
-	err = e.Type.FromHeaders(nlmsg.Header, ht)
+	// Unmarshal a netlink.Message into netfilter.Attributes and Header
+	h, attrs, err := netfilter.UnmarshalNetlink(nlmsg)
 	if err != nil {
 		return err
 	}
 
-	// Unmarshal a netlink.Message into netfilter.Attributes
-	attrs, err := netfilter.AttributesFromNetlink(nlmsg)
+	// Decode the header to make sure we're dealing with a Conntrack event
+	err = e.Type.unmarshal(h)
 	if err != nil {
 		return err
 	}
 
 	// Unmarshal Netfilter attributes into the event's Flow or Expect entry
-	if ht.SubsystemID == netfilter.NFSubsysCTNetlink {
+	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
 		e.Flow = new(Flow)
-		err = e.Flow.UnmarshalAttributes(attrs)
-	} else if ht.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
+		err = e.Flow.unmarshal(attrs)
+	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
 		e.Expect = new(Expect)
-		err = e.Expect.UnmarshalAttributes(attrs)
+		err = e.Expect.unmarshal(attrs)
 	}
 
 	if err != nil {

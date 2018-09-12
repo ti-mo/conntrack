@@ -86,7 +86,7 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 
 		// Decode event and send on channel
 		ev = *new(Event)
-		err := ev.FromNetlinkMessage(recv[0])
+		err := ev.unmarshal(recv[0])
 		if err != nil {
 			errChan <- err
 			return
@@ -100,48 +100,44 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 // of Flow objects.
 func (c *Conn) Dump() ([]Flow, error) {
 
-	req := netlink.Message{
-		Header: netlink.Header{
-			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTGet),
+			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
 		},
+		nil)
+
+	if err != nil {
+		return nil, err
 	}
-
-	netfilter.HeaderType{
-		SubsystemID: netfilter.NFSubsysCTNetlink,
-		MessageType: netfilter.MessageType(CTGet),
-	}.ToNetlinkHeader(&req.Header)
-
-	netfilter.Header{
-		Family: netfilter.ProtoUnspec, // Dumps both IPv4 and IPv6
-	}.ToNetlinkMessage(&req)
 
 	nlm, err := c.conn.Query(req)
 	if err != nil {
 		return nil, err
 	}
 
-	return FlowsFromNetlink(nlm)
+	return unmarshalFlows(nlm)
 }
 
 // Flush empties the Conntrack table.
 func (c *Conn) Flush() error {
 
-	req := netlink.Message{
-		Header: netlink.Header{
-			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTDelete),
+			Family:      netfilter.ProtoInet,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		},
+		nil)
+
+	if err != nil {
+		return err
 	}
 
-	netfilter.HeaderType{
-		SubsystemID: netfilter.NFSubsysCTNetlink,
-		MessageType: netfilter.MessageType(CTDelete),
-	}.ToNetlinkHeader(&req.Header)
-
-	netfilter.Header{
-		Family: netfilter.ProtoInet,
-	}.ToNetlinkMessage(&req)
-
-	_, err := c.conn.Query(req)
+	_, err = c.conn.Query(req)
 	if err != nil {
 		return err
 	}
@@ -157,28 +153,20 @@ func (c *Conn) Create(f Flow) error {
 		return errNeedTimeout
 	}
 
-	req := netlink.Message{
-		Header: netlink.Header{
-			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
-				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
-		},
-	}
-
-	netfilter.HeaderType{
-		SubsystemID: netfilter.NFSubsysCTNetlink,
-		MessageType: netfilter.MessageType(CTNew),
-	}.ToNetlinkHeader(&req.Header)
-
-	netfilter.Header{
-		Family: netfilter.ProtoFamily(2), //TODO: Family constant
-	}.ToNetlinkMessage(&req)
-
-	attrs, err := f.MarshalAttributes()
+	attrs, err := f.marshal()
 	if err != nil {
 		return err
 	}
 
-	err = netfilter.AttributesToNetlink(attrs, &req)
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTNew),
+			Family:      netfilter.ProtoFamily(2), //TODO: Family based on IP type v4/v6
+			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
+				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+		}, attrs)
+
 	if err != nil {
 		return err
 	}
