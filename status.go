@@ -8,7 +8,7 @@ import (
 
 // Status represents a snapshot of a conntrack connection's state.
 type Status struct {
-	value uint32
+	value StatusFlag
 }
 
 // UnmarshalAttribute unmarshals a netfilter.Attribute into a Status structure.
@@ -26,7 +26,7 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 		return errIncorrectSize
 	}
 
-	s.value = attr.Uint32()
+	s.value = StatusFlag(attr.Uint32())
 
 	return nil
 }
@@ -35,8 +35,13 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 func (s Status) MarshalAttribute() netfilter.Attribute {
 	return netfilter.Attribute{
 		Type: uint16(CTAStatus),
-		Data: netfilter.Uint32Bytes(s.value),
+		Data: netfilter.Uint32Bytes(uint32(s.value)),
 	}
+}
+
+// Set replaces the Status' value field with the given parameter.
+func (s *Status) Set(sf StatusFlag) {
+	s.value = sf
 }
 
 // Expected indicates that this connection is an expected connection,
@@ -110,28 +115,31 @@ func (s Status) Offload() bool {
 	return s.value&IPSOffload != 0
 }
 
+// StatusFlag describes a status bit in a Status structure.
+type StatusFlag uint32
+
 // Conntrack connection's status flags, from enum ip_conntrack_status.
 // uapi/linux/netfilter/nf_conntrack_common.h
 const (
-	IPSExpected  = 1      // IPS_EXPECTED
-	IPSSeenReply = 1 << 1 // IPS_SEEN_REPLY
-	IPSAssured   = 1 << 2 // IPS_ASSURED
-	IPSConfirmed = 1 << 3 // IPS_CONFIRMED
-	IPSSrcNat    = 1 << 4 // IPS_SRC_NAT
-	IPSDstNat    = 1 << 5 // IPS_DST_NAT
+	IPSExpected  StatusFlag = 1      // IPS_EXPECTED
+	IPSSeenReply StatusFlag = 1 << 1 // IPS_SEEN_REPLY
+	IPSAssured   StatusFlag = 1 << 2 // IPS_ASSURED
+	IPSConfirmed StatusFlag = 1 << 3 // IPS_CONFIRMED
+	IPSSrcNat    StatusFlag = 1 << 4 // IPS_SRC_NAT
+	IPSDstNat    StatusFlag = 1 << 5 // IPS_DST_NAT
 
 	IPSNatMask = IPSDstNat | IPSSrcNat // IPS_NAT_MASK
 
-	IPSSeqAdjust  = 1 << 6 // IPS_SEQ_ADJUST
-	IPSSrcNatDone = 1 << 7 // IPS_SRC_NAT_DONE
-	IPSDstNatDone = 1 << 8 // IPS_DST_NAT_DONE
+	IPSSeqAdjust  StatusFlag = 1 << 6 // IPS_SEQ_ADJUST
+	IPSSrcNatDone StatusFlag = 1 << 7 // IPS_SRC_NAT_DONE
+	IPSDstNatDone StatusFlag = 1 << 8 // IPS_DST_NAT_DONE
 
 	IPSNatDoneMask = IPSDstNatDone | IPSSrcNatDone // IPS_NAT_DONE_MASK
 
-	IPSDying        = 1 << 9
-	IPSFixedTimeout = 1 << 10 // IPS_FIXED_TIMEOUT
-	IPSTemplate     = 1 << 11 // IPS_TEMPLATE
-	IPSUntracked    = 1 << 12 // IPS_UNTRACKED
-	IPSHelper       = 1 << 13 // IPS_HELPER
-	IPSOffload      = 1 << 14 // IPS_OFFLOAD
+	IPSDying        StatusFlag = 1 << 9
+	IPSFixedTimeout StatusFlag = 1 << 10 // IPS_FIXED_TIMEOUT
+	IPSTemplate     StatusFlag = 1 << 11 // IPS_TEMPLATE
+	IPSUntracked    StatusFlag = 1 << 12 // IPS_UNTRACKED
+	IPSHelper       StatusFlag = 1 << 13 // IPS_HELPER
+	IPSOffload      StatusFlag = 1 << 14 // IPS_OFFLOAD
 )

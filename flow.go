@@ -38,7 +38,7 @@ type Flow struct {
 
 // Build sets up a Flow object with the minimum necessary attributes
 // to create a Conntrack entry in the kernel.
-func (f *Flow) Build(proto uint8, status uint32, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
+func (f *Flow) Build(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
 
 	f.Status = Status{value: status}
 

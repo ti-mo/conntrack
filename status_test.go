@@ -81,46 +81,46 @@ func TestStatus_FieldTest(t *testing.T) {
 
 	var s Status
 
-	s.value = IPSExpected
+	s.Set(IPSExpected)
 	assert.Equal(t, true, s.Expected(), "expected")
 
-	s.value = IPSSeenReply
+	s.Set(IPSSeenReply)
 	assert.Equal(t, true, s.SeenReply(), "seenreply")
 
-	s.value = IPSAssured
+	s.Set(IPSAssured)
 	assert.Equal(t, true, s.Assured(), "assured")
 
-	s.value = IPSConfirmed
+	s.Set(IPSConfirmed)
 	assert.Equal(t, true, s.Confirmed(), "confirmed")
 
-	s.value = IPSSrcNat
+	s.Set(IPSSrcNat)
 	assert.Equal(t, true, s.SrcNAT(), "srcnat")
 
-	s.value = IPSDstNat
+	s.Set(IPSDstNat)
 	assert.Equal(t, true, s.DstNAT(), "dstnat")
 
-	s.value = IPSSeqAdjust
+	s.Set(IPSSeqAdjust)
 	assert.Equal(t, true, s.SeqAdjust(), "seqadjust")
 
-	s.value = IPSSrcNatDone
+	s.Set(IPSSrcNatDone)
 	assert.Equal(t, true, s.SrcNATDone(), "srcnatdone")
 
-	s.value = IPSDstNatDone
+	s.Set(IPSDstNatDone)
 	assert.Equal(t, true, s.DstNATDone(), "dstnatdone")
 
-	s.value = IPSDying
+	s.Set(IPSDying)
 	assert.Equal(t, true, s.Dying(), "dying")
 
-	s.value = IPSFixedTimeout
+	s.Set(IPSFixedTimeout)
 	assert.Equal(t, true, s.FixedTimeout(), "fixedtimeout")
 
-	s.value = IPSTemplate
+	s.Set(IPSTemplate)
 	assert.Equal(t, true, s.Template(), "template")
 
-	s.value = IPSHelper
+	s.Set(IPSHelper)
 	assert.Equal(t, true, s.Helper(), "helper")
 
-	s.value = IPSOffload
+	s.Set(IPSOffload)
 	assert.Equal(t, true, s.Offload(), "offload")
 }
 
