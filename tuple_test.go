@@ -150,6 +150,45 @@ var ipTupleTests = []struct {
 	},
 }
 
+func TestIPTuple_MarshalTwoWay(t *testing.T) {
+	for _, tt := range ipTupleTests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			var ipt IPTuple
+
+			err := ipt.UnmarshalAttribute(tt.nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
+				require.EqualError(t, tt.err, err.Error())
+				return
+			}
+
+			if diff := cmp.Diff(tt.cta, ipt); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+			}
+
+			mipt, err := ipt.MarshalAttribute()
+			require.NoError(t, err, "error during marshal:", ipt)
+			if diff := cmp.Diff(tt.nfa, mipt); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestIPTuple_MarshalError(t *testing.T) {
+
+	v4v6Mismatch := IPTuple{
+		SourceAddress:      net.ParseIP("1.2.3.4"),
+		DestinationAddress: net.ParseIP("::1"),
+	}
+
+	_, err := v4v6Mismatch.MarshalAttribute()
+	require.Error(t, err)
+	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
+}
+
 var protoTupleTests = []struct {
 	name string
 	nfa  netfilter.Attribute
@@ -246,6 +285,33 @@ var protoTupleTests = []struct {
 			ICMPID:   0x5678,
 		},
 	},
+}
+
+func TestProtoTuple_MarshalTwoWay(t *testing.T) {
+	for _, tt := range protoTupleTests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			var pt ProtoTuple
+
+			err := pt.UnmarshalAttribute(tt.nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
+				require.EqualError(t, tt.err, err.Error())
+				return
+			}
+
+			if diff := cmp.Diff(tt.cta, pt); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+			}
+
+			mpt, err := pt.MarshalAttribute()
+			require.NoError(t, err, "error during marshal:", pt)
+			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 var tupleTests = []struct {
@@ -390,76 +456,6 @@ var tupleTests = []struct {
 		nfa:  attrTupleUnknownNested,
 		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type, CTATupleOrig), opUnTup),
 	},
-}
-
-func TestIPTuple_MarshalTwoWay(t *testing.T) {
-	for _, tt := range ipTupleTests {
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			var ipt IPTuple
-
-			err := ipt.UnmarshalAttribute(tt.nfa)
-			if err != nil || tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
-				return
-			}
-
-			if diff := cmp.Diff(tt.cta, ipt); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
-
-			mipt, err := ipt.MarshalAttribute()
-			require.NoError(t, err, "error during marshal:", ipt)
-			if diff := cmp.Diff(tt.nfa, mipt); diff != "" {
-				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestIPTuple_MarshalError(t *testing.T) {
-
-	v4v6Mismatch := IPTuple{
-		SourceAddress:      net.ParseIP("1.2.3.4"),
-		DestinationAddress: net.ParseIP("::1"),
-	}
-
-	t.Log(v4v6Mismatch.SourceAddress.To16())
-	t.Log(v4v6Mismatch.DestinationAddress.To16())
-
-	nfa, err := v4v6Mismatch.MarshalAttribute()
-	t.Log(nfa)
-	require.Error(t, err)
-	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
-}
-
-func TestProtoTuple_MarshalTwoWay(t *testing.T) {
-	for _, tt := range protoTupleTests {
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			var pt ProtoTuple
-
-			err := pt.UnmarshalAttribute(tt.nfa)
-			if err != nil || tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
-				return
-			}
-
-			if diff := cmp.Diff(tt.cta, pt); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
-
-			mpt, err := pt.MarshalAttribute()
-			require.NoError(t, err, "error during marshal:", pt)
-			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
-				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
-			}
-		})
-	}
 }
 
 func TestTuple_MarshalTwoWay(t *testing.T) {
