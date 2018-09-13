@@ -305,8 +305,7 @@ func TestProtoTuple_MarshalTwoWay(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
-			mpt, err := pt.MarshalAttribute()
-			require.NoError(t, err, "error during marshal:", pt)
+			mpt := pt.MarshalAttribute()
 			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
@@ -483,6 +482,20 @@ func TestTuple_MarshalTwoWay(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTuple_MarshalError(t *testing.T) {
+
+	ipTupleError := Tuple{
+		IP: IPTuple{
+			SourceAddress:      net.ParseIP("1.2.3.4"),
+			DestinationAddress: net.ParseIP("::1"),
+		},
+	}
+
+	_, err := ipTupleError.MarshalAttribute(CTATupleOrig)
+	require.Error(t, err)
+	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }
 
 func TestTuple_Filled(t *testing.T) {

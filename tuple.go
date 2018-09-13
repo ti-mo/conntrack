@@ -89,11 +89,7 @@ func (t Tuple) MarshalAttribute(at AttributeType) (netfilter.Attribute, error) {
 	}
 	nfa.Children[0] = ipt
 
-	pt, err := t.Proto.MarshalAttribute()
-	if err != nil {
-		return netfilter.Attribute{}, err
-	}
-	nfa.Children[1] = pt
+	nfa.Children[1] = t.Proto.MarshalAttribute()
 
 	if t.Zone != 0 {
 		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(CTATupleZone), Data: netfilter.Uint16Bytes(t.Zone)})
@@ -246,7 +242,7 @@ func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 }
 
 // MarshalAttribute marshals a ProtoTuple into a netfilter.Attribute.
-func (pt ProtoTuple) MarshalAttribute() (netfilter.Attribute, error) {
+func (pt ProtoTuple) MarshalAttribute() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTATupleProto), Nested: true, Children: make([]netfilter.Attribute, 3, 4)}
 
@@ -266,5 +262,5 @@ func (pt ProtoTuple) MarshalAttribute() (netfilter.Attribute, error) {
 		nfa.Children[2] = netfilter.Attribute{Type: uint16(CTAProtoDstPort), Data: netfilter.Uint16Bytes(pt.DestinationPort)}
 	}
 
-	return nfa, nil
+	return nfa
 }
