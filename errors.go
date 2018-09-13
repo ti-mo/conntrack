@@ -17,7 +17,7 @@ var (
 	errReusedProtoInfo = errors.New("cannot to unmarshal into existing ProtoInfo")
 
 	errEmptyProtoInfo = errors.New("no TCP, DCCP or SCTP info found during ProtoInfo marshal")
-	errBadIPTuple     = errors.New("IPTuple source and destination addresses both need to be 4 or 16 bytes long")
+	errBadIPTuple     = errors.New("IPTuple source and destination addresses must be valid and belong to the same address family")
 
 	errNeedTimeout = errors.New("Flow needs Timeout field set for this operation")
 	errNeedTuples  = errors.New("Flow needs Original and Reply Tuple set for this operation")

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/sys/unix"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -163,8 +164,7 @@ var protoTupleTests = []struct {
 	{
 		name: "error unmarshal with incorrect amount of children",
 		nfa: netfilter.Attribute{
-			// CTA_TUPLE_PROTO
-			Type:   0x2,
+			Type:   uint16(CTATupleProto),
 			Nested: true,
 		},
 		err: errors.Wrap(errNeedSingleChild, opUnPTup),
@@ -172,8 +172,7 @@ var protoTupleTests = []struct {
 	{
 		name: "error unmarshal unknown ProtoTupleType",
 		nfa: netfilter.Attribute{
-			// CTA_TUPLE_PROTO
-			Type:   0x2,
+			Type:   uint16(CTATupleProto),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				attrUnknown,
@@ -182,6 +181,70 @@ var protoTupleTests = []struct {
 			},
 		},
 		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type, CTATupleProto), opUnPTup),
+	},
+	{
+		name: "correct icmpv4 prototuple",
+		nfa: netfilter.Attribute{
+			Type:   uint16(CTATupleProto),
+			Nested: true,
+			Children: []netfilter.Attribute{
+				{
+					Type: uint16(CTAProtoNum),
+					Data: []byte{unix.IPPROTO_ICMP},
+				},
+				{
+					Type: uint16(CTAProtoICMPType),
+					Data: []byte{0x1},
+				},
+				{
+					Type: uint16(CTAProtoICMPCode),
+					Data: []byte{0xf},
+				},
+				{
+					Type: uint16(CTAProtoICMPID),
+					Data: []byte{0x12, 0x34},
+				},
+			},
+		},
+		cta: ProtoTuple{
+			Protocol: unix.IPPROTO_ICMP,
+			ICMPv4:   true,
+			ICMPType: 1,
+			ICMPCode: 0xf,
+			ICMPID:   0x1234,
+		},
+	},
+	{
+		name: "correct icmpv6 prototuple",
+		nfa: netfilter.Attribute{
+			Type:   uint16(CTATupleProto),
+			Nested: true,
+			Children: []netfilter.Attribute{
+				{
+					Type: uint16(CTAProtoNum),
+					Data: []byte{unix.IPPROTO_ICMPV6},
+				},
+				{
+					Type: uint16(CTAProtoICMPv6Type),
+					Data: []byte{0x2},
+				},
+				{
+					Type: uint16(CTAProtoICMPv6Code),
+					Data: []byte{0xe},
+				},
+				{
+					Type: uint16(CTAProtoICMPv6ID),
+					Data: []byte{0x56, 0x78},
+				},
+			},
+		},
+		cta: ProtoTuple{
+			Protocol: unix.IPPROTO_ICMPV6,
+			ICMPv6:   true,
+			ICMPType: 2,
+			ICMPCode: 0xe,
+			ICMPID:   0x5678,
+		},
 	},
 }
 
@@ -336,8 +399,9 @@ func TestIPTuple_MarshalTwoWay(t *testing.T) {
 
 			var ipt IPTuple
 
-			err := (&ipt).UnmarshalAttribute(tt.nfa)
-			if err != nil {
+			err := ipt.UnmarshalAttribute(tt.nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
 				return
 			}
@@ -347,12 +411,28 @@ func TestIPTuple_MarshalTwoWay(t *testing.T) {
 			}
 
 			mipt, err := ipt.MarshalAttribute()
-			require.NoError(t, err)
+			require.NoError(t, err, "error during marshal:", ipt)
 			if diff := cmp.Diff(tt.nfa, mipt); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func TestIPTuple_MarshalError(t *testing.T) {
+
+	v4v6Mismatch := IPTuple{
+		SourceAddress:      net.ParseIP("1.2.3.4"),
+		DestinationAddress: net.ParseIP("::1"),
+	}
+
+	t.Log(v4v6Mismatch.SourceAddress.To16())
+	t.Log(v4v6Mismatch.DestinationAddress.To16())
+
+	nfa, err := v4v6Mismatch.MarshalAttribute()
+	t.Log(nfa)
+	require.Error(t, err)
+	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }
 
 func TestProtoTuple_MarshalTwoWay(t *testing.T) {
@@ -362,8 +442,9 @@ func TestProtoTuple_MarshalTwoWay(t *testing.T) {
 
 			var pt ProtoTuple
 
-			err := (&pt).UnmarshalAttribute(tt.nfa)
-			if err != nil {
+			err := pt.UnmarshalAttribute(tt.nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
 				return
 			}
@@ -373,7 +454,7 @@ func TestProtoTuple_MarshalTwoWay(t *testing.T) {
 			}
 
 			mpt, err := pt.MarshalAttribute()
-			require.NoError(t, err)
+			require.NoError(t, err, "error during marshal:", pt)
 			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
@@ -388,8 +469,9 @@ func TestTuple_MarshalTwoWay(t *testing.T) {
 
 			var tpl Tuple
 
-			err := (&tpl).UnmarshalAttribute(tt.nfa)
-			if err != nil {
+			err := tpl.UnmarshalAttribute(tt.nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
 				return
 			}
@@ -399,7 +481,7 @@ func TestTuple_MarshalTwoWay(t *testing.T) {
 			}
 
 			mtpl, err := tpl.MarshalAttribute(AttributeType(tt.nfa.Type))
-			require.NoError(t, err)
+			require.NoError(t, err, "error during marshal:", tpl)
 			if diff := cmp.Diff(tt.nfa, mtpl); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
