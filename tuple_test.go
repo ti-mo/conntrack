@@ -3,10 +3,13 @@ package conntrack
 import (
 	"fmt"
 	"net"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ti-mo/netfilter"
 )
@@ -54,8 +57,8 @@ var ipTupleTests = []struct {
 			},
 		},
 		cta: IPTuple{
-			net.ParseIP("1.2.3.4"),
-			net.ParseIP("4.3.2.1"),
+			SourceAddress:      net.ParseIP("1.2.3.4"),
+			DestinationAddress: net.ParseIP("4.3.2.1"),
 		},
 	},
 	{
@@ -83,8 +86,8 @@ var ipTupleTests = []struct {
 			},
 		},
 		cta: IPTuple{
-			net.ParseIP("1:1:2:2:3:3:4:4"),
-			net.ParseIP("4:4:3:3:2:2:1:1"),
+			SourceAddress:      net.ParseIP("1:1:2:2:3:3:4:4"),
+			DestinationAddress: net.ParseIP("4:4:3:3:2:2:1:1"),
 		},
 	},
 	{
@@ -249,8 +252,8 @@ var tupleTests = []struct {
 		},
 		cta: Tuple{
 			IP: IPTuple{
-				net.ParseIP("::1"),
-				net.ParseIP("::1"),
+				SourceAddress:      net.ParseIP("::1"),
+				DestinationAddress: net.ParseIP("::1"),
 			},
 			Proto: ProtoTuple{6, 32780, 80, false, false, 0, 0, 0},
 			Zone:  0x7B, // Zone 123
@@ -327,94 +330,88 @@ var tupleTests = []struct {
 }
 
 func TestIPTuple_UnmarshalAttribute(t *testing.T) {
-	for _, test := range ipTupleTests {
+	for _, tt := range ipTupleTests {
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 
-			// Unmarshal the test's netfilter.Attribute into an IPTuple
-			var attr IPTuple
+			var ipt IPTuple
 
-			err := (&attr).UnmarshalAttribute(test.nfa)
-
-			// Compare the error result to the test's 'err' field
-			if want, got := test.err, err; want != nil && got != nil {
-				// Both are set, try to compare their Error()s
-				if want.Error() != got.Error() {
-					t.Fatalf("mismatching errors:\n- want: %v\n-  got: %v",
-						want.Error(), got.Error())
-				}
-			} else if want != got {
-				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
-					want, got)
+			err := (&ipt).UnmarshalAttribute(tt.nfa)
+			if err != nil {
+				require.EqualError(t, tt.err, err.Error())
 			}
 
-			if want, got := test.cta, attr; !want.DestinationAddress.Equal(got.DestinationAddress) ||
-				!want.SourceAddress.Equal(got.SourceAddress) {
-				t.Fatalf("unexpected attribute:\n- want: %v (%p)\n-  got: %v (%p)",
-					want, want, got, got)
+			if diff := cmp.Diff(tt.cta, ipt); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
 func TestProtoTuple_UnmarshalAttribute(t *testing.T) {
-	for _, test := range protoTupleTests {
+	for _, tt := range protoTupleTests {
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 
-			// Unmarshal the test's netfilter.Attribute into an IPTuple
-			var attr ProtoTuple
+			var pt ProtoTuple
 
-			err := (&attr).UnmarshalAttribute(test.nfa)
-
-			// Compare the error result to the test's 'err' field
-			if want, got := test.err, err; want != nil && got != nil {
-				// Both are set, try to compare their Error()s
-				if want.Error() != got.Error() {
-					t.Fatalf("mismatching errors:\n- want: %v\n-  got: %v",
-						want.Error(), got.Error())
-				}
-			} else if want != got {
-				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
-					want, got)
+			err := (&pt).UnmarshalAttribute(tt.nfa)
+			if err != nil {
+				require.EqualError(t, tt.err, err.Error())
 			}
 
-			if want, got := test.cta, attr; !reflect.DeepEqual(want, got) {
-				t.Fatalf("unexpected attribute:\n- want: %v\n-  got: %v",
-					want, got)
+			if diff := cmp.Diff(tt.cta, pt); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
 func TestTuple_UnmarshalAttribute(t *testing.T) {
-	for _, test := range tupleTests {
+	for _, tt := range tupleTests {
 
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 
-			// Unmarshal the test's netfilter.Attribute into a Tuple
-			var attr Tuple
+			var tpl Tuple
 
-			err := (&attr).UnmarshalAttribute(test.nfa)
-
-			// Compare the error result to the test's 'err' field
-			if want, got := test.err, err; want != nil && got != nil {
-				// Both are set, try to compare their Error()s
-				if want.Error() != got.Error() {
-					t.Fatalf("mismatching errors:\n- want: %v\n-  got: %v",
-						want.Error(), got.Error())
-				}
-			} else if want != got {
-				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
-					want, got)
+			err := (&tpl).UnmarshalAttribute(tt.nfa)
+			if err != nil {
+				require.EqualError(t, tt.err, err.Error())
 			}
 
-			if want, got := test.cta, attr; !reflect.DeepEqual(want, got) {
-				t.Fatalf("unexpected attribute:\n- want: %v\n-  got: %v",
-					want, got)
+			if diff := cmp.Diff(tt.cta, tpl); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func TestTuple_Filled(t *testing.T) {
+
+	// Empty Tuple
+	assert.Equal(t, false, Tuple{}.Filled())
+
+	// Tuple with empty IPTuple and ProtoTuples
+	assert.Equal(t, false, Tuple{IP: IPTuple{}, Proto: ProtoTuple{}}.Filled())
+
+	// Tuple with empty ProtoTuple
+	assert.Equal(t, false, Tuple{
+		IP:    IPTuple{DestinationAddress: []byte{0}, SourceAddress: []byte{0}},
+		Proto: ProtoTuple{},
+	}.Filled())
+
+	// Tuple with empty IPTuple
+	assert.Equal(t, false, Tuple{
+		IP:    IPTuple{},
+		Proto: ProtoTuple{Protocol: 6},
+	}.Filled())
+
+	// Filled tuple with all minimum required fields set
+	assert.Equal(t, true, Tuple{
+		IP:    IPTuple{DestinationAddress: []byte{0}, SourceAddress: []byte{0}},
+		Proto: ProtoTuple{Protocol: 6},
+	}.Filled())
+
 }
 
 func TestTupleType_String(t *testing.T) {
