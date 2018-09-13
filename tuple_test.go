@@ -329,7 +329,7 @@ var tupleTests = []struct {
 	},
 }
 
-func TestIPTuple_UnmarshalAttribute(t *testing.T) {
+func TestIPTuple_MarshalTwoWay(t *testing.T) {
 	for _, tt := range ipTupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -339,16 +339,23 @@ func TestIPTuple_UnmarshalAttribute(t *testing.T) {
 			err := (&ipt).UnmarshalAttribute(tt.nfa)
 			if err != nil {
 				require.EqualError(t, tt.err, err.Error())
+				return
 			}
 
 			if diff := cmp.Diff(tt.cta, ipt); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
+
+			mipt, err := ipt.MarshalAttribute()
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.nfa, mipt); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
-func TestProtoTuple_UnmarshalAttribute(t *testing.T) {
+func TestProtoTuple_MarshalTwoWay(t *testing.T) {
 	for _, tt := range protoTupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -358,16 +365,23 @@ func TestProtoTuple_UnmarshalAttribute(t *testing.T) {
 			err := (&pt).UnmarshalAttribute(tt.nfa)
 			if err != nil {
 				require.EqualError(t, tt.err, err.Error())
+				return
 			}
 
 			if diff := cmp.Diff(tt.cta, pt); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
+
+			mpt, err := pt.MarshalAttribute()
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
 
-func TestTuple_UnmarshalAttribute(t *testing.T) {
+func TestTuple_MarshalTwoWay(t *testing.T) {
 	for _, tt := range tupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -377,10 +391,17 @@ func TestTuple_UnmarshalAttribute(t *testing.T) {
 			err := (&tpl).UnmarshalAttribute(tt.nfa)
 			if err != nil {
 				require.EqualError(t, tt.err, err.Error())
+				return
 			}
 
 			if diff := cmp.Diff(tt.cta, tpl); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+			}
+
+			mtpl, err := tpl.MarshalAttribute(AttributeType(tt.nfa.Type))
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.nfa, mtpl); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
 		})
 	}
