@@ -2,10 +2,11 @@ package conntrack
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -19,7 +20,7 @@ func TestStatus_Error(t *testing.T) {
 	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errNested.Error())
 }
 
-func TestStatus_UnmarshalAttribute(t *testing.T) {
+func TestStatus_MarshalTwoWay(t *testing.T) {
 
 	tests := []struct {
 		name   string
@@ -51,27 +52,31 @@ func TestStatus_UnmarshalAttribute(t *testing.T) {
 
 	for _, tt := range tests {
 
-		// Status attribute container
-		var nfa netfilter.Attribute
-		nfa.Type = uint16(CTAStatus)
-
 		t.Run(tt.name, func(t *testing.T) {
+
+			// Wrap in status attribute container
+			nfa := netfilter.Attribute{
+				Type: uint16(CTAStatus),
+				Data: tt.b,
+			}
 
 			var s Status
 
-			// Wrap binary contents in netfilter.Attribute
-			nfa.Data = tt.b
-
-			err := (&s).UnmarshalAttribute(nfa)
-
-			if want, got := tt.err, err; want != got {
-				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
-					want, got)
+			err := s.UnmarshalAttribute(nfa)
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
+				require.EqualError(t, tt.err, err.Error())
+				return
 			}
 
-			if want, got := tt.status, s; !reflect.DeepEqual(want, got) {
-				t.Fatalf("unexpected status:\n- want: %v\n-  got: %v",
-					want, got)
+			if diff := cmp.Diff(tt.status.value, s.value); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+			}
+
+			ms := s.MarshalAttribute()
+			require.NoError(t, err, "error during marshal:", s)
+			if diff := cmp.Diff(nfa, ms); diff != "" {
+				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
 		})
 	}
