@@ -1,7 +1,13 @@
 package conntrack
 
 import (
+	"net"
 	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/ti-mo/netfilter"
 )
@@ -10,6 +16,7 @@ var (
 	corpusFlow = []struct {
 		name  string
 		attrs []netfilter.Attribute
+		flow  Flow
 		err   error
 	}{
 		{
@@ -47,6 +54,11 @@ var (
 					Type: uint16(CTALabelsMask),
 					Data: []byte{0x00, 0xba, 0x1b, 0xe1},
 				},
+			},
+			flow: Flow{
+				ID: 0x010203, Timeout: 0x010203, Zone: 0x0405,
+				Labels: []byte{0x4b, 0x1d, 0xbe, 0xef}, LabelsMask: []byte{0x00, 0xba, 0x1b, 0xe1},
+				Mark: 0x010203, MarkMask: 0x010203, Use: 0x010203,
 			},
 		},
 		{
@@ -91,6 +103,19 @@ var (
 					},
 				},
 			},
+			flow: Flow{
+				TupleOrig: Tuple{
+					IP: IPTuple{
+						SourceAddress:      net.IP{1, 2, 3, 4},
+						DestinationAddress: net.IP{4, 3, 2, 1},
+					},
+					Proto: ProtoTuple{
+						Protocol:        6,
+						SourcePort:      65280,
+						DestinationPort: 255,
+					},
+				},
+			},
 		},
 		{
 			name: "status attribute",
@@ -100,6 +125,7 @@ var (
 					Data: []byte{0xff, 0x00, 0xff, 0x00},
 				},
 			},
+			flow: Flow{Status: Status{value: 0xff00ff00}},
 		},
 		{
 			name: "protoinfo attribute w/ tcp info",
@@ -129,6 +155,7 @@ var (
 					},
 				},
 			},
+			flow: Flow{ProtoInfo: ProtoInfo{TCP: &ProtoInfoTCP{State: 1, OriginalFlags: 0x0203, ReplyFlags: 0x0405}}},
 		},
 		{
 			name: "helper attribute",
@@ -148,6 +175,7 @@ var (
 					},
 				},
 			},
+			flow: Flow{Helper: Helper{Name: "helper", Info: []byte("info")}},
 		},
 		{
 			name: "counter attribute",
@@ -181,6 +209,10 @@ var (
 					},
 				},
 			},
+			flow: Flow{
+				CountersOrig:  Counter{Packets: 0xf00d0000, Bytes: 0xbaaaaa0000000000},
+				CountersReply: Counter{Packets: 0xb00000000000000d, Bytes: 0xfaaaaa00000000ce, Direction: true},
+			},
 		},
 		{
 			name: "security attribute",
@@ -196,6 +228,7 @@ var (
 					},
 				},
 			},
+			flow: Flow{SecurityContext: Security{Name: "jail"}},
 		},
 		{
 			name: "timestamp attribute",
@@ -219,6 +252,9 @@ var (
 					},
 				},
 			},
+			flow: Flow{Timestamp: Timestamp{
+				Start: time.Unix(0, 0x0f123456789abcde),
+				Stop:  time.Unix(0, -66933498461897506)}},
 		},
 		{
 			name: "sequence adjust attribute",
@@ -238,25 +274,31 @@ var (
 					},
 				},
 			},
+			flow: Flow{SeqAdjOrig: SequenceAdjust{Position: 0x0f123456, OffsetAfter: 0x0f123499}},
 		},
 	}
 )
 
-func TestAttribute_UnmarshalFlow(t *testing.T) {
-
-	var f Flow
-
+func TestFlow_Unmarshal(t *testing.T) {
 	for _, tt := range corpusFlow {
 		t.Run(tt.name, func(t *testing.T) {
+			var f Flow
 			err := f.unmarshal(tt.attrs)
-			if err != nil {
-				t.Fatalf("unmarshal error: %v", err)
+
+			if err != nil || tt.err != nil {
+				require.Error(t, err)
+				require.EqualError(t, tt.err, err.Error())
+				return
+			}
+
+			if diff := cmp.Diff(tt.flow, f, cmp.AllowUnexported(Status{})); diff != "" {
+				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-func BenchmarkAttribute_UnmarshalFlow(b *testing.B) {
+func BenchmarkFlow_Unmarshal(b *testing.B) {
 
 	b.ReportAllocs()
 
