@@ -172,7 +172,7 @@ var (
 	}
 )
 
-func TestAttribute_UnmarshalExpect(t *testing.T) {
+func TestExpect_Unmarshal(t *testing.T) {
 
 	var ex Expect
 
@@ -186,7 +186,7 @@ func TestAttribute_UnmarshalExpect(t *testing.T) {
 	}
 }
 
-func BenchmarkAttribute_UnmarshalExpect(b *testing.B) {
+func BenchmarkExpect_Unmarshal(b *testing.B) {
 
 	b.ReportAllocs()
 
