@@ -4,7 +4,12 @@ import (
 	"fmt"
 
 	"github.com/mdlayher/netlink"
+	"github.com/pkg/errors"
 	"github.com/ti-mo/netfilter"
+)
+
+const (
+	opUnExpectNAT = "ExpectNAT unmarshal"
 )
 
 // Expect represents an 'expected' conenction, created by Conntrack/IPTables helpers.
@@ -37,11 +42,11 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnExpectNAT)
 	}
 
 	if len(attr.Children) == 0 {
-		return errNeedSingleChild
+		return errors.Wrap(errNeedSingleChild, opUnExpectNAT)
 	}
 
 	for _, iattr := range attr.Children {
@@ -53,7 +58,7 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 				return err
 			}
 		default:
-			return fmt.Errorf(errAttributeChild, iattr.Type, CTAExpectNAT)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, CTAExpectNAT), opUnExpectNAT)
 		}
 	}
 

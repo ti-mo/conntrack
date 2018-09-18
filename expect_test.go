@@ -267,7 +267,7 @@ var corpusExpectUnmarshalError = []struct {
 	{
 		name:   "error unmarshal invalid nat",
 		nfa:    netfilter.Attribute{Type: uint16(CTAExpectNAT)},
-		errStr: "need a Nested attribute to decode this structure",
+		errStr: "ExpectNAT unmarshal: need a Nested attribute to decode this structure",
 	},
 }
 
@@ -281,7 +281,8 @@ func TestExpect_Unmarshal(t *testing.T) {
 
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.Error(t, tt.err)
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
 
@@ -352,12 +353,12 @@ var corpusExpectNAT = []struct {
 	{
 		name: "error not nested",
 		attr: netfilter.Attribute{Type: uint16(CTAExpectNAT)},
-		err:  errNotNested,
+		err:  errors.Wrap(errNotNested, opUnExpectNAT),
 	},
 	{
 		name: "error no children",
 		attr: netfilter.Attribute{Type: uint16(CTAExpectNAT), Nested: true},
-		err:  errNeedSingleChild,
+		err:  errors.Wrap(errNeedSingleChild, opUnExpectNAT),
 	},
 	{
 		name: "error unknown child type",
@@ -370,7 +371,7 @@ var corpusExpectNAT = []struct {
 				},
 			},
 		},
-		err: fmt.Errorf(errAttributeChild, 255, CTAExpectNAT),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, 255, CTAExpectNAT), opUnExpectNAT),
 	},
 }
 
@@ -384,7 +385,8 @@ func TestExpectNAT_Unmarshal(t *testing.T) {
 
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.Error(t, tt.err)
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
 
