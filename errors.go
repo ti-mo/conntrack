@@ -16,8 +16,7 @@ var (
 	errReusedEvent     = errors.New("cannot to unmarshal into existing Event")
 	errReusedProtoInfo = errors.New("cannot to unmarshal into existing ProtoInfo")
 
-	errEmptyProtoInfo = errors.New("no TCP, DCCP or SCTP info found during ProtoInfo marshal")
-	errBadIPTuple     = errors.New("IPTuple source and destination addresses must be valid and belong to the same address family")
+	errBadIPTuple = errors.New("IPTuple source and destination addresses must be valid and belong to the same address family")
 
 	errNeedTimeout = errors.New("Flow needs Timeout field set for this operation")
 	errNeedTuples  = errors.New("Flow needs Original and Reply Tuple set for this operation")
@@ -26,7 +25,6 @@ var (
 const (
 	errUnknownEventType   = "unknown event type %d"
 	errWorkerCount        = "invalid worker count %d"
-	errRecover            = "recovered from panic in function %s: %s"
 	errWorkerReceive      = "netlink.Receive error in listenWorker %d, exiting"
 	errAttributeWrongType = "attribute type '%d' is not a %s"
 	errAttributeChild     = "child Type '%d' unknown for attribute type %s"

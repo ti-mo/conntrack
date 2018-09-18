@@ -3,7 +3,12 @@ package conntrack
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/ti-mo/netfilter"
+)
+
+const (
+	opUnStatus = "Status unmarshal"
 )
 
 // Status represents a snapshot of a conntrack connection's state.
@@ -19,11 +24,11 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if attr.Nested {
-		return errNested
+		return errors.Wrap(errNested, opUnStatus)
 	}
 
 	if len(attr.Data) != 4 {
-		return errIncorrectSize
+		return errors.Wrap(errIncorrectSize, opUnStatus)
 	}
 
 	s.value = StatusFlag(attr.Uint32())

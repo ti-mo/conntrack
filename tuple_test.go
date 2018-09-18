@@ -18,10 +18,6 @@ import (
 var (
 	// Template attribute with Nested disabled
 	attrDefault = netfilter.Attribute{Nested: false}
-	// Nested attribute without any children
-	attrNoChildren = netfilter.Attribute{Nested: true, Children: []netfilter.Attribute{}}
-	// Nested attribute with one child
-	attrOneChild = netfilter.Attribute{Nested: true, Children: []netfilter.Attribute{attrDefault}}
 	// Attribute with random, unused type 65535
 	attrUnknown = netfilter.Attribute{Type: 0xFFFF}
 	// Nested structure of attributes with random, unused type 65535

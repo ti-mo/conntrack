@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
@@ -17,7 +18,7 @@ func TestStatus_Error(t *testing.T) {
 	var s Status
 
 	assert.EqualError(t, s.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAStatus))
-	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errNested.Error())
+	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
 }
 
 func TestStatus_MarshalTwoWay(t *testing.T) {
@@ -41,12 +42,12 @@ func TestStatus_MarshalTwoWay(t *testing.T) {
 		{
 			name: "error, byte array too short",
 			b:    []byte{0xBE, 0xEF},
-			err:  errIncorrectSize,
+			err:  errors.Wrap(errIncorrectSize, opUnStatus),
 		},
 		{
 			name: "error, byte array too long",
 			b:    []byte{0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00},
-			err:  errIncorrectSize,
+			err:  errors.Wrap(errIncorrectSize, opUnStatus),
 		},
 	}
 

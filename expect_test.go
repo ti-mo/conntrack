@@ -186,6 +186,12 @@ func TestExpect_Unmarshal(t *testing.T) {
 	}
 }
 
+func TestExpectType_String(t *testing.T) {
+	if ExpectType(255).String() == "" {
+		t.Fatal("ExpectType string representation empty - did you run `go generate`?")
+	}
+}
+
 func BenchmarkExpect_Unmarshal(b *testing.B) {
 
 	b.ReportAllocs()
