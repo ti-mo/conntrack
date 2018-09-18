@@ -4,7 +4,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/ti-mo/netfilter"
+)
+
+const (
+	opUnHelper        = "Helper unmarshal"
+	opUnProtoInfo     = "ProtoInfo unmarshal"
+	opUnProtoInfoTCP  = "ProtoInfoTCP unmarshal"
+	opUnProtoInfoDCCP = "ProtoInfoDCCP unmarshal"
+	opUnProtoInfoSCTP = "ProtoInfoSCTP unmarshal"
+	opUnCounter       = "Counter unmarshal"
+	opUnTimestamp     = "Timestamp unmarshal"
+	opUnSecurity      = "Security unmarshal"
+	opUnSeqAdj        = "SeqAdj unmarshal"
+	opUnSynProxy      = "SynProxy unmarshal"
 )
 
 var (
@@ -148,7 +162,7 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnHelper)
 	}
 
 	for _, iattr := range attr.Children {
@@ -206,11 +220,11 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnProtoInfo)
 	}
 
 	if len(attr.Children) != 1 {
-		return errNeedSingleChild
+		return errors.Wrap(errNeedSingleChild, opUnProtoInfo)
 	}
 
 	// Step into the single nested child
@@ -243,21 +257,19 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 }
 
 // MarshalAttribute marshals a ProtoInfo into a netfilter.Attribute.
-func (pi ProtoInfo) MarshalAttribute() (netfilter.Attribute, error) {
+func (pi ProtoInfo) MarshalAttribute() netfilter.Attribute {
 
-	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true, Children: make([]netfilter.Attribute, 1)}
+	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true, Children: make([]netfilter.Attribute, 0, 1)}
 
 	if pi.TCP != nil {
-		nfa.Children[0] = pi.TCP.MarshalAttribute()
+		nfa.Children = append(nfa.Children, pi.TCP.MarshalAttribute())
 	} else if pi.DCCP != nil {
-		nfa.Children[0] = pi.DCCP.MarshalAttribute()
+		nfa.Children = append(nfa.Children, pi.DCCP.MarshalAttribute())
 	} else if pi.SCTP != nil {
-		nfa.Children[0] = pi.SCTP.MarshalAttribute()
-	} else {
-		return netfilter.Attribute{}, errEmptyProtoInfo
+		nfa.Children = append(nfa.Children, pi.SCTP.MarshalAttribute())
 	}
 
-	return nfa, nil
+	return nfa
 }
 
 // A ProtoInfoTCP describes the state of a TCP session in both directions.
@@ -278,12 +290,12 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnProtoInfoTCP)
 	}
 
 	// A ProtoInfoTCP has at least 3 members, TCP_STATE and TCP_FLAGS_ORIG/REPLY.
 	if len(attr.Children) < 3 {
-		return errNeedChildren
+		return errors.Wrap(errNeedChildren, opUnProtoInfoTCP)
 	}
 
 	for _, iattr := range attr.Children {
@@ -339,11 +351,11 @@ func (dpi *ProtoInfoDCCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnProtoInfoDCCP)
 	}
 
 	if len(attr.Children) == 0 {
-		return errNeedChildren
+		return errors.Wrap(errNeedChildren, opUnProtoInfoDCCP)
 	}
 
 	for _, iattr := range attr.Children {
@@ -388,11 +400,11 @@ func (spi *ProtoInfoSCTP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnProtoInfoSCTP)
 	}
 
 	if len(attr.Children) == 0 {
-		return errNeedChildren
+		return errors.Wrap(errNeedChildren, opUnProtoInfoSCTP)
 	}
 
 	for _, iattr := range attr.Children {
@@ -459,7 +471,7 @@ func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnCounter)
 	}
 
 	// A Counter will always consist of packet and byte attributes
@@ -500,12 +512,12 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnTimestamp)
 	}
 
 	// A Timestamp will always have at least a start time
 	if len(attr.Children) == 0 {
-		return errNeedSingleChild
+		return errors.Wrap(errNeedSingleChild, opUnTimestamp)
 	}
 
 	for _, iattr := range attr.Children {
@@ -537,12 +549,12 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnSecurity)
 	}
 
 	// A SecurityContext has at least a name
 	if len(attr.Children) == 0 {
-		return errNeedChildren
+		return errors.Wrap(errNeedChildren, opUnSecurity)
 	}
 
 	for _, iattr := range attr.Children {
@@ -594,12 +606,12 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnSeqAdj)
 	}
 
 	// A SequenceAdjust message should come with at least 1 child.
 	if len(attr.Children) == 0 {
-		return errNeedSingleChild
+		return errors.Wrap(errNeedSingleChild, opUnSeqAdj)
 	}
 
 	// Set Direction to true if it's a reply adjustment
@@ -660,11 +672,11 @@ func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
 	}
 
 	if !attr.Nested {
-		return errNotNested
+		return errors.Wrap(errNotNested, opUnSynProxy)
 	}
 
 	if len(attr.Children) == 0 {
-		return errNeedSingleChild
+		return errors.Wrap(errNeedSingleChild, opUnSynProxy)
 	}
 
 	for _, iattr := range attr.Children {

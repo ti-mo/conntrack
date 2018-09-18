@@ -5,14 +5,75 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mdlayher/netlink"
+
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ti-mo/netfilter"
 )
 
 var (
+	// Re-usable structures and netfilter atttibutes for tests
+	nfaIPPT = []netfilter.Attribute{
+		{
+			Type:   uint16(CTATupleIP),
+			Nested: true,
+			Children: []netfilter.Attribute{
+				{
+					Type: uint16(CTAIPv4Src),
+					Data: []byte{1, 2, 3, 4},
+				},
+				{
+					Type: uint16(CTAIPv4Dst),
+					Data: []byte{4, 3, 2, 1},
+				},
+			},
+		},
+		{
+			Type:   uint16(CTATupleProto),
+			Nested: true,
+			Children: []netfilter.Attribute{
+				{
+					Type: uint16(CTAProtoNum),
+					Data: []byte{0x06},
+				},
+				{
+					Type: uint16(CTAProtoSrcPort),
+					Data: []byte{0xff, 0x00},
+				},
+				{
+					Type: uint16(CTAProtoDstPort),
+					Data: []byte{0x00, 0xff},
+				},
+			},
+		},
+	}
+	flowIPPT = Tuple{
+		IP: IPTuple{
+			SourceAddress:      net.IP{1, 2, 3, 4},
+			DestinationAddress: net.IP{4, 3, 2, 1},
+		},
+		Proto: ProtoTuple{
+			Protocol:        6,
+			SourcePort:      65280,
+			DestinationPort: 255,
+		},
+	}
+	flowBadIPPT = Tuple{
+		IP: IPTuple{
+			SourceAddress:      net.IP{1, 2, 3, 4},
+			DestinationAddress: net.ParseIP("::1"),
+		},
+		Proto: ProtoTuple{
+			Protocol:        6,
+			SourcePort:      65280,
+			DestinationPort: 255,
+		},
+	}
+
 	corpusFlow = []struct {
 		name  string
 		attrs []netfilter.Attribute
@@ -62,59 +123,28 @@ var (
 			},
 		},
 		{
-			name: "ip/port/proto tuple attributes",
+			name: "ip/port/proto tuple attributes as orig/reply/master",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTATupleOrig),
-					Nested: true,
-					Children: []netfilter.Attribute{
-						{
-							Type:   uint16(CTATupleIP),
-							Nested: true,
-							Children: []netfilter.Attribute{
-								{
-									Type: uint16(CTAIPv4Src),
-									Data: []byte{1, 2, 3, 4},
-								},
-								{
-									Type: uint16(CTAIPv4Dst),
-									Data: []byte{4, 3, 2, 1},
-								},
-							},
-						},
-						{
-							Type:   uint16(CTATupleProto),
-							Nested: true,
-							Children: []netfilter.Attribute{
-								{
-									Type: uint16(CTAProtoNum),
-									Data: []byte{0x06},
-								},
-								{
-									Type: uint16(CTAProtoSrcPort),
-									Data: []byte{0xff, 0x00},
-								},
-								{
-									Type: uint16(CTAProtoDstPort),
-									Data: []byte{0x00, 0xff},
-								},
-							},
-						},
-					},
+					Type:     uint16(CTATupleOrig),
+					Nested:   true,
+					Children: nfaIPPT,
+				},
+				{
+					Type:     uint16(CTATupleReply),
+					Nested:   true,
+					Children: nfaIPPT,
+				},
+				{
+					Type:     uint16(CTATupleMaster),
+					Nested:   true,
+					Children: nfaIPPT,
 				},
 			},
 			flow: Flow{
-				TupleOrig: Tuple{
-					IP: IPTuple{
-						SourceAddress:      net.IP{1, 2, 3, 4},
-						DestinationAddress: net.IP{4, 3, 2, 1},
-					},
-					Proto: ProtoTuple{
-						Protocol:        6,
-						SourcePort:      65280,
-						DestinationPort: 255,
-					},
-				},
+				TupleOrig:   flowIPPT,
+				TupleReply:  flowIPPT,
+				TupleMaster: flowIPPT,
 			},
 		},
 		{
@@ -273,8 +303,121 @@ var (
 						},
 					},
 				},
+				{
+					Type:   uint16(CTASeqAdjReply),
+					Nested: true,
+					Children: []netfilter.Attribute{
+						{
+							Type: uint16(CTASeqAdjCorrectionPos),
+							Data: []byte{0x0f, 0x12, 0x34, 0x56},
+						},
+						{
+							Type: uint16(CTASeqAdjOffsetAfter),
+							Data: []byte{0x0f, 0x12, 0x34, 0x99},
+						},
+					},
+				},
 			},
-			flow: Flow{SeqAdjOrig: SequenceAdjust{Position: 0x0f123456, OffsetAfter: 0x0f123499}},
+			flow: Flow{
+				SeqAdjOrig:  SequenceAdjust{Position: 0x0f123456, OffsetAfter: 0x0f123499},
+				SeqAdjReply: SequenceAdjust{Direction: true, Position: 0x0f123456, OffsetAfter: 0x0f123499},
+			},
+		},
+		{
+			name: "synproxy attribute",
+			attrs: []netfilter.Attribute{
+				{
+					Type:   uint16(CTASynProxy),
+					Nested: true,
+					Children: []netfilter.Attribute{
+						{
+							Type: uint16(CTASynProxyISN),
+							Data: []byte{0x12, 0x34, 0x56, 0x78},
+						},
+						{
+							Type: uint16(CTASynProxyITS),
+							Data: []byte{0x87, 0x65, 0x43, 0x21},
+						},
+						{
+							Type: uint16(CTASynProxyTSOff),
+							Data: []byte{0xab, 0xcd, 0xef, 0x00},
+						},
+					},
+				},
+			},
+			flow: Flow{SynProxy: SynProxy{ISN: 0x12345678, ITS: 0x87654321, TSOff: 0xabcdef00}},
+		},
+	}
+
+	corpusFlowUnmarshalError = []struct {
+		name   string
+		errStr string
+		nfa    netfilter.Attribute
+	}{
+		{
+			name:   "error unmarshal original tuple",
+			nfa:    netfilter.Attribute{Type: uint16(CTATupleOrig)},
+			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal reply tuple",
+			nfa:    netfilter.Attribute{Type: uint16(CTATupleReply)},
+			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal master tuple",
+			nfa:    netfilter.Attribute{Type: uint16(CTATupleMaster)},
+			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal status",
+			nfa:    netfilter.Attribute{Type: uint16(CTAStatus), Nested: true},
+			errStr: "Status unmarshal: unexpected Nested attribute",
+		},
+		{
+			name:   "error unmarshal protoinfo",
+			nfa:    netfilter.Attribute{Type: uint16(CTAProtoInfo)},
+			errStr: "ProtoInfo unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal helper",
+			nfa:    netfilter.Attribute{Type: uint16(CTAHelp)},
+			errStr: "Helper unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal original counter",
+			nfa:    netfilter.Attribute{Type: uint16(CTACountersOrig)},
+			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal reply counter",
+			nfa:    netfilter.Attribute{Type: uint16(CTACountersReply)},
+			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal security context",
+			nfa:    netfilter.Attribute{Type: uint16(CTASecCtx)},
+			errStr: "Security unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal timestamp",
+			nfa:    netfilter.Attribute{Type: uint16(CTATimestamp)},
+			errStr: "Timestamp unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal original seqadj",
+			nfa:    netfilter.Attribute{Type: uint16(CTASeqAdjOrig)},
+			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal reply seqadj",
+			nfa:    netfilter.Attribute{Type: uint16(CTASeqAdjReply)},
+			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
+		},
+		{
+			name:   "error unmarshal synproxy",
+			nfa:    netfilter.Attribute{Type: uint16(CTASynProxy)},
+			errStr: "SynProxy unmarshal: need a Nested attribute to decode this structure",
 		},
 	}
 )
@@ -296,6 +439,51 @@ func TestFlow_Unmarshal(t *testing.T) {
 			}
 		})
 	}
+
+	for _, tt := range corpusFlowUnmarshalError {
+		t.Run(tt.name, func(t *testing.T) {
+			var f Flow
+			assert.EqualError(t, f.unmarshal([]netfilter.Attribute{tt.nfa}), tt.errStr)
+		})
+	}
+}
+
+func TestFlow_Marshal(t *testing.T) {
+
+	// Expect a marshal without errors
+	_, err := Flow{
+		TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowIPPT,
+		ProtoInfo: ProtoInfo{TCP: &ProtoInfoTCP{State: 42}},
+		Timeout:   123, Status: Status{value: 1234}, Mark: 0x1234, Zone: 2,
+		Helper:      Helper{Name: "ftp"},
+		SeqAdjOrig:  SequenceAdjust{Position: 1, OffsetBefore: 2, OffsetAfter: 3},
+		SeqAdjReply: SequenceAdjust{Position: 5, OffsetBefore: 6, OffsetAfter: 7},
+		SynProxy:    SynProxy{ISN: 0x12345678, ITS: 0x87654321, TSOff: 0xabcdef00},
+	}.marshal()
+	assert.NoError(t, err)
+
+	// Cannot marshal without orig and reply tuples
+	_, err = Flow{}.marshal()
+	assert.EqualError(t, err, errNeedTuples.Error())
+
+	// Return error from orig/reply/master IPTuple marshals
+	_, err = Flow{TupleOrig: flowBadIPPT, TupleReply: flowIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+	_, err = Flow{TupleOrig: flowIPPT, TupleReply: flowBadIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+	_, err = Flow{TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowBadIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+}
+
+func TestUnmarshalFlowsError(t *testing.T) {
+
+	_, err := unmarshalFlows([]netlink.Message{{}})
+	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+
+	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
+	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
+	_, err = unmarshalFlows([]netlink.Message{nlm})
+	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
 func BenchmarkFlow_Unmarshal(b *testing.B) {

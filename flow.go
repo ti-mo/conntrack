@@ -211,11 +211,7 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 	}
 
 	if f.ProtoInfo.Filled() {
-		pi, err := f.ProtoInfo.MarshalAttribute()
-		if err != nil {
-			return nil, err
-		}
-		attrs = append(attrs, pi)
+		attrs = append(attrs, f.ProtoInfo.MarshalAttribute())
 	}
 
 	if f.Helper.Filled() {
