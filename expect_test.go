@@ -3,6 +3,7 @@ package conntrack
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -190,6 +191,8 @@ func TestExpectType_String(t *testing.T) {
 	if ExpectType(255).String() == "" {
 		t.Fatal("ExpectType string representation empty - did you run `go generate`?")
 	}
+
+	assert.Equal(t, "CTAExpectFN", CTAExpectFN.String())
 }
 
 func BenchmarkExpect_Unmarshal(b *testing.B) {
