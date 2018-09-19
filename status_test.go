@@ -11,7 +11,7 @@ import (
 	"github.com/ti-mo/netfilter"
 )
 
-func TestStatus_Error(t *testing.T) {
+func TestStatusError(t *testing.T) {
 
 	nfaNested := netfilter.Attribute{Type: uint16(CTAStatus), Nested: true}
 
@@ -21,7 +21,7 @@ func TestStatus_Error(t *testing.T) {
 	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
 }
 
-func TestStatus_MarshalTwoWay(t *testing.T) {
+func TestStatusMarshalTwoWay(t *testing.T) {
 
 	tests := []struct {
 		name   string
@@ -83,7 +83,7 @@ func TestStatus_MarshalTwoWay(t *testing.T) {
 	}
 }
 
-func TestStatus_FieldTest(t *testing.T) {
+func TestStatusFieldTest(t *testing.T) {
 
 	var s Status
 
@@ -130,7 +130,7 @@ func TestStatus_FieldTest(t *testing.T) {
 	assert.Equal(t, true, s.Offload(), "offload")
 }
 
-func TestStatus_String(t *testing.T) {
+func TestStatusString(t *testing.T) {
 	full := Status{value: 0xffffffff}
 	empty := Status{}
 

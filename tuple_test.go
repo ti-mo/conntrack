@@ -146,7 +146,7 @@ var ipTupleTests = []struct {
 	},
 }
 
-func TestIPTuple_MarshalTwoWay(t *testing.T) {
+func TestIPTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range ipTupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -173,7 +173,7 @@ func TestIPTuple_MarshalTwoWay(t *testing.T) {
 	}
 }
 
-func TestIPTuple_MarshalError(t *testing.T) {
+func TestIPTupleMarshalError(t *testing.T) {
 
 	v4v6Mismatch := IPTuple{
 		SourceAddress:      net.ParseIP("1.2.3.4"),
@@ -283,7 +283,7 @@ var protoTupleTests = []struct {
 	},
 }
 
-func TestProtoTuple_MarshalTwoWay(t *testing.T) {
+func TestProtoTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range protoTupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -453,7 +453,7 @@ var tupleTests = []struct {
 	},
 }
 
-func TestTuple_MarshalTwoWay(t *testing.T) {
+func TestTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range tupleTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -480,7 +480,7 @@ func TestTuple_MarshalTwoWay(t *testing.T) {
 	}
 }
 
-func TestTuple_MarshalError(t *testing.T) {
+func TestTupleMarshalError(t *testing.T) {
 
 	ipTupleError := Tuple{
 		IP: IPTuple{
@@ -494,7 +494,7 @@ func TestTuple_MarshalError(t *testing.T) {
 	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }
 
-func TestTuple_Filled(t *testing.T) {
+func TestTupleFilled(t *testing.T) {
 
 	// Empty Tuple
 	assert.Equal(t, false, Tuple{}.Filled())
@@ -522,7 +522,7 @@ func TestTuple_Filled(t *testing.T) {
 
 }
 
-func TestTupleType_String(t *testing.T) {
+func TestTupleTypeString(t *testing.T) {
 
 	if TupleType(255).String() == "" {
 		t.Fatal("TupleType string representation empty - did you run `go generate`?")

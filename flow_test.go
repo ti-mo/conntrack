@@ -422,7 +422,7 @@ var (
 	}
 )
 
-func TestFlow_Unmarshal(t *testing.T) {
+func TestFlowUnmarshal(t *testing.T) {
 	for _, tt := range corpusFlow {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
@@ -448,7 +448,7 @@ func TestFlow_Unmarshal(t *testing.T) {
 	}
 }
 
-func TestFlow_Marshal(t *testing.T) {
+func TestFlowMarshal(t *testing.T) {
 
 	// Expect a marshal without errors
 	_, err := Flow{
@@ -486,7 +486,7 @@ func TestUnmarshalFlowsError(t *testing.T) {
 	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
-func BenchmarkFlow_Unmarshal(b *testing.B) {
+func BenchmarkFlowUnmarshal(b *testing.B) {
 
 	b.ReportAllocs()
 

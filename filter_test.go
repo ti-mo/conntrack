@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFilter_AttributeFilter(t *testing.T) {
+func TestFilterAttributeFilter(t *testing.T) {
 
 	var af AttributeFilter
 

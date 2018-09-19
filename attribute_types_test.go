@@ -14,13 +14,13 @@ var (
 	nfaTooShort = netfilter.Attribute{}
 )
 
-func TestAttributeType_String(t *testing.T) {
+func TestAttributeTypeString(t *testing.T) {
 	if AttributeType(255).String() == "" {
 		t.Fatal("AttributeType string representation empty - did you run `go generate`?")
 	}
 }
 
-func TestAttribute_Num16(t *testing.T) {
+func TestAttributeNum16(t *testing.T) {
 
 	n16 := Num16{}
 	assert.Equal(t, false, n16.Filled())
@@ -42,7 +42,7 @@ func TestAttribute_Num16(t *testing.T) {
 	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAZone), Data: []byte{0, 1}}, n16.MarshalAttribute(CTAZone))
 }
 
-func TestAttribute_Num32(t *testing.T) {
+func TestAttributeNum32(t *testing.T) {
 
 	n32 := Num32{}
 	assert.Equal(t, false, n32.Filled())
@@ -64,7 +64,7 @@ func TestAttribute_Num32(t *testing.T) {
 	assert.EqualValues(t, netfilter.Attribute{Type: uint16(CTAMark), Data: []byte{0, 1, 2, 3}}, n32.MarshalAttribute(CTAMark))
 }
 
-func TestAttribute_Bitfield(t *testing.T) {
+func TestAttributeBitfield(t *testing.T) {
 	bin := Binary{}
 	assert.Equal(t, false, bin.Filled())
 	assert.Equal(t, true, Binary{Type: 1}.Filled())
@@ -73,7 +73,7 @@ func TestAttribute_Bitfield(t *testing.T) {
 	assert.Nil(t, bin.UnmarshalAttribute(netfilter.Attribute{}))
 }
 
-func TestAttribute_Helper(t *testing.T) {
+func TestAttributeHelper(t *testing.T) {
 
 	hlp := Helper{}
 	assert.Equal(t, false, hlp.Filled())
@@ -115,7 +115,7 @@ func TestAttribute_Helper(t *testing.T) {
 	assert.EqualError(t, hlp.UnmarshalAttribute(nfaUnknownChild), fmt.Sprintf(errAttributeChild, CTAHelpUnspec, CTAHelp))
 }
 
-func TestAttribute_ProtoInfo(t *testing.T) {
+func TestAttributeProtoInfo(t *testing.T) {
 
 	pi := ProtoInfo{}
 	assert.Equal(t, false, pi.Filled())
@@ -299,7 +299,7 @@ func TestAttribute_ProtoInfo(t *testing.T) {
 	assert.EqualError(t, pi.UnmarshalAttribute(nfaInfoTCP), errReusedProtoInfo.Error())
 }
 
-func TestProtoInfoType_String(t *testing.T) {
+func TestProtoInfoTypeString(t *testing.T) {
 	ssid := ProtoInfoType(255)
 
 	ssidStr := ssid.String()
@@ -309,7 +309,7 @@ func TestProtoInfoType_String(t *testing.T) {
 	}
 }
 
-func TestAttribute_ProtoInfoTCP(t *testing.T) {
+func TestAttributeProtoInfoTCP(t *testing.T) {
 
 	pit := ProtoInfoTCP{}
 
@@ -362,7 +362,7 @@ func TestAttribute_ProtoInfoTCP(t *testing.T) {
 
 }
 
-func TestAttribute_ProtoInfoDCCP(t *testing.T) {
+func TestAttributeProtoInfoDCCP(t *testing.T) {
 
 	pid := ProtoInfoDCCP{}
 
@@ -407,7 +407,7 @@ func TestAttribute_ProtoInfoDCCP(t *testing.T) {
 
 }
 
-func TestAttribute_ProtoInfoSCTP(t *testing.T) {
+func TestAttributeProtoInfoSCTP(t *testing.T) {
 
 	pid := ProtoInfoSCTP{}
 
@@ -452,7 +452,7 @@ func TestAttribute_ProtoInfoSCTP(t *testing.T) {
 
 }
 
-func TestAttribute_Counters(t *testing.T) {
+func TestAttributeCounters(t *testing.T) {
 
 	ctr := Counter{}
 
@@ -507,7 +507,7 @@ func TestAttribute_Counters(t *testing.T) {
 	}
 }
 
-func TestAttribute_Timestamp(t *testing.T) {
+func TestAttributeTimestamp(t *testing.T) {
 
 	ts := Timestamp{}
 
@@ -546,7 +546,7 @@ func TestAttribute_Timestamp(t *testing.T) {
 
 }
 
-func TestAttribute_SecCtx(t *testing.T) {
+func TestAttributeSecCtx(t *testing.T) {
 
 	sc := Security{}
 
@@ -581,7 +581,7 @@ func TestAttribute_SecCtx(t *testing.T) {
 
 }
 
-func TestAttribute_SeqAdj(t *testing.T) {
+func TestAttributeSeqAdj(t *testing.T) {
 
 	sa := SequenceAdjust{}
 
@@ -642,7 +642,7 @@ func TestAttribute_SeqAdj(t *testing.T) {
 	}
 }
 
-func TestAttribute_SynProxy(t *testing.T) {
+func TestAttributeSynProxy(t *testing.T) {
 
 	sp := SynProxy{}
 	assert.Equal(t, false, sp.Filled())

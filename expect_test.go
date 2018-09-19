@@ -271,7 +271,7 @@ var corpusExpectUnmarshalError = []struct {
 	},
 }
 
-func TestExpect_Unmarshal(t *testing.T) {
+func TestExpectUnmarshal(t *testing.T) {
 
 	for _, tt := range corpusExpect {
 		t.Run(tt.name, func(t *testing.T) {
@@ -375,7 +375,7 @@ var corpusExpectNAT = []struct {
 	},
 }
 
-func TestExpectNAT_Unmarshal(t *testing.T) {
+func TestExpectNATUnmarshal(t *testing.T) {
 
 	for _, tt := range corpusExpectNAT {
 		t.Run(tt.name, func(t *testing.T) {
@@ -397,7 +397,7 @@ func TestExpectNAT_Unmarshal(t *testing.T) {
 	}
 }
 
-func TestExpectType_String(t *testing.T) {
+func TestExpectTypeString(t *testing.T) {
 	if ExpectType(255).String() == "" {
 		t.Fatal("ExpectType string representation empty - did you run `go generate`?")
 	}

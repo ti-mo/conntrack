@@ -79,7 +79,7 @@ var eventTypeTests = []struct {
 	},
 }
 
-func TestEventType_Unmarshal(t *testing.T) {
+func TestEventTypeUnmarshal(t *testing.T) {
 	for _, tt := range eventTypeTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestEventType_Unmarshal(t *testing.T) {
 	}
 }
 
-func TestEventType_String(t *testing.T) {
+func TestEventTypeString(t *testing.T) {
 	assert.Equal(t, "EventType(255)", EventType(255).String())
 }
 
@@ -132,7 +132,7 @@ var eventTests = []struct {
 	},
 }
 
-func TestEvent_Unmarshal(t *testing.T) {
+func TestEventUnmarshal(t *testing.T) {
 	for _, tt := range eventTests {
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -155,7 +155,7 @@ func TestEvent_Unmarshal(t *testing.T) {
 	}
 }
 
-func TestEvent_UnmarshalError(t *testing.T) {
+func TestEventUnmarshalError(t *testing.T) {
 
 	// Unmarshal into event with existing Flow
 	eventExistingFlow := Event{Flow: &Flow{}}

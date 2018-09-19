@@ -36,8 +36,14 @@ type Flow struct {
 	SynProxy SynProxy
 }
 
-// Build sets up a Flow object with the minimum necessary attributes
-// to create a Conntrack entry in the kernel.
+// Build sets up a Flow object with the minimum necessary attributes to create a Conntrack entry.
+// Writes values into the Status, Timeout, TupleOrig and TupleReply fields of the Flow.
+//
+// proto is the layer 4 protocol number of the connection.
+// status is a StatusFlag value, or an ORed combination thereof.
+// srcAddr and dstAddr are the source and destination addresses.
+// srcPort and dstPort are the source and destination ports.
+// timeout is the non-zero time-to-live of a connection in seconds.
 func (f *Flow) Build(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
 
 	f.Status.Set(status)
