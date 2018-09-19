@@ -37,7 +37,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 		{
 			name:   "out of range, only highest bits flipped",
 			b:      []byte{0xFF, 0xFF, 0x80, 0x00},
-			status: Status{value: 0xFFFF8000},
+			status: Status{Value: 0xFFFF8000},
 		},
 		{
 			name: "error, byte array too short",
@@ -70,7 +70,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.status.value, s.value); diff != "" {
+			if diff := cmp.Diff(tt.status.Value, s.Value); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
@@ -87,51 +87,51 @@ func TestStatusFieldTest(t *testing.T) {
 
 	var s Status
 
-	s.Set(StatusExpected)
+	s.Value = StatusExpected
 	assert.Equal(t, true, s.Expected(), "expected")
 
-	s.Set(StatusSeenReply)
+	s.Value = StatusSeenReply
 	assert.Equal(t, true, s.SeenReply(), "seenreply")
 
-	s.Set(StatusAssured)
+	s.Value = StatusAssured
 	assert.Equal(t, true, s.Assured(), "assured")
 
-	s.Set(StatusConfirmed)
+	s.Value = StatusConfirmed
 	assert.Equal(t, true, s.Confirmed(), "confirmed")
 
-	s.Set(StatusSrcNAT)
+	s.Value = StatusSrcNAT
 	assert.Equal(t, true, s.SrcNAT(), "srcnat")
 
-	s.Set(StatusDstNAT)
+	s.Value = StatusDstNAT
 	assert.Equal(t, true, s.DstNAT(), "dstnat")
 
-	s.Set(StatusSeqAdjust)
+	s.Value = StatusSeqAdjust
 	assert.Equal(t, true, s.SeqAdjust(), "seqadjust")
 
-	s.Set(StatusSrcNATDone)
+	s.Value = StatusSrcNATDone
 	assert.Equal(t, true, s.SrcNATDone(), "srcnatdone")
 
-	s.Set(StatusDstNATDone)
+	s.Value = StatusDstNATDone
 	assert.Equal(t, true, s.DstNATDone(), "dstnatdone")
 
-	s.Set(StatusDying)
+	s.Value = StatusDying
 	assert.Equal(t, true, s.Dying(), "dying")
 
-	s.Set(StatusFixedTimeout)
+	s.Value = StatusFixedTimeout
 	assert.Equal(t, true, s.FixedTimeout(), "fixedtimeout")
 
-	s.Set(StatusTemplate)
+	s.Value = StatusTemplate
 	assert.Equal(t, true, s.Template(), "template")
 
-	s.Set(StatusHelper)
+	s.Value = StatusHelper
 	assert.Equal(t, true, s.Helper(), "helper")
 
-	s.Set(StatusOffload)
+	s.Value = StatusOffload
 	assert.Equal(t, true, s.Offload(), "offload")
 }
 
 func TestStatusString(t *testing.T) {
-	full := Status{value: 0xffffffff}
+	full := Status{Value: 0xffffffff}
 	empty := Status{}
 
 	wantFull := "EXPECTED|SEEN_REPLY|ASSURED|CONFIRMED|SRC_NAT|DST_NAT|SEQ_ADJUST|SRC_NAT_DONE|DST_NAT_DONE|DYING|FIXED_TIMEOUT|TEMPLATE|UNTRACKED|HELPER|OFFLOAD"

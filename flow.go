@@ -46,7 +46,7 @@ type Flow struct {
 // timeout is the non-zero time-to-live of a connection in seconds.
 func (f *Flow) Build(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
 
-	f.Status.Set(status)
+	f.Status.Value = status
 
 	f.Timeout = timeout
 
@@ -204,7 +204,7 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 		attrs = append(attrs, Num32{Value: f.Timeout}.MarshalAttribute(CTATimeout))
 	}
 
-	if f.Status.value != 0 {
+	if f.Status.Value != 0 {
 		attrs = append(attrs, f.Status.MarshalAttribute())
 	}
 

@@ -155,7 +155,7 @@ var (
 					Data: []byte{0xff, 0x00, 0xff, 0x00},
 				},
 			},
-			flow: Flow{Status: Status{value: 0xff00ff00}},
+			flow: Flow{Status: Status{Value: 0xff00ff00}},
 		},
 		{
 			name: "protoinfo attribute w/ tcp info",
@@ -434,7 +434,7 @@ func TestFlowUnmarshal(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.flow, f, cmp.AllowUnexported(Status{})); diff != "" {
+			if diff := cmp.Diff(tt.flow, f); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
@@ -454,7 +454,7 @@ func TestFlowMarshal(t *testing.T) {
 	_, err := Flow{
 		TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowIPPT,
 		ProtoInfo: ProtoInfo{TCP: &ProtoInfoTCP{State: 42}},
-		Timeout:   123, Status: Status{value: 1234}, Mark: 0x1234, Zone: 2,
+		Timeout:   123, Status: Status{Value: 1234}, Mark: 0x1234, Zone: 2,
 		Helper:      Helper{Name: "ftp"},
 		SeqAdjOrig:  SequenceAdjust{Position: 1, OffsetBefore: 2, OffsetAfter: 3},
 		SeqAdjReply: SequenceAdjust{Position: 5, OffsetBefore: 6, OffsetAfter: 7},

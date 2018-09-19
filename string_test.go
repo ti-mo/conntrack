@@ -42,7 +42,7 @@ func TestEventString(t *testing.T) {
 	// Event with Flow
 	ef := conntrack.Event{Flow: &conntrack.Flow{}}
 
-	ef.Flow.Status.Set(conntrack.StatusAssured)
+	ef.Flow.Status.Value = conntrack.StatusAssured
 
 	ef.Flow.TupleOrig = tpl
 

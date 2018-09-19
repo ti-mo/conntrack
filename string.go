@@ -51,7 +51,7 @@ func (s Status) String() string {
 
 	// Loop over the field's bits
 	for i, name := range names {
-		if s.value&(1<<uint32(i)) != 0 {
+		if s.Value&(1<<uint32(i)) != 0 {
 			if rs != "" {
 				rs += "|"
 			}
