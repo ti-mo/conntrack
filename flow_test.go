@@ -486,6 +486,47 @@ func TestUnmarshalFlowsError(t *testing.T) {
 	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
+func TestFlowBuilder(t *testing.T) {
+
+	var f Flow
+
+	f.Build(
+		13, StatusNATMask, net.ParseIP("2a01:1450:200e:985::200e"),
+		net.ParseIP("2a12:1250:200e:123::100d"), 64732, 443, 400,
+	)
+
+	want := Flow{
+		Status:  Status{Value: StatusNATMask},
+		Timeout: 400,
+		TupleOrig: Tuple{
+			IP: IPTuple{
+				SourceAddress:      net.ParseIP("2a01:1450:200e:985::200e"),
+				DestinationAddress: net.ParseIP("2a12:1250:200e:123::100d"),
+			},
+			Proto: ProtoTuple{
+				Protocol:        13,
+				SourcePort:      64732,
+				DestinationPort: 443,
+			},
+		},
+		TupleReply: Tuple{
+			IP: IPTuple{
+				DestinationAddress: net.ParseIP("2a01:1450:200e:985::200e"),
+				SourceAddress:      net.ParseIP("2a12:1250:200e:123::100d"),
+			},
+			Proto: ProtoTuple{
+				Protocol:        13,
+				DestinationPort: 64732,
+				SourcePort:      443,
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, f); diff != "" {
+		t.Fatalf("unexpected builder output (-want +got):\n%s", diff)
+	}
+}
+
 func BenchmarkFlowUnmarshal(b *testing.B) {
 
 	b.ReportAllocs()
