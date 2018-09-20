@@ -519,7 +519,22 @@ func TestTupleFilled(t *testing.T) {
 		IP:    IPTuple{DestinationAddress: []byte{0}, SourceAddress: []byte{0}},
 		Proto: ProtoTuple{Protocol: 6},
 	}.Filled())
+}
 
+func TestTupleIPv6(t *testing.T) {
+
+	var ipt IPTuple
+
+	// Uninitialized Tuple cannot be IPv6 (nor IPv4)
+	assert.Equal(t, false, ipt.IsIPv6())
+
+	// Non-matching address lengths are not considered an IPv6 tuple
+	ipt.SourceAddress = net.ParseIP("1.2.3.4")
+	ipt.DestinationAddress = net.ParseIP("::1")
+	assert.Equal(t, false, ipt.IsIPv6())
+
+	ipt.SourceAddress = net.ParseIP("::2")
+	assert.Equal(t, true, ipt.IsIPv6())
 }
 
 func TestTupleTypeString(t *testing.T) {

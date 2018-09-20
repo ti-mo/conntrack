@@ -179,6 +179,12 @@ func (ipt IPTuple) MarshalAttribute() (netfilter.Attribute, error) {
 	return nfa, nil
 }
 
+// IsIPv6 returns true if the IPTuple contains source and destination addresses that are both IPv6.
+func (ipt IPTuple) IsIPv6() bool {
+	return ipt.SourceAddress.To16() != nil && ipt.SourceAddress.To4() == nil &&
+		ipt.DestinationAddress.To16() != nil && ipt.DestinationAddress.To4() == nil
+}
+
 // A ProtoTuple encodes a protocol number, source port and destination port.
 type ProtoTuple struct {
 	Protocol        uint8

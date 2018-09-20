@@ -158,11 +158,17 @@ func (c *Conn) Create(f Flow) error {
 		return err
 	}
 
+	// Default to IPv4, set netlink protocol family to IPv6 if orig/reply is IPv6.
+	pf := netfilter.ProtoIPv4
+	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
+		pf = netfilter.ProtoIPv6
+	}
+
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(CTNew),
-			Family:      netfilter.ProtoFamily(2), //TODO: Family based on IP type v4/v6
+			Family:      pf,
 			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
 				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
 		}, attrs)
