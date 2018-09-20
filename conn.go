@@ -184,3 +184,37 @@ func (c *Conn) Create(f Flow) error {
 
 	return nil
 }
+
+// Delete removes a Conntrack entry given a Flow.
+func (c *Conn) Delete(f Flow) error {
+
+	attrs, err := f.marshal()
+	if err != nil {
+		return err
+	}
+
+	// Default to IPv4, set netlink protocol family to IPv6 if orig/reply is IPv6.
+	pf := netfilter.ProtoIPv4
+	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
+		pf = netfilter.ProtoIPv6
+	}
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTDelete),
+			Family:      pf,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+		}, attrs)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
