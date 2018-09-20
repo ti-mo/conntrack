@@ -405,7 +405,7 @@ func TestExpectTypeString(t *testing.T) {
 	assert.Equal(t, "CTAExpectFN", CTAExpectFN.String())
 }
 
-func BenchmarkExpect_Unmarshal(b *testing.B) {
+func BenchmarkExpectUnmarshal(b *testing.B) {
 
 	b.ReportAllocs()
 

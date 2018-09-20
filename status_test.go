@@ -146,7 +146,7 @@ func TestStatusString(t *testing.T) {
 
 }
 
-func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {
+func BenchmarkStatusUnmarshalAttribute(b *testing.B) {
 	inputs := [][]byte{
 		{0x00, 0x00, 0x00, 0x01}, {0x00, 0x00, 0x00, 0x02}, {0x00, 0x00, 0x00, 0x03}, {0x00, 0x00, 0x00, 0x04},
 		{0x00, 0x00, 0x00, 0x05}, {0x00, 0x00, 0x00, 0x06}, {0x00, 0x00, 0x00, 0x07}, {0x00, 0x00, 0x00, 0x08},
@@ -158,7 +158,7 @@ func BenchmarkStatus_UnmarshalAttribute(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]
-		if err := (&ss).UnmarshalAttribute(nfa); err != nil {
+		if err := ss.UnmarshalAttribute(nfa); err != nil {
 			b.Fatal(err)
 		}
 	}
