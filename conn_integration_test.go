@@ -41,33 +41,30 @@ func checkKmod() error {
 }
 
 // makeNSConn creates a Conn in a new network namespace to use for testing.
-func makeNSConn() (*Conn, error) {
+func makeNSConn(t *testing.T) *Conn {
 
 	newns, err := netns.New()
 	if err != nil {
-		return nil, err
+		t.Fatalf("unexpected error creating network namespace: %s", err)
 	}
 	defer newns.Close()
 
 	newConn, err := Dial(&netlink.Config{NetNS: int(newns)})
 	if err != nil {
-		return nil, err
+		t.Fatalf("unexpected error dialing namespaced connection: %s", err)
 	}
 
-	return newConn, nil
+	return newConn
 }
 
 // Create a given number of flows with a randomized component and check the amount
 // of flows present in the table. Clean up by flushing the table.
 func TestConnCreateFlows(t *testing.T) {
 
-	c, err := makeNSConn()
-	if err != nil {
-		t.Fatalf("unexpected error creating namespaced connection: %s", err)
-	}
+	c := makeNSConn(t)
 
 	defer func() {
-		err = c.Flush()
+		err := c.Flush()
 		if err != nil {
 			t.Fatalf("error flushing table: %s", err)
 		}
@@ -76,6 +73,7 @@ func TestConnCreateFlows(t *testing.T) {
 	numFlows := 1337
 
 	var f Flow
+	var err error
 
 	// Create IPv4 flows
 	for i := 1; i <= numFlows; i++ {
