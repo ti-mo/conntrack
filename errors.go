@@ -20,6 +20,8 @@ var (
 
 	errNeedTimeout = errors.New("Flow needs Timeout field set for this operation")
 	errNeedTuples  = errors.New("Flow needs Original and Reply Tuple set for this operation")
+
+	errUpdateMaster = errors.New("cannot send TupleMaster in Flow update")
 )
 
 const (

@@ -104,6 +104,44 @@ func TestConnCreateDeleteFlows(t *testing.T) {
 	}
 }
 
+// Creates a flow, updates it and checks the result.
+func TestConnCreateUpdateFlow(t *testing.T) {
+
+	c, err := makeNSConn()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f Flow
+
+	f.Build(
+		17, 0,
+		net.ParseIP("1.2.3.4"),
+		net.ParseIP("5.6.7.8"),
+		1234, 5678, 120,
+	)
+
+	err = c.Create(f)
+	if err != nil {
+		t.Fatalf("unexpected error creating flow: %s", err)
+	}
+
+	f.Timeout = 240
+
+	err = c.Update(f)
+	if err != nil {
+		t.Fatalf("unexpected error updating flow: %s", err)
+	}
+
+	flows, err := c.Dump()
+	if err != nil {
+		t.Fatalf("unexpected error dumping table: %s", err)
+	}
+
+	if want, got := f.Timeout, flows[0].Timeout; want != got {
+		t.Fatalf("unexpected updated flow:\n- want: %d\n-  got: %d", want, got)
+	}
+}
+
 // Bench scenario that calls Conn.Create and Conn.Delete on the same Flow once per iteration.
 // This includes two marshaling operations for create/delete, two syscalls and output validation.
 func BenchmarkCreateDeleteFlow(b *testing.B) {

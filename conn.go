@@ -158,7 +158,6 @@ func (c *Conn) Create(f Flow) error {
 		return err
 	}
 
-	// Default to IPv4, set netlink protocol family to IPv6 if orig/reply is IPv6.
 	pf := netfilter.ProtoIPv4
 	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
 		pf = netfilter.ProtoIPv6
@@ -171,6 +170,47 @@ func (c *Conn) Create(f Flow) error {
 			Family:      pf,
 			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
 				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+		}, attrs)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Update updates a Conntrack entry. Only the following attributes are considered
+// when sending a Flow update: Helper, Timeout, Status, ProtoInfo, Mark, SeqAdj (orig/reply),
+// SynProxy, Labels. All other attributes are immutable past the point of creation.
+// See the ctnetlink_change_conntrack() kernel function for exact behaviour.
+func (c *Conn) Update(f Flow) error {
+
+	// Kernel rejects updates with a master tuple set
+	if f.TupleMaster.Filled() {
+		return errUpdateMaster
+	}
+
+	attrs, err := f.marshal()
+	if err != nil {
+		return err
+	}
+
+	pf := netfilter.ProtoIPv4
+	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
+		pf = netfilter.ProtoIPv6
+	}
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTNew),
+			Family:      pf,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		}, attrs)
 
 	if err != nil {
