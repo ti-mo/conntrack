@@ -184,6 +184,47 @@ func (c *Conn) Create(f Flow) error {
 	return nil
 }
 
+// Get queries the conntrack table for a connection matching some attributes of a given Flow.
+// The following attributes are considered in the query: Zone, (TupleOrig or TupleReply).
+func (c *Conn) Get(f Flow) (Flow, error) {
+
+	var qf Flow
+
+	attrs, err := f.marshal()
+	if err != nil {
+		return qf, err
+	}
+
+	pf := netfilter.ProtoIPv4
+	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
+		pf = netfilter.ProtoIPv6
+	}
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTGet),
+			Family:      pf,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+		}, attrs)
+
+	if err != nil {
+		return qf, err
+	}
+
+	nlm, err := c.conn.Query(req)
+	if err != nil {
+		return qf, err
+	}
+
+	qf, err = unmarshalFlow(nlm[0])
+	if err != nil {
+		return qf, err
+	}
+
+	return qf, nil
+}
+
 // Update updates a Conntrack entry. Only the following attributes are considered
 // when sending a Flow update: Helper, Timeout, Status, ProtoInfo, Mark, SeqAdj (orig/reply),
 // SynProxy, Labels. All other attributes are immutable past the point of creation.
@@ -225,7 +266,9 @@ func (c *Conn) Update(f Flow) error {
 	return nil
 }
 
-// Delete removes a Conntrack entry given a Flow.
+// Delete removes a Conntrack entry given a Flow. Flows are looked up in the conntrack table
+// based on the original and reply tuple. When the Flow's ID field is filled, it must match the
+// ID on the connection returned from the tuple lookup, or the delete will fail.
 func (c *Conn) Delete(f Flow) error {
 
 	attrs, err := f.marshal()
