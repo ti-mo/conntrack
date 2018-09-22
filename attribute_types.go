@@ -233,19 +233,19 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	switch ProtoInfoType(iattr.Type) {
 	case CTAProtoInfoTCP:
 		var tpi ProtoInfoTCP
-		if err := (&tpi).UnmarshalAttribute(iattr); err != nil {
+		if err := tpi.UnmarshalAttribute(iattr); err != nil {
 			return err
 		}
 		pi.TCP = &tpi
 	case CTAProtoInfoDCCP:
 		var dpi ProtoInfoDCCP
-		if err := (&dpi).UnmarshalAttribute(iattr); err != nil {
+		if err := dpi.UnmarshalAttribute(iattr); err != nil {
 			return err
 		}
 		pi.DCCP = &dpi
 	case CTAProtoInfoSCTP:
 		var spi ProtoInfoSCTP
-		if err := (&spi).UnmarshalAttribute(iattr); err != nil {
+		if err := spi.UnmarshalAttribute(iattr); err != nil {
 			return err
 		}
 		pi.SCTP = &spi

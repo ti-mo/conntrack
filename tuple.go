@@ -55,13 +55,13 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		switch TupleType(iattr.Type) {
 		case CTATupleIP:
 			var ti IPTuple
-			if err := (&ti).UnmarshalAttribute(iattr); err != nil {
+			if err := ti.UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
 			t.IP = ti
 		case CTATupleProto:
 			var tp ProtoTuple
-			if err := (&tp).UnmarshalAttribute(iattr); err != nil {
+			if err := tp.UnmarshalAttribute(iattr); err != nil {
 				return err
 			}
 			t.Proto = tp
