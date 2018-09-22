@@ -136,9 +136,13 @@ func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		}
 
 		switch IPTupleType(iattr.Type) {
-		case CTAIPv4Src, CTAIPv6Src:
+		case CTAIPv4Src:
+			ipt.SourceAddress = net.IPv4(iattr.Data[0], iattr.Data[1], iattr.Data[2], iattr.Data[3])
+		case CTAIPv6Src:
 			ipt.SourceAddress = net.IP(iattr.Data)
-		case CTAIPv4Dst, CTAIPv6Dst:
+		case CTAIPv4Dst:
+			ipt.DestinationAddress = net.IPv4(iattr.Data[0], iattr.Data[1], iattr.Data[2], iattr.Data[3])
+		case CTAIPv6Dst:
 			ipt.DestinationAddress = net.IP(iattr.Data)
 		default:
 			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, CTATupleIP), opUnIPTup)
