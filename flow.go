@@ -36,7 +36,7 @@ type Flow struct {
 	SynProxy SynProxy
 }
 
-// Build sets up a Flow object with the minimum necessary attributes to create a Conntrack entry.
+// NewFlow returns a new Flow object with the minimum necessary attributes to create a Conntrack entry.
 // Writes values into the Status, Timeout, TupleOrig and TupleReply fields of the Flow.
 //
 // proto is the layer 4 protocol number of the connection.
@@ -44,11 +44,14 @@ type Flow struct {
 // srcAddr and dstAddr are the source and destination addresses.
 // srcPort and dstPort are the source and destination ports.
 // timeout is the non-zero time-to-live of a connection in seconds.
-func (f *Flow) Build(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout uint32) error {
+func NewFlow(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, srcPort, destPort uint16, timeout, mark uint32) Flow {
+
+	var f Flow
 
 	f.Status.Value = status
 
 	f.Timeout = timeout
+	f.Mark = mark
 
 	f.TupleOrig.IP.SourceAddress = srcAddr
 	f.TupleOrig.IP.DestinationAddress = destAddr
@@ -63,7 +66,7 @@ func (f *Flow) Build(proto uint8, status StatusFlag, srcAddr, destAddr net.IP, s
 	f.TupleReply.Proto.DestinationPort = srcPort
 	f.TupleReply.Proto.Protocol = proto
 
-	return nil
+	return f
 }
 
 // unmarshal unmarshals a list of netfilter.Attributes into a Flow structure.

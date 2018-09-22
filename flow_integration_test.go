@@ -14,15 +14,11 @@ import (
 func TestConnCreateFlows(t *testing.T) {
 
 	c, err := makeNSConn()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	defer func() {
 		err = c.Flush()
-		if err != nil {
-			t.Fatalf("error flushing table: %s", err)
-		}
+		assert.NoError(t, err, "error flushing table")
 	}()
 
 	numFlows := 1337
@@ -31,38 +27,30 @@ func TestConnCreateFlows(t *testing.T) {
 
 	// Create IPv4 flows
 	for i := 1; i <= numFlows; i++ {
-		f.Build(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, uint16(i), 120)
+		f = NewFlow(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, uint16(i), 120, 0)
 
 		err = c.Create(f)
-		if err != nil {
-			t.Fatalf("unexpected error creating IPv4 flow %d: %s", i, err)
-		}
+		require.NoError(t, err, "unexpected error creating IPv4 flow", i)
 	}
 
 	// Create IPv6 flows
 	for i := 1; i <= numFlows; i++ {
-		f.Build(
+		f = NewFlow(
 			17, 0,
 			net.ParseIP("2a00:1450:400e:804::200e"),
 			net.ParseIP("2a00:1450:400e:804::200f"),
-			1234, uint16(i), 120,
+			1234, uint16(i), 120, 0,
 		)
 
 		err = c.Create(f)
-		if err != nil {
-			t.Fatalf("unexpected error creating IPv6 flow %d: %s", i, err)
-		}
+		require.NoError(t, err, "unexpected error creating IPv6 flow", i)
 	}
 
 	flows, err := c.Dump()
-	if err != nil {
-		t.Fatalf("unexpected error dumping table: %s", err)
-	}
+	require.NoError(t, err, "unexpected error dumping table")
 
 	// Expect twice the amount of numFlows, both for IPv4 and IPv6
-	if want, got := numFlows*2, len(flows); want != got {
-		t.Fatalf("unexpected amount of flows in table:\n- want: %d\n-  got: %d", want, got)
-	}
+	assert.Equal(t, numFlows*2, len(flows))
 }
 
 // Creates and deletes a number of flows with a randomized component.
@@ -70,56 +58,44 @@ func TestConnCreateFlows(t *testing.T) {
 func TestConnCreateDeleteFlows(t *testing.T) {
 
 	c, err := makeNSConn()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	numFlows := 42
 
 	var f Flow
 
 	for i := 1; i <= numFlows; i++ {
-		f.Build(
+		f = NewFlow(
 			17, 0,
 			net.ParseIP("2a00:1450:400e:804::223e"),
 			net.ParseIP("2a00:1450:400e:804::223f"),
-			1234, uint16(i), 120,
+			1234, uint16(i), 120, 0,
 		)
 
 		err = c.Create(f)
-		if err != nil {
-			t.Fatalf("unexpected error creating flow %d: %s", i, err)
-		}
+		require.NoError(t, err, "unexpected error creating flow", i)
+
 		err = c.Delete(f)
-		if err != nil {
-			t.Fatalf("unexpected error deleting flow %d: %s", i, err)
-		}
+		require.NoError(t, err, "unexpected error deleting flow", i)
 	}
 
 	flows, err := c.Dump()
-	if err != nil {
-		t.Fatalf("unexpected error dumping table: %s", err)
-	}
+	require.NoError(t, err, "unexpected error dumping table")
 
-	if want, got := 0, len(flows); want != got {
-		t.Fatalf("unexpected amount of flows in table:\n- want: %d\n-  got: %d", want, got)
-	}
+	assert.Equal(t, 0, len(flows))
 }
 
 // Creates a flow, updates it and checks the result.
 func TestConnCreateUpdateFlow(t *testing.T) {
 
 	c, err := makeNSConn()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var f Flow
+	require.NoError(t, err)
 
-	f.Build(
+	f := NewFlow(
 		17, 0,
 		net.ParseIP("1.2.3.4"),
 		net.ParseIP("5.6.7.8"),
-		1234, 5678, 120,
+		1234, 5678, 120, 0,
 	)
 
 	err = c.Create(f)
@@ -127,7 +103,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 		t.Fatalf("unexpected error creating flow: %s", err)
 	}
 
-	// Increase the flow's timeout from 120 in Build().
+	// Increase the flow's timeout from 120 in NewFlow().
 	f.Timeout = 240
 
 	err = c.Update(f)
@@ -149,28 +125,21 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 func TestConnCreateGetFlow(t *testing.T) {
 
 	c, err := makeNSConn()
-	if err != nil {
-		t.Fatal(err)
+	require.NoError(t, err)
+
+	flows := map[string]Flow{
+		"v4m1": NewFlow(17, 0, net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8"), 1234, 5678, 120, 0),
+		"v4m2": NewFlow(17, 0, net.ParseIP("10.0.0.1"), net.ParseIP("10.0.0.2"), 24000, 80, 120, 0),
+		"v6m1": NewFlow(17, 0, net.ParseIP("2a12:1234:200f:600::200a"), net.ParseIP("2a12:1234:200f:600::200b"), 6554, 53, 120, 0),
+		"v6m2": NewFlow(17, 0, net.ParseIP("900d:f00d:24::7"), net.ParseIP("baad:beef:b00::b00"), 1323, 22, 120, 0),
 	}
-
-	var v4m1, v4m2, v6m1, v6m2 Flow
-	v4m1.Build(17, 0, net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8"), 1234, 5678, 120)
-	v4m2.Build(17, 0, net.ParseIP("10.0.0.1"), net.ParseIP("10.0.0.2"), 24000, 80, 120)
-	v6m1.Build(17, 0, net.ParseIP("2a12:1234:200f:600::200a"), net.ParseIP("2a12:1234:200f:600::200b"), 6554, 53, 120)
-	v6m2.Build(17, 0, net.ParseIP("900d:f00d:24::7"), net.ParseIP("baad:beef:b00::b00"), 1323, 22, 120)
-
-	flows := map[string]Flow{"v4m1": v4m1, "v4m2": v4m2, "v6m1": v6m1, "v6m2": v6m2}
 
 	for n, f := range flows {
 		err = c.Create(f)
-		if err != nil {
-			t.Fatalf("unexpected error creating flow %s: %s", n, err)
-		}
+		require.NoError(t, err, "unexpected error creating flow", n)
 
 		qflow, err := c.Get(f)
-		if err != nil {
-			t.Fatalf("unexpected error getting flow %s: %s", n, err)
-		}
+		require.NoError(t, err, "unexpected error getting flow", n)
 
 		assert.Equal(t, qflow.TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, qflow.TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
@@ -188,8 +157,7 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	var f Flow
-	f.Build(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, 80, 120)
+	f := NewFlow(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, 80, 120, 0)
 
 	for n := 0; n < b.N; n++ {
 		err = c.Create(f)

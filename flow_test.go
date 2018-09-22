@@ -482,13 +482,11 @@ func TestUnmarshalFlowsError(t *testing.T) {
 	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
-func TestFlowBuilder(t *testing.T) {
+func TestNewFlow(t *testing.T) {
 
-	var f Flow
-
-	f.Build(
+	f := NewFlow(
 		13, StatusNATMask, net.ParseIP("2a01:1450:200e:985::200e"),
-		net.ParseIP("2a12:1250:200e:123::100d"), 64732, 443, 400,
+		net.ParseIP("2a12:1250:200e:123::100d"), 64732, 443, 400, 0xf00,
 	)
 
 	want := Flow{
@@ -516,6 +514,7 @@ func TestFlowBuilder(t *testing.T) {
 				SourcePort:      443,
 			},
 		},
+		Mark: 0xf00,
 	}
 
 	if diff := cmp.Diff(want, f); diff != "" {
