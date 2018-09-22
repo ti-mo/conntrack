@@ -125,6 +125,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 		t.Fatalf("unexpected error creating flow: %s", err)
 	}
 
+	// Increase the flow's timeout from 120 in Build().
 	f.Timeout = 240
 
 	err = c.Update(f)
@@ -137,8 +138,8 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 		t.Fatalf("unexpected error dumping table: %s", err)
 	}
 
-	if want, got := f.Timeout, flows[0].Timeout; want != got {
-		t.Fatalf("unexpected updated flow:\n- want: %d\n-  got: %d", want, got)
+	if got := flows[0].Timeout; !(got > 120) {
+		t.Fatalf("unexpected updated flow:\n- want: > 120\n-  got: %d", got)
 	}
 }
 
