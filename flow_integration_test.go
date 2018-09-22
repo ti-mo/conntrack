@@ -6,6 +6,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -143,6 +145,31 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 		assert.Equal(t, qflow.TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, qflow.TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
+	}
+}
+
+func TestConnDumpFilter(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	flows := map[string]Flow{
+		"v4m1": NewFlow(17, 0, net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8"), 1234, 5678, 120, 0xff000000),
+		"v4m2": NewFlow(17, 0, net.ParseIP("10.0.0.1"), net.ParseIP("10.0.0.2"), 24000, 80, 120, 0x00ff0000),
+		"v6m1": NewFlow(17, 0, net.ParseIP("2a12:1234:200f:600::200a"), net.ParseIP("2a12:1234:200f:600::200b"), 6554, 53, 120, 0x0000ff00),
+		"v6m2": NewFlow(17, 0, net.ParseIP("900d:f00d:24::7"), net.ParseIP("baad:beef:b00::b00"), 1323, 22, 120, 0x000000ff),
+	}
+
+	for n, f := range flows {
+		err = c.Create(f)
+		require.NoError(t, err, "unexpected error creating flow", n)
+
+		df, err := c.DumpFilter(Filter{Mark: f.Mark, Mask: f.Mark})
+		require.NoError(t, err, "unexpected error dumping filtered flows", n)
+
+		assert.Len(t, df, 1)
+		assert.Equal(t, df[0].TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
+		assert.Equal(t, df[0].TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
 	}
 }
 

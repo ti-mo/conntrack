@@ -121,6 +121,30 @@ func (c *Conn) Dump() ([]Flow, error) {
 	return unmarshalFlows(nlm)
 }
 
+// DumpFilter gets all Conntrack connections from the kernel in the form of a list
+// of Flow objects, but only returns Flows matching the connmark specified in the Filter parameter.
+func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(CTGet),
+			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+		}, f.marshal())
+
+	if err != nil {
+		return nil, err
+	}
+
+	nlm, err := c.conn.Query(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalFlows(nlm)
+}
+
 // Flush empties the Conntrack table.
 func (c *Conn) Flush() error {
 
@@ -217,6 +241,9 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 		return qf, err
 	}
 
+	// Since this is not a dump (and ACK flag is set), the kernel sends a message containing
+	// the flow, followed by a Netlink (non-)error message. The error is already parsed by
+	// the netlink library, so we only read the first message containing the Flow.
 	qf, err = unmarshalFlow(nlm[0])
 	if err != nil {
 		return qf, err
