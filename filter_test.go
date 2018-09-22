@@ -3,28 +3,26 @@ package conntrack
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/ti-mo/netfilter"
+
+	"github.com/google/go-cmp/cmp"
 )
 
-func TestFilterAttributeFilter(t *testing.T) {
+func TestFilterMarshal(t *testing.T) {
 
-	var af AttributeFilter
+	f := Filter{Mark: 0xf0000000, Mask: 0x0000000f}
+	fm := []netfilter.Attribute{
+		{
+			Type: uint16(CTAMark),
+			Data: []byte{0xf0, 0, 0, 0},
+		},
+		{
+			Type: uint16(CTAMarkMask),
+			Data: []byte{0, 0, 0, 0x0f},
+		},
+	}
 
-	// AttributeFilter is a bitfield of 32 bits, so can represent values 0-31
-	assert.Panics(t, func() { af.Check(0x32) })
-	assert.Panics(t, func() { af.Set(0x32) })
-
-	// A default AttributeFilter will answer positively to any checks
-	assert.Equal(t, true, af.Check(CTAUnspec))
-
-	// Set and check some types in the bitfield
-	af.Set(CTAZone, CTACountersReply)
-	assert.Equal(t, true, af.Check(CTAZone))
-	assert.Equal(t, true, af.Check(CTACountersReply))
-
-	// Make sure Set() zeroes the bitfield before writing
-	af.Set(CTAHelp)
-	assert.Equal(t, true, af.Check(CTAHelp))
-	assert.Equal(t, false, af.Check(CTAZone)) // Erased by Set(CTAHelp)
-
+	if diff := cmp.Diff(fm, f.marshal()); diff != "" {
+		t.Fatalf("unexpected Filter marshal (-want +got):\n%s", diff)
+	}
 }

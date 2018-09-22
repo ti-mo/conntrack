@@ -1,40 +1,28 @@
 package conntrack
 
-const (
-	errAttrTypeTooLarge = "AttributeType too large for AttributeFilter bitfield"
+import (
+	"github.com/ti-mo/netfilter"
 )
 
-// An AttributeFilter is a bitfield used for selective decoding of
-// netfilter.Attributes into Conntrack structures.
-type AttributeFilter uint32
-
-// Check checks whether the AttributeType is whitelisted in the filter.
-// Panics if the type value is larger than 31. Always returns true if the
-// filter is 0. (default)
-func (af AttributeFilter) Check(t AttributeType) bool {
-
-	if t > 31 {
-		panic(errAttrTypeTooLarge)
-	}
-
-	// Filter uninitialized/default, return true
-	if af == 0 {
-		return true
-	}
-
-	return af&(1<<t) != 0
+// Filter is a structure used in dump operations to filter the response
+// based on a given connmark and mask. The mask is applied to the Mark field of
+// all flows in the conntrack table, the result is compared to the filter's Mark.
+// Each flow that matches will be returned by the kernel.
+type Filter struct {
+	Mark, Mask uint32
 }
 
-// Set takes a list of AttributeTypes and flags them in the filter. Re-initializes the filter
-// before setting flags. Panics if any type value is larger than 31.
-func (af *AttributeFilter) Set(types ...AttributeType) {
+// marshal marshals a Filter into a list of netfilter.Attributes.
+func (f Filter) marshal() []netfilter.Attribute {
 
-	*af = 0
-
-	for _, t := range types {
-		if t > 31 {
-			panic(errAttrTypeTooLarge)
-		}
-		*af = AttributeFilter(uint32(*af) | 1<<t)
+	return []netfilter.Attribute{
+		{
+			Type: uint16(CTAMark),
+			Data: netfilter.Uint32Bytes(f.Mark),
+		},
+		{
+			Type: uint16(CTAMarkMask),
+			Data: netfilter.Uint32Bytes(f.Mask),
+		},
 	}
 }
