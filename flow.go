@@ -247,27 +247,40 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 	return attrs, nil
 }
 
+// unmarshalFlow unmarshals a Flow from a netlink.Message.
+// The Message must contain valid attributes.
+func unmarshalFlow(nlm netlink.Message) (Flow, error) {
+
+	var f Flow
+
+	_, qattrs, err := netfilter.UnmarshalNetlink(nlm)
+	if err != nil {
+		return f, err
+	}
+
+	err = f.unmarshal(qattrs)
+	if err != nil {
+		return f, err
+	}
+
+	return f, nil
+}
+
 // unmarshalFlows unmarshals a list of flows from a list of Netlink messages.
 // This method can be used to parse the result of a dump or get query.
 func unmarshalFlows(nlm []netlink.Message) ([]Flow, error) {
 
-	// Pre-allocate to avoid extending output slice on every op
-	out := make([]Flow, len(nlm))
+	// Pre-allocate to avoid re-allocating output slice on every op
+	out := make([]Flow, 0, len(nlm))
 
 	for i := 0; i < len(nlm); i++ {
 
-		_, attrs, err := netfilter.UnmarshalNetlink(nlm[i])
+		f, err := unmarshalFlow(nlm[i])
 		if err != nil {
 			return nil, err
 		}
 
-		var f Flow
-		err = f.unmarshal(attrs)
-		if err != nil {
-			return nil, err
-		}
-
-		out[i] = f
+		out = append(out, f)
 	}
 
 	return out, nil
