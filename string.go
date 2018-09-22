@@ -90,8 +90,8 @@ func (e Event) String() string {
 
 		// Mark/mask
 		mark := "<No Mark>"
-		if e.Flow.Mark != 0 && e.Flow.MarkMask != 0 {
-			mark = fmt.Sprintf("Mark: <%#x/%#x>", e.Flow.Mark, e.Flow.MarkMask)
+		if e.Flow.Mark != 0 {
+			mark = fmt.Sprintf("Mark: <%#x>", e.Flow.Mark)
 		}
 
 		// SeqAdj

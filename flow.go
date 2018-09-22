@@ -31,7 +31,7 @@ type Flow struct {
 
 	Labels, LabelsMask []byte
 
-	Mark, MarkMask, Use uint32
+	Mark, Use uint32
 
 	SynProxy SynProxy
 }
@@ -85,9 +85,6 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 		// CTA_MARK is the connection's connmark
 		case CTAMark:
 			f.Mark = attr.Uint32()
-		// CTA_MARK_MASK is never sent by the kernel, but can be used for kernel-space dump filtering!
-		case CTAMarkMask:
-			f.MarkMask = attr.Uint32()
 		// CTA_ZONE describes the Conntrack zone the flow is placed in. This can be combined with a CTA_TUPLE_ZONE
 		// to specify which zone an event originates from.
 		case CTAZone:

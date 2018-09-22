@@ -100,10 +100,6 @@ var (
 					Data: []byte{0, 1, 2, 3},
 				},
 				{
-					Type: uint16(CTAMarkMask),
-					Data: []byte{0, 1, 2, 3},
-				},
-				{
 					Type: uint16(CTAZone),
 					Data: []byte{4, 5},
 				},
@@ -119,7 +115,7 @@ var (
 			flow: Flow{
 				ID: 0x010203, Timeout: 0x010203, Zone: 0x0405,
 				Labels: []byte{0x4b, 0x1d, 0xbe, 0xef}, LabelsMask: []byte{0x00, 0xba, 0x1b, 0xe1},
-				Mark: 0x010203, MarkMask: 0x010203, Use: 0x010203,
+				Mark: 0x010203, Use: 0x010203,
 			},
 		},
 		{
