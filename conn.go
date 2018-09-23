@@ -145,6 +145,31 @@ func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
 	return unmarshalFlows(nlm)
 }
 
+// DumpExpect gets all expected Conntrack expectations from the kernel in the form
+// of a list of Expect objects.
+func (c *Conn) DumpExpect() ([]Expect, error) {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
+			MessageType: netfilter.MessageType(CTGet),
+			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
+		},
+		nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	nlm, err := c.conn.Query(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalExpects(nlm)
+}
+
 // Flush empties the Conntrack table.
 func (c *Conn) Flush() error {
 
