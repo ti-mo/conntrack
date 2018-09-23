@@ -305,6 +305,7 @@ func TestExpectMarshal(t *testing.T) {
 
 	ex := Expect{
 		TupleMaster: flowIPPT, Tuple: flowIPPT, Mask: flowIPPT,
+		Timeout:  240,
 		Zone:     5,
 		HelpName: "ftp",
 		Function: "func",
@@ -334,6 +335,10 @@ func TestExpectMarshal(t *testing.T) {
 			Type:     uint16(CTAExpectMask),
 			Nested:   true,
 			Children: nfaIPPT,
+		},
+		{
+			Type: uint16(CTAExpectTimeout),
+			Data: []byte{0x00, 0x00, 0x00, 0xf0},
 		},
 		{
 			Type: uint16(CTAExpectHelpName),
@@ -378,7 +383,7 @@ func TestExpectMarshal(t *testing.T) {
 
 	// Cannot marshal without tuple/mask/master Tuples
 	_, err = Expect{}.marshal()
-	assert.EqualError(t, err, errNeedTuples.Error())
+	assert.EqualError(t, err, errExpectNeedTuples.Error())
 
 	// Return error from tuple/mask/master Tuple marshals
 	_, err = Expect{TupleMaster: flowBadIPPT, Tuple: flowIPPT, Mask: flowIPPT}.marshal()

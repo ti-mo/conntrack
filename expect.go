@@ -134,10 +134,10 @@ func (ex Expect) marshal() ([]netfilter.Attribute, error) {
 
 	// Expectations need Tuple, Mask and TupleMaster filled to be valid.
 	if !ex.Tuple.Filled() || !ex.Mask.Filled() || !ex.TupleMaster.Filled() {
-		return nil, errNeedTuples
+		return nil, errExpectNeedTuples
 	}
 
-	attrs := make([]netfilter.Attribute, 3, 9)
+	attrs := make([]netfilter.Attribute, 4, 10)
 
 	tm, err := ex.TupleMaster.MarshalAttribute(uint16(CTAExpectMaster))
 	if err != nil {
@@ -156,6 +156,8 @@ func (ex Expect) marshal() ([]netfilter.Attribute, error) {
 		return nil, err
 	}
 	attrs[2] = ts
+
+	attrs[3] = netfilter.Attribute{Type: uint16(CTAExpectTimeout), Data: netfilter.Uint32Bytes(ex.Timeout)}
 
 	if ex.HelpName != "" {
 		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectHelpName), Data: []byte(ex.HelpName)})

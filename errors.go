@@ -22,6 +22,8 @@ var (
 	errNeedTuples  = errors.New("Flow needs Original and Reply Tuple set for this operation")
 
 	errUpdateMaster = errors.New("cannot send TupleMaster in Flow update")
+
+	errExpectNeedTuples = errors.New("Expect needs Tuple, Mask and TupleMaster Tuples set for this operation")
 )
 
 const (
