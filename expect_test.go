@@ -301,6 +301,98 @@ func TestExpectUnmarshal(t *testing.T) {
 	}
 }
 
+func TestExpectMarshal(t *testing.T) {
+
+	ex := Expect{
+		TupleMaster: flowIPPT, Tuple: flowIPPT, Mask: flowIPPT,
+		Zone:     5,
+		HelpName: "ftp",
+		Function: "func",
+		Flags:    123,
+		Class:    456,
+		NAT: ExpectNAT{
+			Direction: true,
+			Tuple:     flowIPPT,
+		},
+	}
+
+	exm, err := ex.marshal()
+	require.NoError(t, err, "Expect marshal")
+
+	want := []netfilter.Attribute{
+		{
+			Type:     uint16(CTAExpectMaster),
+			Nested:   true,
+			Children: nfaIPPT,
+		},
+		{
+			Type:     uint16(CTAExpectTuple),
+			Nested:   true,
+			Children: nfaIPPT,
+		},
+		{
+			Type:     uint16(CTAExpectMask),
+			Nested:   true,
+			Children: nfaIPPT,
+		},
+		{
+			Type: uint16(CTAExpectHelpName),
+			Data: []byte("ftp"),
+		},
+		{
+			Type: uint16(CTAExpectZone),
+			Data: []byte{0x00, 0x05},
+		},
+		{
+			Type: uint16(CTAExpectClass),
+			Data: []byte{0x00, 0x00, 0x01, 0xc8},
+		},
+		{
+			Type: uint16(CTAExpectFlags),
+			Data: []byte{0x00, 0x00, 0x00, 0x7b},
+		},
+		{
+			Type: uint16(CTAExpectFN),
+			Data: []byte("func"),
+		},
+		{
+			Type:   uint16(CTAExpectNAT),
+			Nested: true,
+			Children: []netfilter.Attribute{
+				{
+					Type: uint16(CTAExpectNATDir),
+					Data: []byte{0x0, 0x0, 0x0, 0x1},
+				},
+				{
+					Type:     uint16(CTAExpectNATTuple),
+					Nested:   true,
+					Children: nfaIPPT,
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, exm); diff != "" {
+		t.Fatalf("unexpected Expect marshal (-want +got):\n%s", diff)
+	}
+
+	// Cannot marshal without tuple/mask/master Tuples
+	_, err = Expect{}.marshal()
+	assert.EqualError(t, err, errNeedTuples.Error())
+
+	// Return error from tuple/mask/master Tuple marshals
+	_, err = Expect{TupleMaster: flowBadIPPT, Tuple: flowIPPT, Mask: flowIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+	_, err = Expect{TupleMaster: flowIPPT, Tuple: flowBadIPPT, Mask: flowIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+	_, err = Expect{TupleMaster: flowIPPT, Tuple: flowIPPT, Mask: flowBadIPPT}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+
+	// Return error from Tuple marshal in ExpectNAT
+	_, err = Expect{TupleMaster: flowIPPT, Tuple: flowIPPT, Mask: flowIPPT, NAT: ExpectNAT{Tuple: flowBadIPPT}}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+}
+
 var corpusExpectNAT = []struct {
 	name string
 	attr netfilter.Attribute

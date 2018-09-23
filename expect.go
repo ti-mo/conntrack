@@ -130,6 +130,64 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 	return nil
 }
 
+func (ex Expect) marshal() ([]netfilter.Attribute, error) {
+
+	// Expectations need Tuple, Mask and TupleMaster filled to be valid.
+	if !ex.Tuple.Filled() || !ex.Mask.Filled() || !ex.TupleMaster.Filled() {
+		return nil, errNeedTuples
+	}
+
+	attrs := make([]netfilter.Attribute, 3, 9)
+
+	tm, err := ex.TupleMaster.MarshalAttribute(uint16(CTAExpectMaster))
+	if err != nil {
+		return nil, err
+	}
+	attrs[0] = tm
+
+	tp, err := ex.Tuple.MarshalAttribute(uint16(CTAExpectTuple))
+	if err != nil {
+		return nil, err
+	}
+	attrs[1] = tp
+
+	ts, err := ex.Mask.MarshalAttribute(uint16(CTAExpectMask))
+	if err != nil {
+		return nil, err
+	}
+	attrs[2] = ts
+
+	if ex.HelpName != "" {
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectHelpName), Data: []byte(ex.HelpName)})
+	}
+
+	if ex.Zone != 0 {
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectZone), Data: netfilter.Uint16Bytes(ex.Zone)})
+	}
+
+	if ex.Class != 0 {
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectClass), Data: netfilter.Uint32Bytes(ex.Class)})
+	}
+
+	if ex.Flags != 0 {
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectFlags), Data: netfilter.Uint32Bytes(ex.Flags)})
+	}
+
+	if ex.Function != "" {
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectFN), Data: []byte(ex.Function)})
+	}
+
+	if ex.NAT.Tuple.Filled() {
+		en, err := ex.NAT.marshal()
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, en)
+	}
+
+	return attrs, nil
+}
+
 // unmarshalExpect unmarshals an Expect from a netlink.Message.
 // The Message must contain valid attributes.
 func unmarshalExpect(nlm netlink.Message) (Expect, error) {
