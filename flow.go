@@ -187,13 +187,13 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	attrs := make([]netfilter.Attribute, 2, 12)
 
-	to, err := f.TupleOrig.MarshalAttribute(CTATupleOrig)
+	to, err := f.TupleOrig.MarshalAttribute(uint16(CTATupleOrig))
 	if err != nil {
 		return nil, err
 	}
 	attrs[0] = to
 
-	tr, err := f.TupleReply.MarshalAttribute(CTATupleReply)
+	tr, err := f.TupleReply.MarshalAttribute(uint16(CTATupleReply))
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 	}
 
 	if f.TupleMaster.Filled() {
-		tm, err := f.TupleMaster.MarshalAttribute(CTATupleMaster)
+		tm, err := f.TupleMaster.MarshalAttribute(uint16(CTATupleMaster))
 		if err != nil {
 			return nil, err
 		}

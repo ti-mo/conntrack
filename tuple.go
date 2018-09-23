@@ -79,16 +79,16 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 }
 
 // MarshalAttribute marshals a Tuple to a netfilter.Attribute.
-func (t Tuple) MarshalAttribute(at AttributeType) (netfilter.Attribute, error) {
+func (t Tuple) MarshalAttribute(at uint16) (netfilter.Attribute, error) {
 
-	nfa := netfilter.Attribute{Type: uint16(at), Nested: true, Children: make([]netfilter.Attribute, 2, 3)}
+	nfa := netfilter.Attribute{Type: at, Nested: true, Children: make([]netfilter.Attribute, 2, 3)}
 
 	ipt, err := t.IP.MarshalAttribute()
 	if err != nil {
 		return netfilter.Attribute{}, err
 	}
-	nfa.Children[0] = ipt
 
+	nfa.Children[0] = ipt
 	nfa.Children[1] = t.Proto.MarshalAttribute()
 
 	if t.Zone != 0 {
@@ -96,7 +96,6 @@ func (t Tuple) MarshalAttribute(at AttributeType) (netfilter.Attribute, error) {
 	}
 
 	return nfa, nil
-
 }
 
 // An IPTuple encodes a source and destination address.
