@@ -253,12 +253,12 @@ func unmarshalFlow(nlm netlink.Message) (Flow, error) {
 
 	var f Flow
 
-	_, qattrs, err := netfilter.UnmarshalNetlink(nlm)
+	_, nfa, err := netfilter.UnmarshalNetlink(nlm)
 	if err != nil {
 		return f, err
 	}
 
-	err = f.unmarshal(qattrs)
+	err = f.unmarshal(nfa)
 	if err != nil {
 		return f, err
 	}

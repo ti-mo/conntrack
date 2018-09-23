@@ -110,27 +110,40 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 	return nil
 }
 
-// unmarshalExpects unmarshals a list of expected connectinos from a list of Netlink messages.
+// unmarshalExpect unmarshals an Expect from a netlink.Message.
+// The Message must contain valid attributes.
+func unmarshalExpect(nlm netlink.Message) (Expect, error) {
+
+	var ex Expect
+
+	_, nfa, err := netfilter.UnmarshalNetlink(nlm)
+	if err != nil {
+		return ex, err
+	}
+
+	err = ex.unmarshal(nfa)
+	if err != nil {
+		return ex, err
+	}
+
+	return ex, nil
+}
+
+// unmarshalExpects unmarshals a list of expected connections from a list of Netlink messages.
 // This method can be used to parse the result of a dump or get query.
 func unmarshalExpects(nlm []netlink.Message) ([]Expect, error) {
 
-	// Pre-allocate to avoid extending output slice on every op
-	out := make([]Expect, len(nlm))
+	// Pre-allocate to avoid re-allocating output slice on every op
+	out := make([]Expect, 0, len(nlm))
 
 	for i := 0; i < len(nlm); i++ {
 
-		_, attrs, err := netfilter.UnmarshalNetlink(nlm[i])
+		ex, err := unmarshalExpect(nlm[i])
 		if err != nil {
 			return nil, err
 		}
 
-		var ex Expect
-		err = ex.unmarshal(attrs)
-		if err != nil {
-			return nil, err
-		}
-
-		out[i] = ex
+		out = append(out, ex)
 	}
 
 	return out, nil
