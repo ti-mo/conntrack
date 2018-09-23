@@ -2,6 +2,7 @@ package conntrack
 
 import (
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -394,6 +395,37 @@ func TestExpectNATUnmarshal(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestExpectNATMarshal(t *testing.T) {
+
+	// Expect a marshal without errors
+	en := ExpectNAT{
+		Direction: true,
+		Tuple: Tuple{
+			IP: IPTuple{
+				SourceAddress:      net.ParseIP("baa:baa::b"),
+				DestinationAddress: net.ParseIP("ef00:3f00::ba13"),
+			},
+			Proto: ProtoTuple{
+				Protocol:        13,
+				SourcePort:      123,
+				DestinationPort: 456,
+			},
+			Zone: 5,
+		},
+	}
+	enm, err := en.marshal()
+	require.NoError(t, err, "ExpectNAT marshal", en)
+
+	_, err = ExpectNAT{}.marshal()
+	assert.EqualError(t, err, errBadIPTuple.Error())
+
+	// Only verify first attribute (direction); Tuple marshal has its own tests
+	want := netfilter.Attribute{Type: uint16(CTAExpectNATDir), Data: []byte{0, 0, 0, 1}}
+	if diff := cmp.Diff(want, enm.Children[0]); diff != "" {
+		t.Fatalf("unexpected ExpectNAT marshal (-want +got):\n%s", diff)
 	}
 }
 

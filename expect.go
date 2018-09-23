@@ -65,6 +65,26 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 	return nil
 }
 
+func (en ExpectNAT) marshal() (netfilter.Attribute, error) {
+
+	nfa := netfilter.Attribute{Type: uint16(CTAExpectNAT), Nested: true, Children: make([]netfilter.Attribute, 2)}
+
+	var dir uint32
+	if en.Direction {
+		dir = 1
+	}
+
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAExpectNATDir), Data: netfilter.Uint32Bytes(dir)}
+
+	ta, err := en.Tuple.MarshalAttribute(uint16(CTAExpectNATTuple))
+	if err != nil {
+		return nfa, err
+	}
+	nfa.Children[1] = ta
+
+	return nfa, nil
+}
+
 // unmarshal unmarshals a list of netfilter.Attributes into an Expect structure.
 func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 
