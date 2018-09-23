@@ -233,6 +233,41 @@ func (c *Conn) Create(f Flow) error {
 	return nil
 }
 
+// CreateExpect creates a new Conntrack Expect entry. Warning: Experimental, haven't
+// got this to create an Expect correctly. Best-effort implementation based on kernel source.
+func (c *Conn) CreateExpect(ex Expect) error {
+
+	attrs, err := ex.marshal()
+	if err != nil {
+		return err
+	}
+
+	pf := netfilter.ProtoIPv4
+	if ex.Tuple.IP.IsIPv6() && ex.Mask.IP.IsIPv6() && ex.TupleMaster.IP.IsIPv6() {
+		pf = netfilter.ProtoIPv6
+	}
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
+			MessageType: netfilter.MessageType(CTExpNew),
+			Family:      pf,
+			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
+				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+		}, attrs)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Get queries the conntrack table for a connection matching some attributes of a given Flow.
 // The following attributes are considered in the query: Zone, (TupleOrig or TupleReply).
 func (c *Conn) Get(f Flow) (Flow, error) {
