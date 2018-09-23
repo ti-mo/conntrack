@@ -148,6 +148,7 @@ func TestConnCreateGetFlow(t *testing.T) {
 	}
 }
 
+// Creates IPv4 and IPv6 flows with connmarks and queries them using a filtered dump.
 func TestConnDumpFilter(t *testing.T) {
 
 	c, err := makeNSConn()
@@ -171,6 +172,11 @@ func TestConnDumpFilter(t *testing.T) {
 		assert.Equal(t, df[0].TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, df[0].TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
 	}
+
+	d, err := c.Dump()
+	require.NoError(t, err, "unexpected error dumping flows")
+
+	assert.Len(t, d, len(flows))
 }
 
 // Bench scenario that calls Conn.Create and Conn.Delete on the same Flow once per iteration.
