@@ -6,7 +6,9 @@ import (
 	"net"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sys/unix"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,6 +25,11 @@ func TestConnCreateFlows(t *testing.T) {
 		assert.NoError(t, err, "error flushing table")
 	}()
 
+	// Expect empty result from empty table dump
+	de, err := c.Dump()
+	require.NoError(t, err, "dumping empty table")
+	require.Len(t, de, 0, "expecting 0-length dump from empty table")
+
 	numFlows := 1337
 
 	var f Flow
@@ -32,7 +39,7 @@ func TestConnCreateFlows(t *testing.T) {
 		f = NewFlow(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, uint16(i), 120, 0)
 
 		err = c.Create(f)
-		require.NoError(t, err, "unexpected error creating IPv4 flow", i)
+		require.NoError(t, err, "creating IPv4 flow", i)
 	}
 
 	// Create IPv6 flows
@@ -45,11 +52,11 @@ func TestConnCreateFlows(t *testing.T) {
 		)
 
 		err = c.Create(f)
-		require.NoError(t, err, "unexpected error creating IPv6 flow", i)
+		require.NoError(t, err, "creating IPv6 flow", i)
 	}
 
 	flows, err := c.Dump()
-	require.NoError(t, err, "unexpected error dumping table")
+	require.NoError(t, err, "dumping table")
 
 	// Expect twice the amount of numFlows, both for IPv4 and IPv6
 	assert.Equal(t, numFlows*2, len(flows))
@@ -75,14 +82,14 @@ func TestConnCreateDeleteFlows(t *testing.T) {
 		)
 
 		err = c.Create(f)
-		require.NoError(t, err, "unexpected error creating flow", i)
+		require.NoError(t, err, "creating flow", i)
 
 		err = c.Delete(f)
-		require.NoError(t, err, "unexpected error deleting flow", i)
+		require.NoError(t, err, "deleting flow", i)
 	}
 
 	flows, err := c.Dump()
-	require.NoError(t, err, "unexpected error dumping table")
+	require.NoError(t, err, "dumping table")
 
 	assert.Equal(t, 0, len(flows))
 }
@@ -101,22 +108,16 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	)
 
 	err = c.Create(f)
-	if err != nil {
-		t.Fatalf("unexpected error creating flow: %s", err)
-	}
+	require.NoError(t, err, "creating flow")
 
 	// Increase the flow's timeout from 120 in NewFlow().
 	f.Timeout = 240
 
 	err = c.Update(f)
-	if err != nil {
-		t.Fatalf("unexpected error updating flow: %s", err)
-	}
+	require.NoError(t, err, "updating flow")
 
 	flows, err := c.Dump()
-	if err != nil {
-		t.Fatalf("unexpected error dumping table: %s", err)
-	}
+	require.NoError(t, err, "dumping table")
 
 	if got := flows[0].Timeout; !(got > 120) {
 		t.Fatalf("unexpected updated flow:\n- want: > 120\n-  got: %d", got)
@@ -137,11 +138,14 @@ func TestConnCreateGetFlow(t *testing.T) {
 	}
 
 	for n, f := range flows {
+		_, err := c.Get(f)
+		require.EqualError(t, errors.Cause(err), unix.ENOENT.Error(), "get flow before creating")
+
 		err = c.Create(f)
-		require.NoError(t, err, "unexpected error creating flow", n)
+		require.NoError(t, err, "creating flow", n)
 
 		qflow, err := c.Get(f)
-		require.NoError(t, err, "unexpected error getting flow", n)
+		require.NoError(t, err, "get flow after creating", n)
 
 		assert.Equal(t, qflow.TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, qflow.TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
@@ -161,21 +165,26 @@ func TestConnDumpFilter(t *testing.T) {
 		"v6m2": NewFlow(17, 0, net.ParseIP("900d:f00d:24::7"), net.ParseIP("baad:beef:b00::b00"), 1323, 22, 120, 0x000000ff),
 	}
 
+	// Expect empty result from empty table dump
+	de, err := c.DumpFilter(Filter{Mark: 0x00000000, Mask: 0xffffffff})
+	require.NoError(t, err, "dumping empty table")
+	require.Len(t, de, 0, "expecting 0-length dump from empty table")
+
 	for n, f := range flows {
 		err = c.Create(f)
-		require.NoError(t, err, "unexpected error creating flow", n)
+		require.NoError(t, err, "creating flow", n)
 
 		df, err := c.DumpFilter(Filter{Mark: f.Mark, Mask: f.Mark})
-		require.NoError(t, err, "unexpected error dumping filtered flows", n)
+		require.NoError(t, err, "dumping filtered flows", n)
 
 		assert.Len(t, df, 1)
 		assert.Equal(t, df[0].TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, df[0].TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
 	}
 
+	// Expect table to be empty at end of run
 	d, err := c.Dump()
-	require.NoError(t, err, "unexpected error dumping flows")
-
+	require.NoError(t, err, "dumping flows")
 	assert.Len(t, d, len(flows))
 }
 
@@ -195,11 +204,11 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		err = c.Create(f)
 		if err != nil {
-			b.Fatalf("unexpected error creating flow %d: %s", n, err)
+			b.Fatalf("creating flow %d: %s", n, err)
 		}
 		err = c.Delete(f)
 		if err != nil {
-			b.Fatalf("unexpected error deleting flow %d: %s", n, err)
+			b.Fatalf("deleting flow %d: %s", n, err)
 		}
 	}
 }
