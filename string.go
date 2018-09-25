@@ -106,8 +106,8 @@ func (e Event) String() string {
 
 		// Security Context
 		secctx := "<No SecCtx>"
-		if e.Flow.SecurityContext.Name != "" {
-			secctx = fmt.Sprintf("SecCtx: %s", e.Flow.SecurityContext.Name)
+		if e.Flow.SecurityContext != "" {
+			secctx = fmt.Sprintf("SecCtx: %s", e.Flow.SecurityContext)
 		}
 
 		return fmt.Sprintf("[%s]%s Timeout: %d, %s, Zone %d, %s, %s, %s, %s, %s, %s",

@@ -548,7 +548,7 @@ func TestAttributeTimestamp(t *testing.T) {
 
 func TestAttributeSecCtx(t *testing.T) {
 
-	sc := Security{}
+	var sc Security
 
 	nfaNotNested := netfilter.Attribute{Type: uint16(CTASecCtx)}
 	nfaNestedNoChildren := netfilter.Attribute{Type: uint16(CTASecCtx), Nested: true}

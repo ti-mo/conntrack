@@ -254,7 +254,7 @@ var (
 					},
 				},
 			},
-			flow: Flow{SecurityContext: Security{Name: "jail"}},
+			flow: Flow{SecurityContext: "jail"},
 		},
 		{
 			name: "timestamp attribute",

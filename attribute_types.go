@@ -537,12 +537,10 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 // A Security structure holds the security info belonging to a connection.
 // Kernel uses this to store and match SELinux context name.
 // This attribute cannot be changed on a connection and thus cannot be marshaled.
-type Security struct {
-	Name string
-}
+type Security string
 
 // UnmarshalAttribute unmarshals a nested security attribute into a conntrack.Security structure.
-func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
+func (sec *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTASecCtx {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTASecCtx)
@@ -560,7 +558,7 @@ func (ctx *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
 	for _, iattr := range attr.Children {
 		switch SecurityType(iattr.Type) {
 		case CTASecCtxName:
-			ctx.Name = string(iattr.Data)
+			*sec = Security(iattr.Data)
 		default:
 			return fmt.Errorf(errAttributeChild, iattr.Type, CTASecCtx)
 		}
