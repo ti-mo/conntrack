@@ -18,7 +18,8 @@ type Event struct {
 // eventType is a custom type that describes the Conntrack event type.
 type eventType uint8
 
-// List of all types of Conntrack events.
+// List of all types of Conntrack events. This is an internal representation
+// that unrelated to any event types in the kernel.
 const (
 	EventUnknown eventType = iota
 	EventNew
