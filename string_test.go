@@ -1,48 +1,47 @@
-package conntrack_test
+package conntrack
 
 import (
 	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ti-mo/netfilter/conntrack"
 )
 
 func TestProtoLookup(t *testing.T) {
 
 	// Existing proto
-	if got := conntrack.ProtoLookup(6); got != "tcp" {
+	if got := protoLookup(6); got != "tcp" {
 		t.Fatalf("unexpected string representation of proto 6: %s", got)
 	}
 
 	// Non-existent proto
-	if got := conntrack.ProtoLookup(255); got != "255" {
+	if got := protoLookup(255); got != "255" {
 		t.Fatalf("unexpected string representation of proto 255: %s", got)
 	}
 }
 
 func TestEventString(t *testing.T) {
 
-	tpl := conntrack.Tuple{
-		IP: conntrack.IPTuple{
+	tpl := Tuple{
+		IP: IPTuple{
 			SourceAddress:      net.IPv4(1, 2, 3, 4),
 			DestinationAddress: net.ParseIP("fe80::1"),
 		},
-		Proto: conntrack.ProtoTuple{
+		Proto: ProtoTuple{
 			SourcePort:      54321,
 			DestinationPort: 80,
 		},
 	}
 
 	// Empty event
-	e := conntrack.Event{}
+	e := Event{}
 
 	assert.Equal(t, "[EventUnknown] <Empty Event>", e.String())
 
 	// Event with Flow
-	ef := conntrack.Event{Flow: &conntrack.Flow{}}
+	ef := Event{Flow: &Flow{}}
 
-	ef.Flow.Status.Value = conntrack.StatusAssured
+	ef.Flow.Status.Value = StatusAssured
 
 	ef.Flow.TupleOrig = tpl
 
@@ -54,8 +53,8 @@ func TestEventString(t *testing.T) {
 
 	ef.Flow.Mark = 0xf000baaa
 
-	ef.Flow.SeqAdjOrig = conntrack.SequenceAdjust{OffsetBefore: 80, OffsetAfter: 747811, Position: 42}
-	ef.Flow.SeqAdjReply = conntrack.SequenceAdjust{OffsetBefore: 123, OffsetAfter: 456, Position: 889999}
+	ef.Flow.SeqAdjOrig = SequenceAdjust{OffsetBefore: 80, OffsetAfter: 747811, Position: 42}
+	ef.Flow.SeqAdjReply = SequenceAdjust{OffsetBefore: 123, OffsetAfter: 456, Position: 889999}
 
 	ef.Flow.SecurityContext.Name = "selinux_t"
 
@@ -64,7 +63,7 @@ func TestEventString(t *testing.T) {
 		ef.String())
 
 	// Event with Expect
-	ee := conntrack.Event{Type: conntrack.EventExpDestroy, Expect: &conntrack.Expect{}}
+	ee := Event{Type: EventExpDestroy, Expect: &Expect{}}
 
 	ee.Expect.TupleMaster = tpl
 	ee.Expect.Tuple = tpl

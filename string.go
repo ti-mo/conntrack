@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-// ProtoLookup translates a protocol integer into its string representation.
-func ProtoLookup(p uint8) string {
+// protoLookup translates a protocol integer into its string representation.
+func protoLookup(p uint8) string {
 	protos := map[uint8]string{
 		1:   "icmp",
 		2:   "igmp",
