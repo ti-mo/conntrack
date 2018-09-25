@@ -12,7 +12,7 @@ import (
 
 var eventTypeTests = []struct {
 	name string
-	et   EventType
+	et   eventType
 	nfh  netfilter.Header
 	err  error
 }{
@@ -83,7 +83,7 @@ func TestEventTypeUnmarshal(t *testing.T) {
 	for _, tt := range eventTypeTests {
 
 		t.Run(tt.name, func(t *testing.T) {
-			var et EventType
+			var et eventType
 
 			err := et.unmarshal(tt.nfh)
 			if err != nil || tt.err != nil {
@@ -98,7 +98,7 @@ func TestEventTypeUnmarshal(t *testing.T) {
 }
 
 func TestEventTypeString(t *testing.T) {
-	assert.Equal(t, "EventType(255)", EventType(255).String())
+	assert.Equal(t, "eventType(255)", eventType(255).String())
 }
 
 var eventTests = []struct {

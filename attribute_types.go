@@ -26,30 +26,30 @@ var (
 	ctaSeqAdjOrigReplyCat   = fmt.Sprintf("%s/%s", ctaSeqAdjOrig, ctaSeqAdjReply)
 )
 
-// Num16 is a generic numeric attribute. It is represented by a uint32
+// num16 is a generic numeric attribute. It is represented by a uint32
 // and holds its own AttributeType.
-type Num16 struct {
-	Type  AttributeType
+type num16 struct {
+	Type  attributeType
 	Value uint16
 }
 
 // Filled returns true if the Num16's type is non-zero.
-func (i Num16) filled() bool {
+func (i num16) filled() bool {
 	return i.Type != 0 || i.Value != 0
 }
 
-func (i Num16) String() string {
+func (i num16) String() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
 // unmarshal unmarshals a netfilter.Attribute into a Num16.
-func (i *Num16) unmarshal(attr netfilter.Attribute) error {
+func (i *num16) unmarshal(attr netfilter.Attribute) error {
 
 	if len(attr.Data) != 2 {
 		return errIncorrectSize
 	}
 
-	i.Type = AttributeType(attr.Type)
+	i.Type = attributeType(attr.Type)
 	i.Value = attr.Uint16()
 
 	return nil
@@ -57,7 +57,7 @@ func (i *Num16) unmarshal(attr netfilter.Attribute) error {
 
 // marshal marshals a Num16 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
 // it is used as Attribute's type; otherwise, the Num16's Type field is used.
-func (i Num16) marshal(t AttributeType) netfilter.Attribute {
+func (i num16) marshal(t attributeType) netfilter.Attribute {
 
 	var nfa netfilter.Attribute
 
@@ -72,30 +72,30 @@ func (i Num16) marshal(t AttributeType) netfilter.Attribute {
 	return nfa
 }
 
-// Num32 is a generic numeric attribute. It is represented by a uint32
+// num32 is a generic numeric attribute. It is represented by a uint32
 // and holds its own AttributeType.
-type Num32 struct {
-	Type  AttributeType
+type num32 struct {
+	Type  attributeType
 	Value uint32
 }
 
 // Filled returns true if the Num32's type is non-zero.
-func (i Num32) filled() bool {
+func (i num32) filled() bool {
 	return i.Type != 0 || i.Value != 0
 }
 
-func (i Num32) String() string {
+func (i num32) String() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
 // unmarshal unmarshals a netfilter.Attribute into a Num32.
-func (i *Num32) unmarshal(attr netfilter.Attribute) error {
+func (i *num32) unmarshal(attr netfilter.Attribute) error {
 
 	if len(attr.Data) != 4 {
 		return errIncorrectSize
 	}
 
-	i.Type = AttributeType(attr.Type)
+	i.Type = attributeType(attr.Type)
 	i.Value = attr.Uint32()
 
 	return nil
@@ -103,7 +103,7 @@ func (i *Num32) unmarshal(attr netfilter.Attribute) error {
 
 // marshal marshals a Num32 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
 // it is used as Attribute's type; otherwise, the Num32's Type field is used.
-func (i Num32) marshal(t AttributeType) netfilter.Attribute {
+func (i num32) marshal(t attributeType) netfilter.Attribute {
 
 	var nfa netfilter.Attribute
 
@@ -116,26 +116,6 @@ func (i Num32) marshal(t AttributeType) netfilter.Attribute {
 	nfa.PutUint32(i.Value)
 
 	return nfa
-}
-
-// Binary is a binary attribute that is backed by a byte slice.
-type Binary struct {
-	Type AttributeType
-	Data []byte
-}
-
-// Filled returns true if the bitfield's values are non-zero.
-func (b Binary) filled() bool {
-	return b.Type != 0 || len(b.Data) != 0
-}
-
-// unmarshal unmarshals a netfilter.Attribute into a Binary struct.
-func (b *Binary) unmarshal(attr netfilter.Attribute) error {
-
-	b.Type = AttributeType(attr.Type)
-	b.Data = attr.Data
-
-	return nil
 }
 
 // A Helper holds the name and info the helper that creates a related connection.
@@ -152,7 +132,7 @@ func (hlp Helper) filled() bool {
 // unmarshal unmarshals a netfilter.Attribute into a Helper.
 func (hlp *Helper) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaHelp {
+	if attributeType(attr.Type) != ctaHelp {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaHelp)
 	}
 
@@ -161,7 +141,7 @@ func (hlp *Helper) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch HelperType(iattr.Type) {
+		switch helperType(iattr.Type) {
 		case ctaHelpName:
 			hlp.Name = string(iattr.Data)
 		case ctaHelpInfo:
@@ -210,7 +190,7 @@ func (pi *ProtoInfo) unmarshal(attr netfilter.Attribute) error {
 		return errReusedProtoInfo
 	}
 
-	if AttributeType(attr.Type) != ctaProtoInfo {
+	if attributeType(attr.Type) != ctaProtoInfo {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaProtoInfo)
 	}
 
@@ -225,7 +205,7 @@ func (pi *ProtoInfo) unmarshal(attr netfilter.Attribute) error {
 	// Step into the single nested child
 	iattr := attr.Children[0]
 
-	switch ProtoInfoType(iattr.Type) {
+	switch protoInfoType(iattr.Type) {
 	case ctaProtoInfoTCP:
 		var tpi ProtoInfoTCP
 		if err := tpi.unmarshal(iattr); err != nil {
@@ -280,7 +260,7 @@ type ProtoInfoTCP struct {
 // unmarshal unmarshals a netfilter.Attribute into a ProtoInfoTCP.
 func (tpi *ProtoInfoTCP) unmarshal(attr netfilter.Attribute) error {
 
-	if ProtoInfoType(attr.Type) != ctaProtoInfoTCP {
+	if protoInfoType(attr.Type) != ctaProtoInfoTCP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaProtoInfoTCP)
 	}
 
@@ -294,7 +274,7 @@ func (tpi *ProtoInfoTCP) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch ProtoInfoTCPType(iattr.Type) {
+		switch protoInfoTCPType(iattr.Type) {
 		case ctaProtoInfoTCPState:
 			tpi.State = iattr.Data[0]
 		case ctaProtoInfoTCPWScaleOriginal:
@@ -341,7 +321,7 @@ type ProtoInfoDCCP struct {
 // unmarshal unmarshals a netfilter.Attribute into a ProtoInfoTCP.
 func (dpi *ProtoInfoDCCP) unmarshal(attr netfilter.Attribute) error {
 
-	if ProtoInfoType(attr.Type) != ctaProtoInfoDCCP {
+	if protoInfoType(attr.Type) != ctaProtoInfoDCCP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaProtoInfoDCCP)
 	}
 
@@ -354,7 +334,7 @@ func (dpi *ProtoInfoDCCP) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch ProtoInfoDCCPType(iattr.Type) {
+		switch protoInfoDCCPType(iattr.Type) {
 		case ctaProtoInfoDCCPState:
 			dpi.State = iattr.Data[0]
 		case ctaProtoInfoDCCPRole:
@@ -390,7 +370,7 @@ type ProtoInfoSCTP struct {
 // unmarshal unmarshals a netfilter.Attribute into a ProtoInfoSCTP.
 func (spi *ProtoInfoSCTP) unmarshal(attr netfilter.Attribute) error {
 
-	if ProtoInfoType(attr.Type) != ctaProtoInfoSCTP {
+	if protoInfoType(attr.Type) != ctaProtoInfoSCTP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaProtoInfoSCTP)
 	}
 
@@ -403,7 +383,7 @@ func (spi *ProtoInfoSCTP) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch ProtoInfoSCTPType(iattr.Type) {
+		switch protoInfoSCTPType(iattr.Type) {
 		case ctaProtoInfoSCTPState:
 			spi.State = iattr.Data[0]
 		case ctaProtoInfoSCTPVTagOriginal:
@@ -460,8 +440,8 @@ func (ctr Counter) filled() bool {
 // unmarshal unmarshals a nested counter attribute into a Counter structure.
 func (ctr *Counter) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaCountersOrig &&
-		AttributeType(attr.Type) != ctaCountersReply {
+	if attributeType(attr.Type) != ctaCountersOrig &&
+		attributeType(attr.Type) != ctaCountersReply {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaCountersOrigReplyCat)
 	}
 
@@ -475,10 +455,10 @@ func (ctr *Counter) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	// Set Direction to true if it's a reply counter
-	ctr.Direction = AttributeType(attr.Type) == ctaCountersReply
+	ctr.Direction = attributeType(attr.Type) == ctaCountersReply
 
 	for _, iattr := range attr.Children {
-		switch CounterType(iattr.Type) {
+		switch counterType(iattr.Type) {
 		case ctaCountersPackets:
 			ctr.Packets = iattr.Uint64()
 		case ctaCountersBytes:
@@ -502,7 +482,7 @@ type Timestamp struct {
 // unmarshal unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
 func (ts *Timestamp) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaTimestamp {
+	if attributeType(attr.Type) != ctaTimestamp {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaTimestamp)
 	}
 
@@ -516,7 +496,7 @@ func (ts *Timestamp) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch TimestampType(iattr.Type) {
+		switch timestampType(iattr.Type) {
 		case ctaTimestampStart:
 			ts.Start = time.Unix(0, iattr.Int64())
 		case ctaTimestampStop:
@@ -537,7 +517,7 @@ type Security string
 // unmarshal unmarshals a nested security attribute into a conntrack.Security structure.
 func (sec *Security) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaSecCtx {
+	if attributeType(attr.Type) != ctaSecCtx {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaSecCtx)
 	}
 
@@ -551,7 +531,7 @@ func (sec *Security) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch SecurityType(iattr.Type) {
+		switch securityType(iattr.Type) {
 		case ctaSecCtxName:
 			*sec = Security(iattr.Data)
 		default:
@@ -593,8 +573,8 @@ func (seq SequenceAdjust) filled() bool {
 // conntrack.SequenceAdjust structure.
 func (seq *SequenceAdjust) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaSeqAdjOrig &&
-		AttributeType(attr.Type) != ctaSeqAdjReply {
+	if attributeType(attr.Type) != ctaSeqAdjOrig &&
+		attributeType(attr.Type) != ctaSeqAdjReply {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaSeqAdjOrigReplyCat)
 	}
 
@@ -608,10 +588,10 @@ func (seq *SequenceAdjust) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	// Set Direction to true if it's a reply adjustment
-	seq.Direction = AttributeType(attr.Type) == ctaSeqAdjReply
+	seq.Direction = attributeType(attr.Type) == ctaSeqAdjReply
 
 	for _, iattr := range attr.Children {
-		switch SequenceAdjustType(iattr.Type) {
+		switch seqAdjType(iattr.Type) {
 		case ctaSeqAdjCorrectionPos:
 			seq.Position = iattr.Uint32()
 		case ctaSeqAdjOffsetBefore:
@@ -660,7 +640,7 @@ func (sp SynProxy) filled() bool {
 // unmarshal unmarshals a SYN proxy attribute into a SynProxy structure.
 func (sp *SynProxy) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != ctaSynProxy {
+	if attributeType(attr.Type) != ctaSynProxy {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaSynProxy)
 	}
 
@@ -673,7 +653,7 @@ func (sp *SynProxy) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch SynProxyType(iattr.Type) {
+		switch synProxyType(iattr.Type) {
 		case ctaSynProxyISN:
 			sp.ISN = iattr.Uint32()
 		case ctaSynProxyITS:

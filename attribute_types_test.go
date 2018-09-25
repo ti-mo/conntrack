@@ -15,17 +15,17 @@ var (
 )
 
 func TestAttributeTypeString(t *testing.T) {
-	if AttributeType(255).String() == "" {
+	if attributeType(255).String() == "" {
 		t.Fatal("AttributeType string representation empty - did you run `go generate`?")
 	}
 }
 
 func TestAttributeNum16(t *testing.T) {
 
-	n16 := Num16{}
+	n16 := num16{}
 	assert.Equal(t, false, n16.filled())
-	assert.Equal(t, true, Num16{Type: 1}.filled())
-	assert.Equal(t, true, Num16{Value: 1}.filled())
+	assert.Equal(t, true, num16{Type: 1}.filled())
+	assert.Equal(t, true, num16{Value: 1}.filled())
 
 	assert.EqualError(t, n16.unmarshal(nfaTooShort), errIncorrectSize.Error())
 
@@ -44,10 +44,10 @@ func TestAttributeNum16(t *testing.T) {
 
 func TestAttributeNum32(t *testing.T) {
 
-	n32 := Num32{}
+	n32 := num32{}
 	assert.Equal(t, false, n32.filled())
-	assert.Equal(t, true, Num32{Type: 1}.filled())
-	assert.Equal(t, true, Num32{Value: 1}.filled())
+	assert.Equal(t, true, num32{Type: 1}.filled())
+	assert.Equal(t, true, num32{Value: 1}.filled())
 
 	assert.EqualError(t, n32.unmarshal(nfaTooShort), errIncorrectSize.Error())
 
@@ -62,15 +62,6 @@ func TestAttributeNum32(t *testing.T) {
 	assert.EqualValues(t, netfilter.Attribute{Type: uint16(ctaMark), Data: []byte{0, 1, 2, 3}}, n32.marshal(0))
 	// Marshal with explicit type parameter
 	assert.EqualValues(t, netfilter.Attribute{Type: uint16(ctaMark), Data: []byte{0, 1, 2, 3}}, n32.marshal(ctaMark))
-}
-
-func TestAttributeBitfield(t *testing.T) {
-	bin := Binary{}
-	assert.Equal(t, false, bin.filled())
-	assert.Equal(t, true, Binary{Type: 1}.filled())
-	assert.Equal(t, true, Binary{Data: []byte{1}}.filled())
-
-	assert.Nil(t, bin.unmarshal(netfilter.Attribute{}))
 }
 
 func TestAttributeHelper(t *testing.T) {
@@ -300,7 +291,7 @@ func TestAttributeProtoInfo(t *testing.T) {
 }
 
 func TestProtoInfoTypeString(t *testing.T) {
-	ssid := ProtoInfoType(255)
+	ssid := protoInfoType(255)
 
 	ssidStr := ssid.String()
 
@@ -460,7 +451,7 @@ func TestAttributeCounters(t *testing.T) {
 	assert.Equal(t, true, Counter{Packets: 1, Bytes: 1}.filled())
 
 	// Counters can be unmarshaled from both ctaCountersOrig and ctaCountersReply
-	attrTypes := []AttributeType{ctaCountersOrig, ctaCountersReply}
+	attrTypes := []attributeType{ctaCountersOrig, ctaCountersReply}
 
 	for _, at := range attrTypes {
 		t.Run(at.String(), func(t *testing.T) {
@@ -589,7 +580,7 @@ func TestAttributeSeqAdj(t *testing.T) {
 	assert.Equal(t, true, SequenceAdjust{Position: 1, OffsetBefore: 1, OffsetAfter: 1}.filled())
 
 	// SequenceAdjust can be unmarshaled from both ctaSeqAdjOrig and ctaSeqAdjReply
-	attrTypes := []AttributeType{ctaSeqAdjOrig, ctaSeqAdjReply}
+	attrTypes := []attributeType{ctaSeqAdjOrig, ctaSeqAdjReply}
 
 	for _, at := range attrTypes {
 		t.Run(at.String(), func(t *testing.T) {

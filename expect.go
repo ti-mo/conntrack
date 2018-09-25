@@ -37,7 +37,7 @@ type ExpectNAT struct {
 // unmarshal unmarshals a netfilter.Attribute into an ExpectNAT.
 func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 
-	if ExpectType(attr.Type) != ctaExpectNAT {
+	if expectType(attr.Type) != ctaExpectNAT {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaExpectNAT)
 	}
 
@@ -50,7 +50,7 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch ExpectNATType(iattr.Type) {
+		switch expectNATType(iattr.Type) {
 		case ctaExpectNATDir:
 			en.Direction = iattr.Uint32() == 1
 		case ctaExpectNATTuple:
@@ -90,7 +90,7 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 
 	for _, attr := range attrs {
 
-		switch at := ExpectType(attr.Type); at {
+		switch at := expectType(attr.Type); at {
 
 		case ctaExpectMaster:
 			if err := ex.TupleMaster.unmarshal(attr); err != nil {

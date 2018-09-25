@@ -539,7 +539,7 @@ func TestTupleIPv6(t *testing.T) {
 
 func TestTupleTypeString(t *testing.T) {
 
-	if TupleType(255).String() == "" {
+	if tupleType(255).String() == "" {
 		t.Fatal("TupleType string representation empty - did you run `go generate`?")
 	}
 }

@@ -52,7 +52,7 @@ func (t *Tuple) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch TupleType(iattr.Type) {
+		switch tupleType(iattr.Type) {
 		case ctaTupleIP:
 			var ti IPTuple
 			if err := ti.unmarshal(iattr); err != nil {
@@ -71,7 +71,7 @@ func (t *Tuple) unmarshal(attr netfilter.Attribute) error {
 			}
 			t.Zone = iattr.Uint16()
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, AttributeType(attr.Type)), opUnTup)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, attributeType(attr.Type)), opUnTup)
 		}
 	}
 
@@ -116,7 +116,7 @@ func (ipt IPTuple) filled() bool {
 // Use IP.Equal() to compare addresses in implementations and tests.
 func (ipt *IPTuple) unmarshal(attr netfilter.Attribute) error {
 
-	if TupleType(attr.Type) != ctaTupleIP {
+	if tupleType(attr.Type) != ctaTupleIP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleIP)
 	}
 
@@ -134,7 +134,7 @@ func (ipt *IPTuple) unmarshal(attr netfilter.Attribute) error {
 			return errIncorrectSize
 		}
 
-		switch IPTupleType(iattr.Type) {
+		switch ipTupleType(iattr.Type) {
 		case ctaIPv4Src:
 			ipt.SourceAddress = net.IPv4(iattr.Data[0], iattr.Data[1], iattr.Data[2], iattr.Data[3])
 		case ctaIPv6Src:
@@ -210,7 +210,7 @@ func (pt ProtoTuple) filled() bool {
 // unmarshal unmarshals a netfilter.Attribute into a ProtoTuple.
 func (pt *ProtoTuple) unmarshal(attr netfilter.Attribute) error {
 
-	if TupleType(attr.Type) != ctaTupleProto {
+	if tupleType(attr.Type) != ctaTupleProto {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleProto)
 	}
 
@@ -223,7 +223,7 @@ func (pt *ProtoTuple) unmarshal(attr netfilter.Attribute) error {
 	}
 
 	for _, iattr := range attr.Children {
-		switch ProtoTupleType(iattr.Type) {
+		switch protoTupleType(iattr.Type) {
 		case ctaProtoNum:
 			pt.Protocol = iattr.Data[0]
 

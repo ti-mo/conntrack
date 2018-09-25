@@ -38,13 +38,13 @@ const (
 	ctExpGetStatsCPU                       // IPCTNL_MSG_EXP_GET_STATS_CPU
 )
 
-// AttributeType defines the meaning of a root-level Type
+// attributeType defines the meaning of a root-level Type
 // value of a Conntrack-specific Netfilter attribute.
-type AttributeType uint8
+type attributeType uint8
 
 // enum ctattr_type
 const (
-	ctaUnspec        AttributeType = iota // CTA_UNSPEC
+	ctaUnspec        attributeType = iota // CTA_UNSPEC
 	ctaTupleOrig                          // CTA_TUPLE_ORIG
 	ctaTupleReply                         // CTA_TUPLE_REPLY
 	ctaStatus                             // CTA_STATUS
@@ -71,23 +71,23 @@ const (
 	ctaSynProxy                           // CTA_SYNPROXY
 )
 
-// TupleType describes the type of tuple contained in this container.
-type TupleType uint8
+// tupleType describes the type of tuple contained in this container.
+type tupleType uint8
 
 // enum ctattr_tuple
 const (
-	ctaTupleUnspec TupleType = iota //CTA_TUPLE_UNSPEC
+	ctaTupleUnspec tupleType = iota //CTA_TUPLE_UNSPEC
 	ctaTupleIP                      // CTA_TUPLE_IP
 	ctaTupleProto                   // CTA_TUPLE_PROTO
 	ctaTupleZone                    // CTA_TUPLE_ZONE
 )
 
-// ProtoTupleType describes the type of Layer 4 protocol metadata in this container.
-type ProtoTupleType uint8
+// protoTupleType describes the type of Layer 4 protocol metadata in this container.
+type protoTupleType uint8
 
 // enum ctattr_l4proto
 const (
-	ctaProtoUnspec     ProtoTupleType = iota // CTA_PROTO_UNSPEC
+	ctaProtoUnspec     protoTupleType = iota // CTA_PROTO_UNSPEC
 	ctaProtoNum                              // CTA_PROTO_NUM
 	ctaProtoSrcPort                          // CTA_PROTO_SRC_PORT
 	ctaProtoDstPort                          // CTA_PROTO_DST_PORT
@@ -99,75 +99,75 @@ const (
 	ctaProtoICMPv6Code                       // CTA_PROTO_ICMPV6_CODE
 )
 
-// IPTupleType describes the type of IP address in this container.
-type IPTupleType uint8
+// ipTupleType describes the type of IP address in this container.
+type ipTupleType uint8
 
 // enum ctattr_ip
 const (
-	ctaIPUnspec IPTupleType = iota // CTA_IP_UNSPEC
+	ctaIPUnspec ipTupleType = iota // CTA_IP_UNSPEC
 	ctaIPv4Src                     // CTA_IP_V4_SRC
 	ctaIPv4Dst                     // CTA_IP_V4_DST
 	ctaIPv6Src                     // CTA_IP_V6_SRC
 	ctaIPv6Dst                     // CTA_IP_V6_DST
 )
 
-// HelperType describes the kind of helper in this container.
-type HelperType uint8
+// helperType describes the kind of helper in this container.
+type helperType uint8
 
 // enum ctattr_help
 const (
-	ctaHelpUnspec HelperType = iota // CTA_HELP_UNSPEC
+	ctaHelpUnspec helperType = iota // CTA_HELP_UNSPEC
 	ctaHelpName                     // CTA_HELP_NAME
 	ctaHelpInfo                     // CTA_HELP_INFO
 )
 
-// CounterType describes the kind of counter in this container.
-type CounterType uint8
+// counterType describes the kind of counter in this container.
+type counterType uint8
 
 // enum ctattr_counters
 const (
-	ctaCountersUnspec  CounterType = iota // CTA_COUNTERS_UNSPEC
+	ctaCountersUnspec  counterType = iota // CTA_COUNTERS_UNSPEC
 	ctaCountersPackets                    // CTA_COUNTERS_PACKETS
 	ctaCountersBytes                      // CTA_COUNTERS_BYTES
 )
 
-// TimestampType describes the type of timestamp in this container.
-type TimestampType uint8
+// timestampType describes the type of timestamp in this container.
+type timestampType uint8
 
 // enum ctattr_tstamp
 const (
-	ctaTimestampUnspec TimestampType = iota // CTA_TIMESTAMP_UNSPEC
+	ctaTimestampUnspec timestampType = iota // CTA_TIMESTAMP_UNSPEC
 	ctaTimestampStart                       // CTA_TIMESTAMP_START
 	ctaTimestampStop                        // CTA_TIMESTAMP_STOP
 	ctaTimestampPad                         // CTA_TIMESTAMP_PAD
 )
 
-// SecurityType describes the type of SecCtx value in this container.
-type SecurityType uint8
+// securityType describes the type of SecCtx value in this container.
+type securityType uint8
 
 // enum ctattr_secctx
 const (
-	ctaSecCtxUnspec SecurityType = iota // CTA_SECCTX_UNSPEC
+	ctaSecCtxUnspec securityType = iota // CTA_SECCTX_UNSPEC
 	ctaSecCtxName                       // CTA_SECCTX_NAME
 )
 
-// ProtoInfoType describes the kind of protocol info in this container.
-type ProtoInfoType uint8
+// protoInfoType describes the kind of protocol info in this container.
+type protoInfoType uint8
 
 // enum ctattr_protoinfo
 const (
-	ctaProtoInfoUnspec ProtoInfoType = iota // CTA_PROTOINFO_UNSPEC
+	ctaProtoInfoUnspec protoInfoType = iota // CTA_PROTOINFO_UNSPEC
 	ctaProtoInfoTCP                         // CTA_PROTOINFO_TCP
 	ctaProtoInfoDCCP                        // CTA_PROTOINFO_DCCP
 	ctaProtoInfoSCTP                        // CTA_PROTOINFO_SCTP
 )
 
-// ProtoInfoTCPType describes the kind of TCP protocol info attribute in this container.
-type ProtoInfoTCPType uint8
+// protoInfoTCPType describes the kind of TCP protocol info attribute in this container.
+type protoInfoTCPType uint8
 
 // enum ctattr_protoinfo_tcp
 const (
-	ctaProtoInfoTCPUnspec         ProtoInfoTCPType = iota // CTA_PROTOINFO_TCP_UNSPEC
+	ctaProtoInfoTCPUnspec         protoInfoTCPType = iota // CTA_PROTOINFO_TCP_UNSPEC
 	ctaProtoInfoTCPState                                  // CTA_PROTOINFO_TCP_STATE
 	ctaProtoInfoTCPWScaleOriginal                         // CTA_PROTOINFO_TCP_WSCALE_ORIGINAL
 	ctaProtoInfoTCPWScaleReply                            // CTA_PROTOINFO_TCP_WSCALE_REPLY
@@ -175,57 +175,57 @@ const (
 	ctaProtoInfoTCPFlagsReply                             // CTA_PROTOINFO_TCP_FLAGS_REPLY
 )
 
-// ProtoInfoDCCPType describes the kind of DCCP protocol info attribute in this container.
-type ProtoInfoDCCPType uint8
+// protoInfoDCCPType describes the kind of DCCP protocol info attribute in this container.
+type protoInfoDCCPType uint8
 
 // enum ctattr_protoinfo_dccp
 const (
-	ctaProtoInfoDCCPUnspec       ProtoInfoDCCPType = iota // CTA_PROTOINFO_DCCP_UNSPEC
+	ctaProtoInfoDCCPUnspec       protoInfoDCCPType = iota // CTA_PROTOINFO_DCCP_UNSPEC
 	ctaProtoInfoDCCPState                                 // CTA_PROTOINFO_DCCP_STATE
 	ctaProtoInfoDCCPRole                                  // CTA_PROTOINFO_DCCP_ROLE
 	ctaProtoInfoDCCPHandshakeSeq                          // CTA_PROTOINFO_DCCP_HANDSHAKE_SEQ
 	ctaProtoInfoDCCPPad                                   // CTA_PROTOINFO_DCCP_PAD (never sent by kernel)
 )
 
-// ProtoInfoSCTPType describes the kind of SCTP protocol info attribute in this container.
-type ProtoInfoSCTPType uint8
+// protoInfoSCTPType describes the kind of SCTP protocol info attribute in this container.
+type protoInfoSCTPType uint8
 
 // enum ctattr_protoinfo_sctp
 const (
-	ctaProtoInfoSCTPUnspec       ProtoInfoSCTPType = iota // CTA_PROTOINFO_SCTP_UNSPEC
+	ctaProtoInfoSCTPUnspec       protoInfoSCTPType = iota // CTA_PROTOINFO_SCTP_UNSPEC
 	ctaProtoInfoSCTPState                                 // CTA_PROTOINFO_SCTP_STATE
 	ctaProtoInfoSCTPVTagOriginal                          // CTA_PROTOINFO_SCTP_VTAG_ORIGINAL
 	ctaProtoInfoSCTPVtagReply                             // CTA_PROTOINFO_SCTP_VTAG_REPLY
 )
 
-// SequenceAdjustType describes the type of sequence adjustment in this container.
-type SequenceAdjustType uint8
+// seqAdjType describes the type of sequence adjustment in this container.
+type seqAdjType uint8
 
 // enum ctattr_seqadj
 const (
-	ctaSeqAdjUnspec        SequenceAdjustType = iota // CTA_SEQADJ_UNSPEC
-	ctaSeqAdjCorrectionPos                           // CTA_SEQADJ_CORRECTION_POS
-	ctaSeqAdjOffsetBefore                            // CTA_SEQADJ_OFFSET_BEFORE
-	ctaSeqAdjOffsetAfter                             // CTA_SEQADJ_OFFSET_AFTER
+	ctaSeqAdjUnspec        seqAdjType = iota // CTA_SEQADJ_UNSPEC
+	ctaSeqAdjCorrectionPos                   // CTA_SEQADJ_CORRECTION_POS
+	ctaSeqAdjOffsetBefore                    // CTA_SEQADJ_OFFSET_BEFORE
+	ctaSeqAdjOffsetAfter                     // CTA_SEQADJ_OFFSET_AFTER
 )
 
-// SynProxyType describes the type of SYNproxy attribute in this container.
-type SynProxyType uint8
+// synProxyType describes the type of SYNproxy attribute in this container.
+type synProxyType uint8
 
 // enum ctattr_synproxy
 const (
-	ctaSynProxyUnspec SynProxyType = iota // CTA_SYNPROXY_UNSPEC
+	ctaSynProxyUnspec synProxyType = iota // CTA_SYNPROXY_UNSPEC
 	ctaSynProxyISN                        // CTA_SYNPROXY_ISN
 	ctaSynProxyITS                        // CTA_SYNPROXY_ITS
 	ctaSynProxyTSOff                      // CTA_SYNPROXY_TSOFF
 )
 
-// ExpectType describes the type of expect attribute in this container.
-type ExpectType uint8
+// expectType describes the type of expect attribute in this container.
+type expectType uint8
 
 // enum ctattr_expect
 const (
-	ctaExpectUnspec   ExpectType = iota // CTA_EXPECT_UNSPEC
+	ctaExpectUnspec   expectType = iota // CTA_EXPECT_UNSPEC
 	ctaExpectMaster                     // CTA_EXPECT_MASTER
 	ctaExpectTuple                      // CTA_EXPECT_TUPLE
 	ctaExpectMask                       // CTA_EXPECT_MASK
@@ -239,22 +239,22 @@ const (
 	ctaExpectFN                         // CTA_EXPECT_FN
 )
 
-// ExpectNATType describes the type of NAT expect attribute in this container.
-type ExpectNATType uint8
+// expectNATType describes the type of NAT expect attribute in this container.
+type expectNATType uint8
 
 // enum ctattr_expect_nat
 const (
-	ctaExpectNATUnspec ExpectNATType = iota // CTA_EXPECT_NAT_UNSPEC
+	ctaExpectNATUnspec expectNATType = iota // CTA_EXPECT_NAT_UNSPEC
 	ctaExpectNATDir                         // CTA_EXPECT_NAT_DIR
 	ctaExpectNATTuple                       // CTA_EXPECT_NAT_TUPLE
 )
 
-// CPUStatsType describes the type of CPU-specific conntrack statistics attribute in this container.
-type CPUStatsType uint8
+// cpuStatsType describes the type of CPU-specific conntrack statistics attribute in this container.
+type cpuStatsType uint8
 
 // ctattr_stats_cpu
 const (
-	ctaStatsUnspec        CPUStatsType = iota // CTA_STATS_UNSPEC
+	ctaStatsUnspec        cpuStatsType = iota // CTA_STATS_UNSPEC
 	ctaStatsSearched                          // CTA_STATS_SEARCHED, no longer used
 	ctaStatsFound                             // CTA_STATS_FOUND
 	ctaStatsNew                               // CTA_STATS_NEW, no longer used
@@ -270,21 +270,21 @@ const (
 	ctaStatsSearchRestart                     // CTA_STATS_SEARCH_RESTART
 )
 
-// GlobalStatsType describes the type of global conntrack statistics attribute in this container.
-type GlobalStatsType uint8
+// globalStatsType describes the type of global conntrack statistics attribute in this container.
+type globalStatsType uint8
 
 // enum ctattr_stats_global
 const (
-	ctaStatsGlobalUnspec  GlobalStatsType = iota // CTA_STATS_GLOBAL_UNSPEC
+	ctaStatsGlobalUnspec  globalStatsType = iota // CTA_STATS_GLOBAL_UNSPEC
 	ctaStatsGlobalEntries                        // CTA_STATS_GLOBAL_ENTRIES
 )
 
-// ExpectStatsType describes the type of expectation statistics attribute in this container.
-type ExpectStatsType uint8
+// expectStatsType describes the type of expectation statistics attribute in this container.
+type expectStatsType uint8
 
 // enum ctattr_expect_stats
 const (
-	ctaStatsExpUnspec ExpectStatsType = iota // CTA_STATS_EXP_UNSPEC
+	ctaStatsExpUnspec expectStatsType = iota // CTA_STATS_EXP_UNSPEC
 	ctaStatsExpNew                           // CTA_STATS_EXP_NEW
 	ctaStatsExpCreate                        // CTA_STATS_EXP_CREATE
 	ctaStatsExpDelete                        // CTA_STATS_EXP_DELETE

@@ -527,7 +527,7 @@ func TestExpectNATMarshal(t *testing.T) {
 }
 
 func TestExpectTypeString(t *testing.T) {
-	if ExpectType(255).String() == "" {
+	if expectType(255).String() == "" {
 		t.Fatal("ExpectType string representation empty - did you run `go generate`?")
 	}
 

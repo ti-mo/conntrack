@@ -74,7 +74,7 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 
 	for _, attr := range attrs {
 
-		switch at := AttributeType(attr.Type); at {
+		switch at := attributeType(attr.Type); at {
 
 		// CTA_TIMEOUT is the time until the Conntrack entry is automatically destroyed.
 		case ctaTimeout:
@@ -201,7 +201,7 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	// Optional attributes appended to the list when filled
 	if f.Timeout != 0 {
-		attrs = append(attrs, Num32{Value: f.Timeout}.marshal(ctaTimeout))
+		attrs = append(attrs, num32{Value: f.Timeout}.marshal(ctaTimeout))
 	}
 
 	if f.Status.Value != 0 {
@@ -209,11 +209,11 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 	}
 
 	if f.Mark != 0 {
-		attrs = append(attrs, Num32{Value: f.Mark}.marshal(ctaMark))
+		attrs = append(attrs, num32{Value: f.Mark}.marshal(ctaMark))
 	}
 
 	if f.Zone != 0 {
-		attrs = append(attrs, Num16{Value: f.Zone}.marshal(ctaZone))
+		attrs = append(attrs, num16{Value: f.Zone}.marshal(ctaZone))
 	}
 
 	if f.ProtoInfo.filled() {

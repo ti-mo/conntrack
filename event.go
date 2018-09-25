@@ -9,18 +9,18 @@ import (
 
 // Event holds information about a Conntrack event.
 type Event struct {
-	Type EventType
+	Type eventType
 
 	Flow   *Flow
 	Expect *Expect
 }
 
-// EventType is a custom type that describes the Conntrack event type.
-type EventType uint8
+// eventType is a custom type that describes the Conntrack event type.
+type eventType uint8
 
 // List of all types of Conntrack events.
 const (
-	EventUnknown EventType = iota
+	EventUnknown eventType = iota
 	EventNew
 	EventUpdate
 	EventDestroy
@@ -29,7 +29,7 @@ const (
 )
 
 // unmarshal unmarshals a Conntrack EventType from a Netfilter header.
-func (et *EventType) unmarshal(h netfilter.Header) error {
+func (et *eventType) unmarshal(h netfilter.Header) error {
 
 	// Fail when the message is not a conntrack message
 	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
