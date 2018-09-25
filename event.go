@@ -16,7 +16,6 @@ type Event struct {
 }
 
 // EventType is a custom type that describes the Conntrack event type.
-//go:generate stringer -type=EventType
 type EventType uint8
 
 // List of all types of Conntrack events.
@@ -34,7 +33,7 @@ func (et *EventType) unmarshal(h netfilter.Header) error {
 
 	// Fail when the message is not a conntrack message
 	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
-		switch MessageType(h.MessageType) {
+		switch messageType(h.MessageType) {
 		case CTNew:
 			// Since the MessageType is only of kind new, get or delete,
 			// the header's flags are used to distinguish between NEW and UPDATE.
@@ -49,7 +48,7 @@ func (et *EventType) unmarshal(h netfilter.Header) error {
 			return fmt.Errorf(errUnknownEventType, h.MessageType)
 		}
 	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
-		switch ExpMessageType(h.MessageType) {
+		switch expMessageType(h.MessageType) {
 		case CTExpNew:
 			*et = EventExpNew
 		case CTExpDelete:

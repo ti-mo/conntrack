@@ -5,17 +5,18 @@ import "github.com/ti-mo/netfilter"
 // All enums in this file are translated from the Linux kernel source at
 // include/uapi/linux/netfilter/nfnetlink_conntrack.h
 
-// MessageType is a Conntrack-specific representation of a netfilter.MessageType.
+// messageType is a Conntrack-specific representation of a netfilter.MessageType.
 // It is used to specify the type of action to execute on the kernel's state table
 // (get, create, delete, etc.).
-type MessageType netfilter.MessageType
+type messageType netfilter.MessageType
 
-// enum cntl_msg_types (typo)
 // The first three members are similar to NF_NETLINK_CONNTRACK_*, which is still used
 // in libnetfilter_conntrack. They can still be used to subscribe to Netlink groups with bind(),
 // but subscribing using setsockopt() (like mdlayher/netlink) requires the NFNLGRP_* enum.
+//
+// enum cntl_msg_types (upstream typo)
 const (
-	CTNew MessageType = iota // IPCTNL_MSG_CT_NEW
+	CTNew messageType = iota // IPCTNL_MSG_CT_NEW
 
 	CTGet            // IPCTNL_MSG_CT_GET
 	CTDelete         // IPCTNL_MSG_CT_DELETE
@@ -26,13 +27,13 @@ const (
 	CTGetUnconfirmed // IPCTNL_MSG_CT_GET_UNCONFIRMED
 )
 
-// ExpMessageType is a Conntrack-specific representation of a netfilter.MessageType.
+// expMessageType is a Conntrack-specific representation of a netfilter.MessageType.
 // It holds information about Conntrack Expect events; state created by Conntrack helpers.
-type ExpMessageType netfilter.MessageType
+type expMessageType netfilter.MessageType
 
 // enum ctnl_exp_msg_types
 const (
-	CTExpNew ExpMessageType = iota // IPCTNL_MSG_EXP_NEW
+	CTExpNew expMessageType = iota // IPCTNL_MSG_EXP_NEW
 
 	CTExpGet         // IPCTNL_MSG_EXP_GET
 	CTExpDelete      // IPCTNL_MSG_EXP_DELETE
@@ -41,7 +42,6 @@ const (
 
 // AttributeType defines the meaning of a root-level Type
 // value of a Conntrack-specific Netfilter attribute.
-//go:generate stringer -type=AttributeType
 type AttributeType uint8
 
 // enum ctattr_type
@@ -75,7 +75,6 @@ const (
 )
 
 // TupleType describes the type of tuple contained in this container.
-//go:generate stringer -type=TupleType
 type TupleType uint8
 
 // enum ctattr_tuple
@@ -162,7 +161,6 @@ const (
 )
 
 // ProtoInfoType describes the kind of protocol info in this container.
-//go:generate stringer -type=ProtoInfoType
 type ProtoInfoType uint8
 
 // enum ctattr_protoinfo
@@ -238,7 +236,6 @@ const (
 )
 
 // ExpectType describes the type of expect attribute in this container.
-//go:generate stringer -type=ExpectType
 type ExpectType uint8
 
 // enum ctattr_expect
