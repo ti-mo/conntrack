@@ -21,12 +21,12 @@ var (
 	// Attribute with random, unused type 65535
 	attrUnknown = netfilter.Attribute{Type: 0xFFFF}
 	// Nested structure of attributes with random, unused type 65535
-	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(CTATupleOrig), Nested: true,
+	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true,
 		Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
 	// Tuple attribute without Nested flag
-	attrTupleNotNested = netfilter.Attribute{Type: uint16(CTATupleOrig)}
+	attrTupleNotNested = netfilter.Attribute{Type: uint16(ctaTupleOrig)}
 	// Tuple attribute with Nested flag
-	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(CTATupleOrig), Nested: true, Children: []netfilter.Attribute{attrDefault}}
+	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true, Children: []netfilter.Attribute{attrDefault}}
 )
 
 var ipTupleTests = []struct {
@@ -123,7 +123,7 @@ var ipTupleTests = []struct {
 	{
 		name: "error iptuple unmarshal with wrong type",
 		nfa:  attrUnknown,
-		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, CTATupleIP),
+		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, ctaTupleIP),
 	},
 	{
 		name: "error iptuple unmarshal with unknown IPTupleType",
@@ -142,7 +142,7 @@ var ipTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0xFFFF, CTATupleIP), opUnIPTup),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0xFFFF, ctaTupleIP), opUnIPTup),
 	},
 }
 
@@ -194,12 +194,12 @@ var protoTupleTests = []struct {
 	{
 		name: "error unmarshal with wrong type",
 		nfa:  attrUnknown,
-		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, CTATupleProto),
+		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, ctaTupleProto),
 	},
 	{
 		name: "error unmarshal with incorrect amount of children",
 		nfa: netfilter.Attribute{
-			Type:   uint16(CTATupleProto),
+			Type:   uint16(ctaTupleProto),
 			Nested: true,
 		},
 		err: errors.Wrap(errNeedSingleChild, opUnPTup),
@@ -207,7 +207,7 @@ var protoTupleTests = []struct {
 	{
 		name: "error unmarshal unknown ProtoTupleType",
 		nfa: netfilter.Attribute{
-			Type:   uint16(CTATupleProto),
+			Type:   uint16(ctaTupleProto),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				attrUnknown,
@@ -215,28 +215,28 @@ var protoTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type, CTATupleProto), opUnPTup),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type, ctaTupleProto), opUnPTup),
 	},
 	{
 		name: "correct icmpv4 prototuple",
 		nfa: netfilter.Attribute{
-			Type:   uint16(CTATupleProto),
+			Type:   uint16(ctaTupleProto),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAProtoNum),
+					Type: uint16(ctaProtoNum),
 					Data: []byte{unix.IPPROTO_ICMP},
 				},
 				{
-					Type: uint16(CTAProtoICMPType),
+					Type: uint16(ctaProtoICMPType),
 					Data: []byte{0x1},
 				},
 				{
-					Type: uint16(CTAProtoICMPCode),
+					Type: uint16(ctaProtoICMPCode),
 					Data: []byte{0xf},
 				},
 				{
-					Type: uint16(CTAProtoICMPID),
+					Type: uint16(ctaProtoICMPID),
 					Data: []byte{0x12, 0x34},
 				},
 			},
@@ -252,23 +252,23 @@ var protoTupleTests = []struct {
 	{
 		name: "correct icmpv6 prototuple",
 		nfa: netfilter.Attribute{
-			Type:   uint16(CTATupleProto),
+			Type:   uint16(ctaTupleProto),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAProtoNum),
+					Type: uint16(ctaProtoNum),
 					Data: []byte{unix.IPPROTO_ICMPV6},
 				},
 				{
-					Type: uint16(CTAProtoICMPv6Type),
+					Type: uint16(ctaProtoICMPv6Type),
 					Data: []byte{0x2},
 				},
 				{
-					Type: uint16(CTAProtoICMPv6Code),
+					Type: uint16(ctaProtoICMPv6Code),
 					Data: []byte{0xe},
 				},
 				{
-					Type: uint16(CTAProtoICMPv6ID),
+					Type: uint16(ctaProtoICMPv6ID),
 					Data: []byte{0x56, 0x78},
 				},
 			},
@@ -449,7 +449,7 @@ var tupleTests = []struct {
 	{
 		name: "error unknown nested tuple type",
 		nfa:  attrTupleUnknownNested,
-		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type, CTATupleOrig), opUnTup),
+		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type, ctaTupleOrig), opUnTup),
 	},
 }
 
@@ -489,7 +489,7 @@ func TestTupleMarshalError(t *testing.T) {
 		},
 	}
 
-	_, err := ipTupleError.marshal(uint16(CTATupleOrig))
+	_, err := ipTupleError.marshal(uint16(ctaTupleOrig))
 	require.Error(t, err)
 	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }

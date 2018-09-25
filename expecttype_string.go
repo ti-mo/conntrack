@@ -4,7 +4,7 @@ package conntrack
 
 import "strconv"
 
-const _ExpectType_name = "CTAExpectUnspecCTAExpectMasterCTAExpectTupleCTAExpectMaskCTAExpectTimeoutCTAExpectIDCTAExpectHelpNameCTAExpectZoneCTAExpectFlagsCTAExpectClassCTAExpectNATCTAExpectFN"
+const _ExpectType_name = "ctaExpectUnspecctaExpectMasterctaExpectTuplectaExpectMaskctaExpectTimeoutctaExpectIDctaExpectHelpNamectaExpectZonectaExpectFlagsctaExpectClassctaExpectNATctaExpectFN"
 
 var _ExpectType_index = [...]uint8{0, 15, 30, 44, 57, 73, 84, 101, 114, 128, 142, 154, 165}
 

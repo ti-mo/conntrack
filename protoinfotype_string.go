@@ -4,7 +4,7 @@ package conntrack
 
 import "strconv"
 
-const _ProtoInfoType_name = "CTAProtoInfoUnspecCTAProtoInfoTCPCTAProtoInfoDCCPCTAProtoInfoSCTP"
+const _ProtoInfoType_name = "ctaProtoInfoUnspecctaProtoInfoTCPctaProtoInfoDCCPctaProtoInfoSCTP"
 
 var _ProtoInfoType_index = [...]uint8{0, 18, 33, 49, 65}
 

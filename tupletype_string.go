@@ -4,7 +4,7 @@ package conntrack
 
 import "strconv"
 
-const _TupleType_name = "CTATupleUnspecCTATupleIPCTATupleProtoCTATupleZone"
+const _TupleType_name = "ctaTupleUnspecctaTupleIPctaTupleProtoctaTupleZone"
 
 var _TupleType_index = [...]uint8{0, 14, 24, 37, 49}
 

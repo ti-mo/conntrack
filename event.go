@@ -34,7 +34,7 @@ func (et *EventType) unmarshal(h netfilter.Header) error {
 	// Fail when the message is not a conntrack message
 	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
 		switch messageType(h.MessageType) {
-		case CTNew:
+		case ctNew:
 			// Since the MessageType is only of kind new, get or delete,
 			// the header's flags are used to distinguish between NEW and UPDATE.
 			if h.Flags&(netlink.HeaderFlagsCreate|netlink.HeaderFlagsExcl) != 0 {
@@ -42,16 +42,16 @@ func (et *EventType) unmarshal(h netfilter.Header) error {
 			} else {
 				*et = EventUpdate
 			}
-		case CTDelete:
+		case ctDelete:
 			*et = EventDestroy
 		default:
 			return fmt.Errorf(errUnknownEventType, h.MessageType)
 		}
 	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
 		switch expMessageType(h.MessageType) {
-		case CTExpNew:
+		case ctExpNew:
 			*et = EventExpNew
-		case CTExpDelete:
+		case ctExpDelete:
 			*et = EventExpDestroy
 		default:
 			return fmt.Errorf(errUnknownEventType, h.MessageType)

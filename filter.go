@@ -17,11 +17,11 @@ func (f Filter) marshal() []netfilter.Attribute {
 
 	return []netfilter.Attribute{
 		{
-			Type: uint16(CTAMark),
+			Type: uint16(ctaMark),
 			Data: netfilter.Uint32Bytes(f.Mark),
 		},
 		{
-			Type: uint16(CTAMarkMask),
+			Type: uint16(ctaMarkMask),
 			Data: netfilter.Uint32Bytes(f.Mask),
 		},
 	}

@@ -19,33 +19,33 @@ var (
 	// Re-usable structures and netfilter atttibutes for tests
 	nfaIPPT = []netfilter.Attribute{
 		{
-			Type:   uint16(CTATupleIP),
+			Type:   uint16(ctaTupleIP),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAIPv4Src),
+					Type: uint16(ctaIPv4Src),
 					Data: []byte{1, 2, 3, 4},
 				},
 				{
-					Type: uint16(CTAIPv4Dst),
+					Type: uint16(ctaIPv4Dst),
 					Data: []byte{4, 3, 2, 1},
 				},
 			},
 		},
 		{
-			Type:   uint16(CTATupleProto),
+			Type:   uint16(ctaTupleProto),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAProtoNum),
+					Type: uint16(ctaProtoNum),
 					Data: []byte{0x06},
 				},
 				{
-					Type: uint16(CTAProtoSrcPort),
+					Type: uint16(ctaProtoSrcPort),
 					Data: []byte{0xff, 0x00},
 				},
 				{
-					Type: uint16(CTAProtoDstPort),
+					Type: uint16(ctaProtoDstPort),
 					Data: []byte{0x00, 0xff},
 				},
 			},
@@ -84,31 +84,31 @@ var (
 			name: "scalar and simple binary attributes",
 			attrs: []netfilter.Attribute{
 				{
-					Type: uint16(CTATimeout),
+					Type: uint16(ctaTimeout),
 					Data: []byte{0, 1, 2, 3},
 				},
 				{
-					Type: uint16(CTAID),
+					Type: uint16(ctaID),
 					Data: []byte{0, 1, 2, 3},
 				},
 				{
-					Type: uint16(CTAUse),
+					Type: uint16(ctaUse),
 					Data: []byte{0, 1, 2, 3},
 				},
 				{
-					Type: uint16(CTAMark),
+					Type: uint16(ctaMark),
 					Data: []byte{0, 1, 2, 3},
 				},
 				{
-					Type: uint16(CTAZone),
+					Type: uint16(ctaZone),
 					Data: []byte{4, 5},
 				},
 				{
-					Type: uint16(CTALabels),
+					Type: uint16(ctaLabels),
 					Data: []byte{0x4b, 0x1d, 0xbe, 0xef},
 				},
 				{
-					Type: uint16(CTALabelsMask),
+					Type: uint16(ctaLabelsMask),
 					Data: []byte{0x00, 0xba, 0x1b, 0xe1},
 				},
 			},
@@ -122,17 +122,17 @@ var (
 			name: "ip/port/proto tuple attributes as orig/reply/master",
 			attrs: []netfilter.Attribute{
 				{
-					Type:     uint16(CTATupleOrig),
+					Type:     uint16(ctaTupleOrig),
 					Nested:   true,
 					Children: nfaIPPT,
 				},
 				{
-					Type:     uint16(CTATupleReply),
+					Type:     uint16(ctaTupleReply),
 					Nested:   true,
 					Children: nfaIPPT,
 				},
 				{
-					Type:     uint16(CTATupleMaster),
+					Type:     uint16(ctaTupleMaster),
 					Nested:   true,
 					Children: nfaIPPT,
 				},
@@ -147,7 +147,7 @@ var (
 			name: "status attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type: uint16(CTAStatus),
+					Type: uint16(ctaStatus),
 					Data: []byte{0xff, 0x00, 0xff, 0x00},
 				},
 			},
@@ -157,23 +157,23 @@ var (
 			name: "protoinfo attribute w/ tcp info",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTAProtoInfo),
+					Type:   uint16(ctaProtoInfo),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type:   uint16(CTAProtoInfoTCP),
+							Type:   uint16(ctaProtoInfoTCP),
 							Nested: true,
 							Children: []netfilter.Attribute{
 								{
-									Type: uint16(CTAProtoInfoTCPState),
+									Type: uint16(ctaProtoInfoTCPState),
 									Data: []byte{1},
 								},
 								{
-									Type: uint16(CTAProtoInfoTCPFlagsOriginal),
+									Type: uint16(ctaProtoInfoTCPFlagsOriginal),
 									Data: []byte{2, 3},
 								},
 								{
-									Type: uint16(CTAProtoInfoTCPFlagsReply),
+									Type: uint16(ctaProtoInfoTCPFlagsReply),
 									Data: []byte{4, 5},
 								},
 							},
@@ -187,15 +187,15 @@ var (
 			name: "helper attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTAHelp),
+					Type:   uint16(ctaHelp),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTAHelpName),
+							Type: uint16(ctaHelpName),
 							Data: []byte("helper"),
 						},
 						{
-							Type: uint16(CTAHelpInfo),
+							Type: uint16(ctaHelpInfo),
 							Data: []byte("info"),
 						},
 					},
@@ -207,29 +207,29 @@ var (
 			name: "counter attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTACountersOrig),
+					Type:   uint16(ctaCountersOrig),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTACountersPackets),
+							Type: uint16(ctaCountersPackets),
 							Data: []byte{0x00, 0x00, 0x00, 0x00, 0xf0, 0x0d, 0x00, 0x00},
 						},
 						{
-							Type: uint16(CTACountersBytes),
+							Type: uint16(ctaCountersBytes),
 							Data: []byte{0xba, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00},
 						},
 					},
 				},
 				{
-					Type:   uint16(CTACountersReply),
+					Type:   uint16(ctaCountersReply),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTACountersPackets),
+							Type: uint16(ctaCountersPackets),
 							Data: []byte{0xb0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d},
 						},
 						{
-							Type: uint16(CTACountersBytes),
+							Type: uint16(ctaCountersBytes),
 							Data: []byte{0xfa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0xce},
 						},
 					},
@@ -244,11 +244,11 @@ var (
 			name: "security attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTASecCtx),
+					Type:   uint16(ctaSecCtx),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTASecCtxName),
+							Type: uint16(ctaSecCtxName),
 							Data: []byte("jail"),
 						},
 					},
@@ -260,17 +260,17 @@ var (
 			name: "timestamp attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTATimestamp),
+					Type:   uint16(ctaTimestamp),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTATimestampStart),
+							Type: uint16(ctaTimestampStart),
 							Data: []byte{
 								0x0f, 0x12, 0x34, 0x56,
 								0x78, 0x9a, 0xbc, 0xde},
 						},
 						{
-							Type: uint16(CTATimestampStop),
+							Type: uint16(ctaTimestampStop),
 							Data: []byte{
 								0xff, 0x12, 0x34, 0x56,
 								0x78, 0x9a, 0xbc, 0xde},
@@ -286,29 +286,29 @@ var (
 			name: "sequence adjust attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTASeqAdjOrig),
+					Type:   uint16(ctaSeqAdjOrig),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTASeqAdjCorrectionPos),
+							Type: uint16(ctaSeqAdjCorrectionPos),
 							Data: []byte{0x0f, 0x12, 0x34, 0x56},
 						},
 						{
-							Type: uint16(CTASeqAdjOffsetAfter),
+							Type: uint16(ctaSeqAdjOffsetAfter),
 							Data: []byte{0x0f, 0x12, 0x34, 0x99},
 						},
 					},
 				},
 				{
-					Type:   uint16(CTASeqAdjReply),
+					Type:   uint16(ctaSeqAdjReply),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTASeqAdjCorrectionPos),
+							Type: uint16(ctaSeqAdjCorrectionPos),
 							Data: []byte{0x0f, 0x12, 0x34, 0x56},
 						},
 						{
-							Type: uint16(CTASeqAdjOffsetAfter),
+							Type: uint16(ctaSeqAdjOffsetAfter),
 							Data: []byte{0x0f, 0x12, 0x34, 0x99},
 						},
 					},
@@ -323,19 +323,19 @@ var (
 			name: "synproxy attribute",
 			attrs: []netfilter.Attribute{
 				{
-					Type:   uint16(CTASynProxy),
+					Type:   uint16(ctaSynProxy),
 					Nested: true,
 					Children: []netfilter.Attribute{
 						{
-							Type: uint16(CTASynProxyISN),
+							Type: uint16(ctaSynProxyISN),
 							Data: []byte{0x12, 0x34, 0x56, 0x78},
 						},
 						{
-							Type: uint16(CTASynProxyITS),
+							Type: uint16(ctaSynProxyITS),
 							Data: []byte{0x87, 0x65, 0x43, 0x21},
 						},
 						{
-							Type: uint16(CTASynProxyTSOff),
+							Type: uint16(ctaSynProxyTSOff),
 							Data: []byte{0xab, 0xcd, 0xef, 0x00},
 						},
 					},
@@ -352,67 +352,67 @@ var (
 	}{
 		{
 			name:   "error unmarshal original tuple",
-			nfa:    netfilter.Attribute{Type: uint16(CTATupleOrig)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaTupleOrig)},
 			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal reply tuple",
-			nfa:    netfilter.Attribute{Type: uint16(CTATupleReply)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaTupleReply)},
 			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal master tuple",
-			nfa:    netfilter.Attribute{Type: uint16(CTATupleMaster)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaTupleMaster)},
 			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal status",
-			nfa:    netfilter.Attribute{Type: uint16(CTAStatus), Nested: true},
+			nfa:    netfilter.Attribute{Type: uint16(ctaStatus), Nested: true},
 			errStr: "Status unmarshal: unexpected Nested attribute",
 		},
 		{
 			name:   "error unmarshal protoinfo",
-			nfa:    netfilter.Attribute{Type: uint16(CTAProtoInfo)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaProtoInfo)},
 			errStr: "ProtoInfo unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal helper",
-			nfa:    netfilter.Attribute{Type: uint16(CTAHelp)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaHelp)},
 			errStr: "Helper unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal original counter",
-			nfa:    netfilter.Attribute{Type: uint16(CTACountersOrig)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaCountersOrig)},
 			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal reply counter",
-			nfa:    netfilter.Attribute{Type: uint16(CTACountersReply)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaCountersReply)},
 			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal security context",
-			nfa:    netfilter.Attribute{Type: uint16(CTASecCtx)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaSecCtx)},
 			errStr: "Security unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal timestamp",
-			nfa:    netfilter.Attribute{Type: uint16(CTATimestamp)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaTimestamp)},
 			errStr: "Timestamp unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal original seqadj",
-			nfa:    netfilter.Attribute{Type: uint16(CTASeqAdjOrig)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaSeqAdjOrig)},
 			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal reply seqadj",
-			nfa:    netfilter.Attribute{Type: uint16(CTASeqAdjReply)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaSeqAdjReply)},
 			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
 			name:   "error unmarshal synproxy",
-			nfa:    netfilter.Attribute{Type: uint16(CTASynProxy)},
+			nfa:    netfilter.Attribute{Type: uint16(ctaSynProxy)},
 			errStr: "SynProxy unmarshal: need a Nested attribute to decode this structure",
 		},
 	}

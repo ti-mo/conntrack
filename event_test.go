@@ -24,7 +24,7 @@ var eventTypeTests = []struct {
 		name: "conntrack new",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTNew),
+			MessageType: netfilter.MessageType(ctNew),
 			Flags:       netlink.HeaderFlagsCreate | netlink.HeaderFlagsExcl,
 		},
 		et: EventNew,
@@ -33,7 +33,7 @@ var eventTypeTests = []struct {
 		name: "conntrack update",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTNew),
+			MessageType: netfilter.MessageType(ctNew),
 		},
 		et: EventUpdate,
 	},
@@ -41,7 +41,7 @@ var eventTypeTests = []struct {
 		name: "conntrack destroy",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTDelete),
+			MessageType: netfilter.MessageType(ctDelete),
 		},
 		et: EventDestroy,
 	},
@@ -57,7 +57,7 @@ var eventTypeTests = []struct {
 		name: "conntrack exp new",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
-			MessageType: netfilter.MessageType(CTExpNew),
+			MessageType: netfilter.MessageType(ctExpNew),
 		},
 		et: EventExpNew,
 	},
@@ -65,7 +65,7 @@ var eventTypeTests = []struct {
 		name: "conntrack exp destroy",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
-			MessageType: netfilter.MessageType(CTExpDelete),
+			MessageType: netfilter.MessageType(ctExpDelete),
 		},
 		et: EventExpDestroy,
 	},
@@ -123,7 +123,7 @@ var eventTests = []struct {
 		name: "correct empty expect destroy event",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
-			MessageType: netfilter.MessageType(CTExpDelete),
+			MessageType: netfilter.MessageType(ctExpDelete),
 		},
 		e: Event{
 			Type:   EventExpDestroy,

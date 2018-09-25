@@ -103,7 +103,7 @@ func (c *Conn) Dump() ([]Flow, error) {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTGet),
+			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
 		},
@@ -128,7 +128,7 @@ func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTGet),
+			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
 		}, f.marshal())
@@ -152,7 +152,7 @@ func (c *Conn) DumpExpect() ([]Expect, error) {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
-			MessageType: netfilter.MessageType(CTGet),
+			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
 		},
@@ -176,7 +176,7 @@ func (c *Conn) Flush() error {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTDelete),
+			MessageType: netfilter.MessageType(ctDelete),
 			Family:      netfilter.ProtoInet,
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		},
@@ -215,7 +215,7 @@ func (c *Conn) Create(f Flow) error {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTNew),
+			MessageType: netfilter.MessageType(ctNew),
 			Family:      pf,
 			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
 				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
@@ -250,7 +250,7 @@ func (c *Conn) CreateExpect(ex Expect) error {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
-			MessageType: netfilter.MessageType(CTExpNew),
+			MessageType: netfilter.MessageType(ctExpNew),
 			Family:      pf,
 			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
 				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
@@ -287,7 +287,7 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTGet),
+			MessageType: netfilter.MessageType(ctGet),
 			Family:      pf,
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		}, attrs)
@@ -336,7 +336,7 @@ func (c *Conn) Update(f Flow) error {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTNew),
+			MessageType: netfilter.MessageType(ctNew),
 			Family:      pf,
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		}, attrs)
@@ -372,7 +372,7 @@ func (c *Conn) Delete(f Flow) error {
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(CTDelete),
+			MessageType: netfilter.MessageType(ctDelete),
 			Family:      pf,
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		}, attrs)

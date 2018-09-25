@@ -19,8 +19,8 @@ type Status struct {
 // unmarshal unmarshals a netfilter.Attribute into a Status structure.
 func (s *Status) unmarshal(attr netfilter.Attribute) error {
 
-	if AttributeType(attr.Type) != CTAStatus {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAStatus)
+	if AttributeType(attr.Type) != ctaStatus {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaStatus)
 	}
 
 	if attr.Nested {
@@ -39,7 +39,7 @@ func (s *Status) unmarshal(attr netfilter.Attribute) error {
 // marshal marshals a Status into a netfilter.Attribute.
 func (s Status) marshal() netfilter.Attribute {
 	return netfilter.Attribute{
-		Type: uint16(CTAStatus),
+		Type: uint16(ctaStatus),
 		Data: netfilter.Uint32Bytes(uint32(s.Value)),
 	}
 }

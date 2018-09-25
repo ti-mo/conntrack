@@ -37,8 +37,8 @@ type ExpectNAT struct {
 // unmarshal unmarshals a netfilter.Attribute into an ExpectNAT.
 func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 
-	if ExpectType(attr.Type) != CTAExpectNAT {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAExpectNAT)
+	if ExpectType(attr.Type) != ctaExpectNAT {
+		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaExpectNAT)
 	}
 
 	if !attr.Nested {
@@ -51,14 +51,14 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 
 	for _, iattr := range attr.Children {
 		switch ExpectNATType(iattr.Type) {
-		case CTAExpectNATDir:
+		case ctaExpectNATDir:
 			en.Direction = iattr.Uint32() == 1
-		case CTAExpectNATTuple:
+		case ctaExpectNATTuple:
 			if err := en.Tuple.unmarshal(iattr); err != nil {
 				return err
 			}
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, CTAExpectNAT), opUnExpectNAT)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, ctaExpectNAT), opUnExpectNAT)
 		}
 	}
 
@@ -67,16 +67,16 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 
 func (en ExpectNAT) marshal() (netfilter.Attribute, error) {
 
-	nfa := netfilter.Attribute{Type: uint16(CTAExpectNAT), Nested: true, Children: make([]netfilter.Attribute, 2)}
+	nfa := netfilter.Attribute{Type: uint16(ctaExpectNAT), Nested: true, Children: make([]netfilter.Attribute, 2)}
 
 	var dir uint32
 	if en.Direction {
 		dir = 1
 	}
 
-	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAExpectNATDir), Data: netfilter.Uint32Bytes(dir)}
+	nfa.Children[0] = netfilter.Attribute{Type: uint16(ctaExpectNATDir), Data: netfilter.Uint32Bytes(dir)}
 
-	ta, err := en.Tuple.marshal(uint16(CTAExpectNATTuple))
+	ta, err := en.Tuple.marshal(uint16(ctaExpectNATTuple))
 	if err != nil {
 		return nfa, err
 	}
@@ -92,35 +92,35 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 
 		switch at := ExpectType(attr.Type); at {
 
-		case CTAExpectMaster:
+		case ctaExpectMaster:
 			if err := ex.TupleMaster.unmarshal(attr); err != nil {
 				return err
 			}
-		case CTAExpectTuple:
+		case ctaExpectTuple:
 			if err := ex.Tuple.unmarshal(attr); err != nil {
 				return err
 			}
-		case CTAExpectMask:
+		case ctaExpectMask:
 			if err := ex.Mask.unmarshal(attr); err != nil {
 				return err
 			}
-		case CTAExpectTimeout:
+		case ctaExpectTimeout:
 			ex.Timeout = attr.Uint32()
-		case CTAExpectID:
+		case ctaExpectID:
 			ex.ID = attr.Uint32()
-		case CTAExpectHelpName:
+		case ctaExpectHelpName:
 			ex.HelpName = string(attr.Data)
-		case CTAExpectZone:
+		case ctaExpectZone:
 			ex.Zone = attr.Uint16()
-		case CTAExpectFlags:
+		case ctaExpectFlags:
 			ex.Flags = attr.Uint32()
-		case CTAExpectClass:
+		case ctaExpectClass:
 			ex.Class = attr.Uint32()
-		case CTAExpectNAT:
+		case ctaExpectNAT:
 			if err := ex.NAT.unmarshal(attr); err != nil {
 				return err
 			}
-		case CTAExpectFN:
+		case ctaExpectFN:
 			ex.Function = string(attr.Data)
 		default:
 			return fmt.Errorf(errAttributeUnknown, at)
@@ -139,44 +139,44 @@ func (ex Expect) marshal() ([]netfilter.Attribute, error) {
 
 	attrs := make([]netfilter.Attribute, 4, 10)
 
-	tm, err := ex.TupleMaster.marshal(uint16(CTAExpectMaster))
+	tm, err := ex.TupleMaster.marshal(uint16(ctaExpectMaster))
 	if err != nil {
 		return nil, err
 	}
 	attrs[0] = tm
 
-	tp, err := ex.Tuple.marshal(uint16(CTAExpectTuple))
+	tp, err := ex.Tuple.marshal(uint16(ctaExpectTuple))
 	if err != nil {
 		return nil, err
 	}
 	attrs[1] = tp
 
-	ts, err := ex.Mask.marshal(uint16(CTAExpectMask))
+	ts, err := ex.Mask.marshal(uint16(ctaExpectMask))
 	if err != nil {
 		return nil, err
 	}
 	attrs[2] = ts
 
-	attrs[3] = netfilter.Attribute{Type: uint16(CTAExpectTimeout), Data: netfilter.Uint32Bytes(ex.Timeout)}
+	attrs[3] = netfilter.Attribute{Type: uint16(ctaExpectTimeout), Data: netfilter.Uint32Bytes(ex.Timeout)}
 
 	if ex.HelpName != "" {
-		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectHelpName), Data: []byte(ex.HelpName)})
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(ctaExpectHelpName), Data: []byte(ex.HelpName)})
 	}
 
 	if ex.Zone != 0 {
-		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectZone), Data: netfilter.Uint16Bytes(ex.Zone)})
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(ctaExpectZone), Data: netfilter.Uint16Bytes(ex.Zone)})
 	}
 
 	if ex.Class != 0 {
-		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectClass), Data: netfilter.Uint32Bytes(ex.Class)})
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(ctaExpectClass), Data: netfilter.Uint32Bytes(ex.Class)})
 	}
 
 	if ex.Flags != 0 {
-		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectFlags), Data: netfilter.Uint32Bytes(ex.Flags)})
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(ctaExpectFlags), Data: netfilter.Uint32Bytes(ex.Flags)})
 	}
 
 	if ex.Function != "" {
-		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectFN), Data: []byte(ex.Function)})
+		attrs = append(attrs, netfilter.Attribute{Type: uint16(ctaExpectFN), Data: []byte(ex.Function)})
 	}
 
 	if ex.NAT.Tuple.filled() {

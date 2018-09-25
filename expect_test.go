@@ -22,23 +22,23 @@ var corpusExpect = []struct {
 		name: "scalar and simple binary attributes",
 		attrs: []netfilter.Attribute{
 			{
-				Type: uint16(CTAExpectID),
+				Type: uint16(ctaExpectID),
 				Data: []byte{0, 1, 2, 3},
 			},
 			{
-				Type: uint16(CTAExpectTimeout),
+				Type: uint16(ctaExpectTimeout),
 				Data: []byte{0, 1, 2, 3},
 			},
 			{
-				Type: uint16(CTAExpectZone),
+				Type: uint16(ctaExpectZone),
 				Data: []byte{4, 5},
 			},
 			{
-				Type: uint16(CTAExpectFlags),
+				Type: uint16(ctaExpectFlags),
 				Data: []byte{5, 6, 7, 8},
 			},
 			{
-				Type: uint16(CTAExpectClass),
+				Type: uint16(ctaExpectClass),
 				Data: []byte{5, 6, 7, 8},
 			},
 		},
@@ -54,37 +54,37 @@ var corpusExpect = []struct {
 		name: "master, tuple, mask tuple attributes",
 		attrs: []netfilter.Attribute{
 			{
-				Type:   uint16(CTAExpectMaster),
+				Type:   uint16(ctaExpectMaster),
 				Nested: true,
 				Children: []netfilter.Attribute{
 					{
-						Type:   uint16(CTATupleIP),
+						Type:   uint16(ctaTupleIP),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAIPv4Src),
+								Type: uint16(ctaIPv4Src),
 								Data: []byte{127, 0, 0, 1},
 							},
 							{
-								Type: uint16(CTAIPv4Dst),
+								Type: uint16(ctaIPv4Dst),
 								Data: []byte{127, 0, 0, 2},
 							},
 						},
 					},
 					{
-						Type:   uint16(CTATupleProto),
+						Type:   uint16(ctaTupleProto),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAProtoNum),
+								Type: uint16(ctaProtoNum),
 								Data: []byte{0x06},
 							},
 							{
-								Type: uint16(CTAProtoSrcPort),
+								Type: uint16(ctaProtoSrcPort),
 								Data: []byte{0xa6, 0xd2},
 							},
 							{
-								Type: uint16(CTAProtoDstPort),
+								Type: uint16(ctaProtoDstPort),
 								Data: []byte{0x00, 0x0c},
 							},
 						},
@@ -92,37 +92,37 @@ var corpusExpect = []struct {
 				},
 			},
 			{
-				Type:   uint16(CTAExpectTuple),
+				Type:   uint16(ctaExpectTuple),
 				Nested: true,
 				Children: []netfilter.Attribute{
 					{
-						Type:   uint16(CTATupleIP),
+						Type:   uint16(ctaTupleIP),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAIPv4Src),
+								Type: uint16(ctaIPv4Src),
 								Data: []byte{127, 0, 0, 1},
 							},
 							{
-								Type: uint16(CTAIPv4Dst),
+								Type: uint16(ctaIPv4Dst),
 								Data: []byte{127, 0, 0, 2},
 							},
 						},
 					},
 					{
-						Type:   uint16(CTATupleProto),
+						Type:   uint16(ctaTupleProto),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAProtoNum),
+								Type: uint16(ctaProtoNum),
 								Data: []byte{0x06},
 							},
 							{
-								Type: uint16(CTAProtoSrcPort),
+								Type: uint16(ctaProtoSrcPort),
 								Data: []byte{0x0, 0x0},
 							},
 							{
-								Type: uint16(CTAProtoDstPort),
+								Type: uint16(ctaProtoDstPort),
 								Data: []byte{0x75, 0x30},
 							},
 						},
@@ -130,37 +130,37 @@ var corpusExpect = []struct {
 				},
 			},
 			{
-				Type:   uint16(CTAExpectMask),
+				Type:   uint16(ctaExpectMask),
 				Nested: true,
 				Children: []netfilter.Attribute{
 					{
-						Type:   uint16(CTATupleIP),
+						Type:   uint16(ctaTupleIP),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAIPv4Src),
+								Type: uint16(ctaIPv4Src),
 								Data: []byte{0xff, 0xff, 0xff, 0xff},
 							},
 							{
-								Type: uint16(CTAIPv4Dst),
+								Type: uint16(ctaIPv4Dst),
 								Data: []byte{0xff, 0xff, 0xff, 0xff},
 							},
 						},
 					},
 					{
-						Type:   uint16(CTATupleProto),
+						Type:   uint16(ctaTupleProto),
 						Nested: true,
 						Children: []netfilter.Attribute{
 							{
-								Type: uint16(CTAProtoNum),
+								Type: uint16(ctaProtoNum),
 								Data: []byte{0x06},
 							},
 							{
-								Type: uint16(CTAProtoSrcPort),
+								Type: uint16(ctaProtoSrcPort),
 								Data: []byte{0x0, 0x0},
 							},
 							{
-								Type: uint16(CTAProtoDstPort),
+								Type: uint16(ctaProtoDstPort),
 								Data: []byte{0xff, 0xff},
 							},
 						},
@@ -168,15 +168,15 @@ var corpusExpect = []struct {
 				},
 			},
 			{
-				Type:   uint16(CTAExpectNAT),
+				Type:   uint16(ctaExpectNAT),
 				Nested: true,
 				Children: []netfilter.Attribute{
 					{
-						Type: uint16(CTAExpectNATDir),
+						Type: uint16(ctaExpectNATDir),
 						Data: []byte{0x00, 0x00, 0x00, 0x01},
 					},
 					{
-						Type:     uint16(CTAExpectNATTuple),
+						Type:     uint16(ctaExpectNATTuple),
 						Nested:   true,
 						Children: nfaIPPT,
 					},
@@ -225,11 +225,11 @@ var corpusExpect = []struct {
 		name: "string attributes",
 		attrs: []netfilter.Attribute{
 			{
-				Type: uint16(CTAExpectHelpName),
+				Type: uint16(ctaExpectHelpName),
 				Data: []byte("ftp"),
 			},
 			{
-				Type: uint16(CTAExpectFN),
+				Type: uint16(ctaExpectFN),
 				Data: []byte("func_name"),
 			},
 		},
@@ -252,22 +252,22 @@ var corpusExpectUnmarshalError = []struct {
 	},
 	{
 		name:   "error unmarshal invalid master tuple",
-		nfa:    netfilter.Attribute{Type: uint16(CTAExpectMaster)},
+		nfa:    netfilter.Attribute{Type: uint16(ctaExpectMaster)},
 		errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 	},
 	{
 		name:   "error unmarshal invalid tuple",
-		nfa:    netfilter.Attribute{Type: uint16(CTAExpectTuple)},
+		nfa:    netfilter.Attribute{Type: uint16(ctaExpectTuple)},
 		errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 	},
 	{
 		name:   "error unmarshal invalid mask tuple",
-		nfa:    netfilter.Attribute{Type: uint16(CTAExpectMask)},
+		nfa:    netfilter.Attribute{Type: uint16(ctaExpectMask)},
 		errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 	},
 	{
 		name:   "error unmarshal invalid nat",
-		nfa:    netfilter.Attribute{Type: uint16(CTAExpectNAT)},
+		nfa:    netfilter.Attribute{Type: uint16(ctaExpectNAT)},
 		errStr: "ExpectNAT unmarshal: need a Nested attribute to decode this structure",
 	},
 }
@@ -322,54 +322,54 @@ func TestExpectMarshal(t *testing.T) {
 
 	want := []netfilter.Attribute{
 		{
-			Type:     uint16(CTAExpectMaster),
+			Type:     uint16(ctaExpectMaster),
 			Nested:   true,
 			Children: nfaIPPT,
 		},
 		{
-			Type:     uint16(CTAExpectTuple),
+			Type:     uint16(ctaExpectTuple),
 			Nested:   true,
 			Children: nfaIPPT,
 		},
 		{
-			Type:     uint16(CTAExpectMask),
+			Type:     uint16(ctaExpectMask),
 			Nested:   true,
 			Children: nfaIPPT,
 		},
 		{
-			Type: uint16(CTAExpectTimeout),
+			Type: uint16(ctaExpectTimeout),
 			Data: []byte{0x00, 0x00, 0x00, 0xf0},
 		},
 		{
-			Type: uint16(CTAExpectHelpName),
+			Type: uint16(ctaExpectHelpName),
 			Data: []byte("ftp"),
 		},
 		{
-			Type: uint16(CTAExpectZone),
+			Type: uint16(ctaExpectZone),
 			Data: []byte{0x00, 0x05},
 		},
 		{
-			Type: uint16(CTAExpectClass),
+			Type: uint16(ctaExpectClass),
 			Data: []byte{0x00, 0x00, 0x01, 0xc8},
 		},
 		{
-			Type: uint16(CTAExpectFlags),
+			Type: uint16(ctaExpectFlags),
 			Data: []byte{0x00, 0x00, 0x00, 0x7b},
 		},
 		{
-			Type: uint16(CTAExpectFN),
+			Type: uint16(ctaExpectFN),
 			Data: []byte("func"),
 		},
 		{
-			Type:   uint16(CTAExpectNAT),
+			Type:   uint16(ctaExpectNAT),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAExpectNATDir),
+					Type: uint16(ctaExpectNATDir),
 					Data: []byte{0x0, 0x0, 0x0, 0x1},
 				},
 				{
-					Type:     uint16(CTAExpectNATTuple),
+					Type:     uint16(ctaExpectNATTuple),
 					Nested:   true,
 					Children: nfaIPPT,
 				},
@@ -407,15 +407,15 @@ var corpusExpectNAT = []struct {
 	{
 		name: "simple direction, tuple unmarshal",
 		attr: netfilter.Attribute{
-			Type:   uint16(CTAExpectNAT),
+			Type:   uint16(ctaExpectNAT),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAExpectNATDir),
+					Type: uint16(ctaExpectNATDir),
 					Data: []byte{0x00, 0x00, 0x00, 0x01},
 				},
 				{
-					Type:     uint16(CTAExpectNATTuple),
+					Type:     uint16(ctaExpectNATTuple),
 					Nested:   true,
 					Children: nfaIPPT,
 				},
@@ -429,15 +429,15 @@ var corpusExpectNAT = []struct {
 	{
 		name: "error bad tuple",
 		attr: netfilter.Attribute{
-			Type:   uint16(CTAExpectNAT),
+			Type:   uint16(ctaExpectNAT),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
-					Type: uint16(CTAExpectNATDir),
+					Type: uint16(ctaExpectNATDir),
 					Data: []byte{0x00, 0x00, 0x00, 0x00},
 				},
 				{
-					Type: uint16(CTAExpectNATTuple),
+					Type: uint16(ctaExpectNATTuple),
 				},
 			},
 		},
@@ -446,22 +446,22 @@ var corpusExpectNAT = []struct {
 	{
 		name: "error unknown type",
 		attr: netfilter.Attribute{Type: 255},
-		err:  fmt.Errorf(errAttributeWrongType, 255, CTAExpectNAT),
+		err:  fmt.Errorf(errAttributeWrongType, 255, ctaExpectNAT),
 	},
 	{
 		name: "error not nested",
-		attr: netfilter.Attribute{Type: uint16(CTAExpectNAT)},
+		attr: netfilter.Attribute{Type: uint16(ctaExpectNAT)},
 		err:  errors.Wrap(errNotNested, opUnExpectNAT),
 	},
 	{
 		name: "error no children",
-		attr: netfilter.Attribute{Type: uint16(CTAExpectNAT), Nested: true},
+		attr: netfilter.Attribute{Type: uint16(ctaExpectNAT), Nested: true},
 		err:  errors.Wrap(errNeedSingleChild, opUnExpectNAT),
 	},
 	{
 		name: "error unknown child type",
 		attr: netfilter.Attribute{
-			Type:   uint16(CTAExpectNAT),
+			Type:   uint16(ctaExpectNAT),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
@@ -469,7 +469,7 @@ var corpusExpectNAT = []struct {
 				},
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, 255, CTAExpectNAT), opUnExpectNAT),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, 255, ctaExpectNAT), opUnExpectNAT),
 	},
 }
 
@@ -520,7 +520,7 @@ func TestExpectNATMarshal(t *testing.T) {
 	assert.EqualError(t, err, errBadIPTuple.Error())
 
 	// Only verify first attribute (direction); Tuple marshal has its own tests
-	want := netfilter.Attribute{Type: uint16(CTAExpectNATDir), Data: []byte{0, 0, 0, 1}}
+	want := netfilter.Attribute{Type: uint16(ctaExpectNATDir), Data: []byte{0, 0, 0, 1}}
 	if diff := cmp.Diff(want, enm.Children[0]); diff != "" {
 		t.Fatalf("unexpected ExpectNAT marshal (-want +got):\n%s", diff)
 	}
@@ -531,7 +531,7 @@ func TestExpectTypeString(t *testing.T) {
 		t.Fatal("ExpectType string representation empty - did you run `go generate`?")
 	}
 
-	assert.Equal(t, "CTAExpectFN", CTAExpectFN.String())
+	assert.Equal(t, "ctaExpectFN", ctaExpectFN.String())
 }
 
 func BenchmarkExpectUnmarshal(b *testing.B) {

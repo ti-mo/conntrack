@@ -4,7 +4,7 @@ package conntrack
 
 import "strconv"
 
-const _AttributeType_name = "CTAUnspecCTATupleOrigCTATupleReplyCTAStatusCTAProtoInfoCTAHelpCTANatSrcCTATimeoutCTAMarkCTACountersOrigCTACountersReplyCTAUseCTAIDCTANatDstCTATupleMasterCTASeqAdjOrigCTASeqAdjReplyCTASecMarkCTAZoneCTASecCtxCTATimestampCTAMarkMaskCTALabelsCTALabelsMaskCTASynProxy"
+const _AttributeType_name = "ctaUnspecctaTupleOrigctaTupleReplyctaStatusctaProtoInfoctaHelpctaNatSrcctaTimeoutctaMarkctaCountersOrigctaCountersReplyctaUsectaIDctaNatDstctaTupleMasterctaSeqAdjOrigctaSeqAdjReplyctaSecMarkctaZonectaSecCtxctaTimestampctaMarkMaskctaLabelsctaLabelsMaskctaSynProxy"
 
 var _AttributeType_index = [...]uint16{0, 9, 21, 34, 43, 55, 62, 71, 81, 88, 103, 119, 125, 130, 139, 153, 166, 180, 190, 197, 206, 218, 229, 238, 251, 262}
 

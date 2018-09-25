@@ -13,11 +13,11 @@ import (
 
 func TestStatusError(t *testing.T) {
 
-	nfaNested := netfilter.Attribute{Type: uint16(CTAStatus), Nested: true}
+	nfaNested := netfilter.Attribute{Type: uint16(ctaStatus), Nested: true}
 
 	var s Status
 
-	assert.EqualError(t, s.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAStatus))
+	assert.EqualError(t, s.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, ctaUnspec, ctaStatus))
 	assert.EqualError(t, s.unmarshal(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
 }
 
@@ -57,7 +57,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 
 			// Wrap in status attribute container
 			nfa := netfilter.Attribute{
-				Type: uint16(CTAStatus),
+				Type: uint16(ctaStatus),
 				Data: tt.b,
 			}
 
@@ -154,7 +154,7 @@ func BenchmarkStatusUnmarshalAttribute(b *testing.B) {
 
 	var ss Status
 	var nfa netfilter.Attribute
-	nfa.Type = uint16(CTAStatus)
+	nfa.Type = uint16(ctaStatus)
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]
