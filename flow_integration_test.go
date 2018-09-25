@@ -62,6 +62,91 @@ func TestConnCreateFlows(t *testing.T) {
 	assert.Equal(t, numFlows*2, len(flows))
 }
 
+func TestConnFlush(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	// Expect empty result from empty table dump
+	de, err := c.Dump()
+	require.NoError(t, err, "dumping empty table")
+	require.Len(t, de, 0, "expecting 0-length dump from empty table")
+
+	// Create IPv4 flow
+	err = c.Create(NewFlow(
+		6, 0,
+		net.IPv4(1, 2, 3, 4),
+		net.IPv4(5, 6, 7, 8),
+		1234, 80, 120, 0,
+	))
+	require.NoError(t, err, "creating IPv4 flow")
+
+	// Create IPv6 flow
+	err = c.Create(NewFlow(
+		17, 0,
+		net.ParseIP("2a00:1450:400e:804::200e"),
+		net.ParseIP("2a00:1450:400e:804::200f"),
+		1234, 80, 120, 0,
+	))
+	require.NoError(t, err, "creating IPv6 flow")
+
+	// Expect both flows to be in the table
+	flows, err := c.Dump()
+	require.NoError(t, err, "dumping table before flush")
+	assert.Equal(t, 2, len(flows))
+
+	err = c.Flush()
+	require.NoError(t, err, "flushing table")
+
+	// Expect empty table
+	flows, err = c.Dump()
+	require.NoError(t, err, "dumping table after flush")
+	assert.Equal(t, 0, len(flows))
+}
+
+func TestConnFlushFilter(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	// Expect empty result from empty table dump
+	de, err := c.Dump()
+	require.NoError(t, err, "dumping empty table")
+	require.Len(t, de, 0, "expecting 0-length dump from empty table")
+
+	// Create IPv4 flow
+	err = c.Create(NewFlow(
+		6, 0,
+		net.IPv4(1, 2, 3, 4),
+		net.IPv4(5, 6, 7, 8),
+		1234, 80, 120, 0,
+	))
+	require.NoError(t, err, "creating IPv4 flow")
+
+	// Create IPv6 flow with mark
+	err = c.Create(NewFlow(
+		17, 0,
+		net.ParseIP("2a00:1450:400e:804::200e"),
+		net.ParseIP("2a00:1450:400e:804::200f"),
+		1234, 80, 120, 0xff00,
+	))
+	require.NoError(t, err, "creating IPv6 flow")
+
+	// Expect both flows to be in the table
+	flows, err := c.Dump()
+	require.NoError(t, err, "dumping table before filtered flush")
+	assert.Equal(t, 2, len(flows))
+
+	// Flush only the flow matching the filter
+	err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
+	require.NoError(t, err, "flushing table")
+
+	// Expect only one flow to remain in the table
+	flows, err = c.Dump()
+	require.NoError(t, err, "dumping table after filtered flush")
+	assert.Equal(t, 1, len(flows))
+}
+
 // Creates and deletes a number of flows with a randomized component.
 // Expects table to be empty at the end of the run.
 func TestConnCreateDeleteFlows(t *testing.T) {

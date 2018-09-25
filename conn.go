@@ -131,7 +131,8 @@ func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
 			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
-		}, f.marshal())
+		},
+		f.marshal())
 
 	if err != nil {
 		return nil, err
@@ -170,17 +171,42 @@ func (c *Conn) DumpExpect() ([]Expect, error) {
 	return unmarshalExpects(nlm)
 }
 
-// Flush empties the Conntrack table.
+// Flush empties the Conntrack table. Deletes all IPv4 and IPv6 entries.
 func (c *Conn) Flush() error {
 
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctDelete),
-			Family:      netfilter.ProtoInet,
+			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
 		},
 		nil)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.conn.Query(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// FlushFilter deletes all entries from the Conntrack table matching a given Filter.
+// Both IPv4 and IPv6 entries are considered for deletion.
+func (c *Conn) FlushFilter(f Filter) error {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(ctDelete),
+			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+		},
+		f.marshal())
 
 	if err != nil {
 		return err
@@ -269,7 +295,8 @@ func (c *Conn) CreateExpect(ex Expect) error {
 }
 
 // Get queries the conntrack table for a connection matching some attributes of a given Flow.
-// The following attributes are considered in the query: Zone, (TupleOrig or TupleReply).
+// The following attributes are considered in the query: TupleOrig or TupleReply, in that order,
+// and Zone. One of TupleOrig or TupleReply is required for a successful query.
 func (c *Conn) Get(f Flow) (Flow, error) {
 
 	var qf Flow
