@@ -78,7 +78,7 @@ func (e Event) String() string {
 
 		// Accounting information
 		acct := "<No Accounting>"
-		if e.Flow.CountersOrig.Filled() || e.Flow.CountersReply.Filled() {
+		if e.Flow.CountersOrig.filled() || e.Flow.CountersReply.filled() {
 			acct = fmt.Sprintf("Acct: %s %s", e.Flow.CountersOrig, e.Flow.CountersReply)
 		}
 
@@ -96,11 +96,11 @@ func (e Event) String() string {
 
 		// SeqAdj
 		seqadjo := "<No SeqAdjOrig>"
-		if e.Flow.SeqAdjOrig.Filled() {
+		if e.Flow.SeqAdjOrig.filled() {
 			seqadjo = fmt.Sprintf("SeqAdjOrig: %s", e.Flow.SeqAdjOrig)
 		}
 		seqadjr := "<No SeqAdjReply>"
-		if e.Flow.SeqAdjReply.Filled() {
+		if e.Flow.SeqAdjReply.filled() {
 			seqadjr = fmt.Sprintf("SeqAdjReply: %s", e.Flow.SeqAdjReply)
 		}
 

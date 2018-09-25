@@ -153,7 +153,7 @@ func TestIPTupleMarshalTwoWay(t *testing.T) {
 
 			var ipt IPTuple
 
-			err := ipt.UnmarshalAttribute(tt.nfa)
+			err := ipt.unmarshal(tt.nfa)
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -164,7 +164,7 @@ func TestIPTupleMarshalTwoWay(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
-			mipt, err := ipt.MarshalAttribute()
+			mipt, err := ipt.marshal()
 			require.NoError(t, err, "error during marshal:", ipt)
 			if diff := cmp.Diff(tt.nfa, mipt); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
@@ -180,7 +180,7 @@ func TestIPTupleMarshalError(t *testing.T) {
 		DestinationAddress: net.ParseIP("::1"),
 	}
 
-	_, err := v4v6Mismatch.MarshalAttribute()
+	_, err := v4v6Mismatch.marshal()
 	require.Error(t, err)
 	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }
@@ -290,7 +290,7 @@ func TestProtoTupleMarshalTwoWay(t *testing.T) {
 
 			var pt ProtoTuple
 
-			err := pt.UnmarshalAttribute(tt.nfa)
+			err := pt.unmarshal(tt.nfa)
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -301,7 +301,7 @@ func TestProtoTupleMarshalTwoWay(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
-			mpt := pt.MarshalAttribute()
+			mpt := pt.marshal()
 			if diff := cmp.Diff(tt.nfa, mpt); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
 			}
@@ -460,7 +460,7 @@ func TestTupleMarshalTwoWay(t *testing.T) {
 
 			var tpl Tuple
 
-			err := tpl.UnmarshalAttribute(tt.nfa)
+			err := tpl.unmarshal(tt.nfa)
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -471,7 +471,7 @@ func TestTupleMarshalTwoWay(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
-			mtpl, err := tpl.MarshalAttribute(tt.nfa.Type)
+			mtpl, err := tpl.marshal(tt.nfa.Type)
 			require.NoError(t, err, "error during marshal:", tpl)
 			if diff := cmp.Diff(tt.nfa, mtpl); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
@@ -489,7 +489,7 @@ func TestTupleMarshalError(t *testing.T) {
 		},
 	}
 
-	_, err := ipTupleError.MarshalAttribute(uint16(CTATupleOrig))
+	_, err := ipTupleError.marshal(uint16(CTATupleOrig))
 	require.Error(t, err)
 	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
 }
@@ -497,28 +497,28 @@ func TestTupleMarshalError(t *testing.T) {
 func TestTupleFilled(t *testing.T) {
 
 	// Empty Tuple
-	assert.Equal(t, false, Tuple{}.Filled())
+	assert.Equal(t, false, Tuple{}.filled())
 
 	// Tuple with empty IPTuple and ProtoTuples
-	assert.Equal(t, false, Tuple{IP: IPTuple{}, Proto: ProtoTuple{}}.Filled())
+	assert.Equal(t, false, Tuple{IP: IPTuple{}, Proto: ProtoTuple{}}.filled())
 
 	// Tuple with empty ProtoTuple
 	assert.Equal(t, false, Tuple{
 		IP:    IPTuple{DestinationAddress: []byte{0}, SourceAddress: []byte{0}},
 		Proto: ProtoTuple{},
-	}.Filled())
+	}.filled())
 
 	// Tuple with empty IPTuple
 	assert.Equal(t, false, Tuple{
 		IP:    IPTuple{},
 		Proto: ProtoTuple{Protocol: 6},
-	}.Filled())
+	}.filled())
 
 	// Filled tuple with all minimum required fields set
 	assert.Equal(t, true, Tuple{
 		IP:    IPTuple{DestinationAddress: []byte{0}, SourceAddress: []byte{0}},
 		Proto: ProtoTuple{Protocol: 6},
-	}.Filled())
+	}.filled())
 }
 
 func TestTupleIPv6(t *testing.T) {

@@ -17,8 +17,8 @@ func TestStatusError(t *testing.T) {
 
 	var s Status
 
-	assert.EqualError(t, s.UnmarshalAttribute(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAStatus))
-	assert.EqualError(t, s.UnmarshalAttribute(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, CTAUnspec, CTAStatus))
+	assert.EqualError(t, s.unmarshal(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
 }
 
 func TestStatusMarshalTwoWay(t *testing.T) {
@@ -63,7 +63,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 
 			var s Status
 
-			err := s.UnmarshalAttribute(nfa)
+			err := s.unmarshal(nfa)
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -74,7 +74,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 			}
 
-			ms := s.MarshalAttribute()
+			ms := s.marshal()
 			require.NoError(t, err, "error during marshal:", s)
 			if diff := cmp.Diff(nfa, ms); diff != "" {
 				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
@@ -158,7 +158,7 @@ func BenchmarkStatusUnmarshalAttribute(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]
-		if err := ss.UnmarshalAttribute(nfa); err != nil {
+		if err := ss.unmarshal(nfa); err != nil {
 			b.Fatal(err)
 		}
 	}

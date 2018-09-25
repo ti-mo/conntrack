@@ -106,67 +106,67 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 		// - ports used in the connection
 		// - (optional) the Conntrack Zone of the originating/replying side of the flow
 		case CTATupleOrig:
-			if err := f.TupleOrig.UnmarshalAttribute(attr); err != nil {
+			if err := f.TupleOrig.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTATupleReply:
-			if err := f.TupleReply.UnmarshalAttribute(attr); err != nil {
+			if err := f.TupleReply.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTATupleMaster:
-			if err := f.TupleMaster.UnmarshalAttribute(attr); err != nil {
+			if err := f.TupleMaster.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_STATUS is a bitfield of the state of the connection
 		// (eg. if packets are seen in both directions, etc.)
 		case CTAStatus:
-			if err := f.Status.UnmarshalAttribute(attr); err != nil {
+			if err := f.Status.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_PROTOINFO is sent for TCP, DCCP and SCTP protocols only. It conveys extra metadata
 		// about the state flags seen on the wire. Update events are sent when these change.
 		case CTAProtoInfo:
-			if err := f.ProtoInfo.UnmarshalAttribute(attr); err != nil {
+			if err := f.ProtoInfo.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTAHelp:
-			if err := f.Helper.UnmarshalAttribute(attr); err != nil {
+			if err := f.Helper.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_COUNTERS_* attributes are nested and contain byte and packet counters for flows in either direction.
 		case CTACountersOrig:
-			if err := f.CountersOrig.UnmarshalAttribute(attr); err != nil {
+			if err := f.CountersOrig.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTACountersReply:
-			if err := f.CountersReply.UnmarshalAttribute(attr); err != nil {
+			if err := f.CountersReply.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_SECCTX is the SELinux security context of a Conntrack entry.
 		case CTASecCtx:
-			if err := f.SecurityContext.UnmarshalAttribute(attr); err != nil {
+			if err := f.SecurityContext.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_TIMESTAMP is a nested attribute that describes the start and end timestamp of a flow.
 		// It is sent by the kernel with dumps and DESTROY events.
 		case CTATimestamp:
-			if err := f.Timestamp.UnmarshalAttribute(attr); err != nil {
+			if err := f.Timestamp.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_SEQADJ_* is generalized TCP window adjustment metadata. It is not (yet) emitted in Conntrack events.
 		// The reason for its introduction is outlined in https://lwn.net/Articles/563151.
 		// Patch set is at http://www.spinics.net/lists/netdev/msg245785.html.
 		case CTASeqAdjOrig:
-			if err := f.SeqAdjOrig.UnmarshalAttribute(attr); err != nil {
+			if err := f.SeqAdjOrig.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTASeqAdjReply:
-			if err := f.SeqAdjReply.UnmarshalAttribute(attr); err != nil {
+			if err := f.SeqAdjReply.unmarshal(attr); err != nil {
 				return err
 			}
 		// CTA_SYNPROXY are the connection's SYN proxy parameters
 		case CTASynProxy:
-			if err := f.SynProxy.UnmarshalAttribute(attr); err != nil {
+			if err := f.SynProxy.unmarshal(attr); err != nil {
 				return err
 			}
 		default:
@@ -181,19 +181,19 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	// Each connection sent to the kernel should have at least an original and reply tuple.
-	if !f.TupleOrig.Filled() || !f.TupleReply.Filled() {
+	if !f.TupleOrig.filled() || !f.TupleReply.filled() {
 		return nil, errNeedTuples
 	}
 
 	attrs := make([]netfilter.Attribute, 2, 12)
 
-	to, err := f.TupleOrig.MarshalAttribute(uint16(CTATupleOrig))
+	to, err := f.TupleOrig.marshal(uint16(CTATupleOrig))
 	if err != nil {
 		return nil, err
 	}
 	attrs[0] = to
 
-	tr, err := f.TupleReply.MarshalAttribute(uint16(CTATupleReply))
+	tr, err := f.TupleReply.marshal(uint16(CTATupleReply))
 	if err != nil {
 		return nil, err
 	}
@@ -201,47 +201,47 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	// Optional attributes appended to the list when filled
 	if f.Timeout != 0 {
-		attrs = append(attrs, Num32{Value: f.Timeout}.MarshalAttribute(CTATimeout))
+		attrs = append(attrs, Num32{Value: f.Timeout}.marshal(CTATimeout))
 	}
 
 	if f.Status.Value != 0 {
-		attrs = append(attrs, f.Status.MarshalAttribute())
+		attrs = append(attrs, f.Status.marshal())
 	}
 
 	if f.Mark != 0 {
-		attrs = append(attrs, Num32{Value: f.Mark}.MarshalAttribute(CTAMark))
+		attrs = append(attrs, Num32{Value: f.Mark}.marshal(CTAMark))
 	}
 
 	if f.Zone != 0 {
-		attrs = append(attrs, Num16{Value: f.Zone}.MarshalAttribute(CTAZone))
+		attrs = append(attrs, Num16{Value: f.Zone}.marshal(CTAZone))
 	}
 
-	if f.ProtoInfo.Filled() {
-		attrs = append(attrs, f.ProtoInfo.MarshalAttribute())
+	if f.ProtoInfo.filled() {
+		attrs = append(attrs, f.ProtoInfo.marshal())
 	}
 
-	if f.Helper.Filled() {
-		attrs = append(attrs, f.Helper.MarshalAttribute())
+	if f.Helper.filled() {
+		attrs = append(attrs, f.Helper.marshal())
 	}
 
-	if f.TupleMaster.Filled() {
-		tm, err := f.TupleMaster.MarshalAttribute(uint16(CTATupleMaster))
+	if f.TupleMaster.filled() {
+		tm, err := f.TupleMaster.marshal(uint16(CTATupleMaster))
 		if err != nil {
 			return nil, err
 		}
 		attrs = append(attrs, tm)
 	}
 
-	if f.SeqAdjOrig.Filled() {
-		attrs = append(attrs, f.SeqAdjOrig.MarshalAttribute())
+	if f.SeqAdjOrig.filled() {
+		attrs = append(attrs, f.SeqAdjOrig.marshal())
 	}
 
-	if f.SeqAdjReply.Filled() {
-		attrs = append(attrs, f.SeqAdjReply.MarshalAttribute())
+	if f.SeqAdjReply.filled() {
+		attrs = append(attrs, f.SeqAdjReply.marshal())
 	}
 
-	if f.SynProxy.Filled() {
-		attrs = append(attrs, f.SynProxy.MarshalAttribute())
+	if f.SynProxy.filled() {
+		attrs = append(attrs, f.SynProxy.marshal())
 	}
 
 	return attrs, nil

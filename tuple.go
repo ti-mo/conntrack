@@ -27,8 +27,8 @@ type Tuple struct {
 
 // Filled returns true if the Tuple's IP and Proto members are filled.
 // The Zone attribute is not considered, because it is zero in most cases.
-func (t Tuple) Filled() bool {
-	return t.IP.Filled() && t.Proto.Filled()
+func (t Tuple) filled() bool {
+	return t.IP.filled() && t.Proto.filled()
 }
 
 // String returns a string representation of a Tuple.
@@ -40,8 +40,8 @@ func (t Tuple) String() string {
 	)
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Tuple.
-func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Tuple.
+func (t *Tuple) unmarshal(attr netfilter.Attribute) error {
 
 	if !attr.Nested {
 		return errors.Wrap(errNotNested, opUnTup)
@@ -55,13 +55,13 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 		switch TupleType(iattr.Type) {
 		case CTATupleIP:
 			var ti IPTuple
-			if err := ti.UnmarshalAttribute(iattr); err != nil {
+			if err := ti.unmarshal(iattr); err != nil {
 				return err
 			}
 			t.IP = ti
 		case CTATupleProto:
 			var tp ProtoTuple
-			if err := tp.UnmarshalAttribute(iattr); err != nil {
+			if err := tp.unmarshal(iattr); err != nil {
 				return err
 			}
 			t.Proto = tp
@@ -78,18 +78,18 @@ func (t *Tuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a Tuple to a netfilter.Attribute.
-func (t Tuple) MarshalAttribute(at uint16) (netfilter.Attribute, error) {
+// marshal marshals a Tuple to a netfilter.Attribute.
+func (t Tuple) marshal(at uint16) (netfilter.Attribute, error) {
 
 	nfa := netfilter.Attribute{Type: at, Nested: true, Children: make([]netfilter.Attribute, 2, 3)}
 
-	ipt, err := t.IP.MarshalAttribute()
+	ipt, err := t.IP.marshal()
 	if err != nil {
 		return netfilter.Attribute{}, err
 	}
 
 	nfa.Children[0] = ipt
-	nfa.Children[1] = t.Proto.MarshalAttribute()
+	nfa.Children[1] = t.Proto.marshal()
 
 	if t.Zone != 0 {
 		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(CTATupleZone), Data: netfilter.Uint16Bytes(t.Zone)})
@@ -106,15 +106,15 @@ type IPTuple struct {
 }
 
 // Filled returns true if the IPTuple's fields are non-zero.
-func (ipt IPTuple) Filled() bool {
+func (ipt IPTuple) filled() bool {
 	return len(ipt.SourceAddress) != 0 && len(ipt.DestinationAddress) != 0
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into an IPTuple.
+// unmarshal unmarshals a netfilter.Attribute into an IPTuple.
 // IPv4 addresses will be represented by a 4-byte net.IP, IPv6 addresses by 16-byte.
 // The net.IP object is created with the raw bytes, NOT with net.ParseIP().
 // Use IP.Equal() to compare addresses in implementations and tests.
-func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
+func (ipt *IPTuple) unmarshal(attr netfilter.Attribute) error {
 
 	if TupleType(attr.Type) != CTATupleIP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATupleIP)
@@ -151,8 +151,8 @@ func (ipt *IPTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals an IPTuple to a netfilter.Attribute.
-func (ipt IPTuple) MarshalAttribute() (netfilter.Attribute, error) {
+// marshal marshals an IPTuple to a netfilter.Attribute.
+func (ipt IPTuple) marshal() (netfilter.Attribute, error) {
 
 	// If either address is not a valid IP or if they do not belong to the same address family, returns false.
 	// Taken from net.IP, for some reason this function is not exported.
@@ -203,12 +203,12 @@ type ProtoTuple struct {
 }
 
 // Filled returns true if the ProtoTuple's protocol is non-zero.
-func (pt ProtoTuple) Filled() bool {
+func (pt ProtoTuple) filled() bool {
 	return pt.Protocol != 0
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoTuple.
-func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a ProtoTuple.
+func (pt *ProtoTuple) unmarshal(attr netfilter.Attribute) error {
 
 	if TupleType(attr.Type) != CTATupleProto {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATupleProto)
@@ -250,8 +250,8 @@ func (pt *ProtoTuple) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a ProtoTuple into a netfilter.Attribute.
-func (pt ProtoTuple) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a ProtoTuple into a netfilter.Attribute.
+func (pt ProtoTuple) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTATupleProto), Nested: true, Children: make([]netfilter.Attribute, 3, 4)}
 

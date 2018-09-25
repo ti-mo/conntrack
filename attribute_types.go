@@ -26,11 +26,6 @@ var (
 	ctaSeqAdjOrigReplyCat   = fmt.Sprintf("%s/%s", CTASeqAdjOrig, CTASeqAdjReply)
 )
 
-// Attribute is an interface implemented by all Conntrack attribute types.
-type Attribute interface {
-	UnmarshalAttribute(netfilter.Attribute) error
-}
-
 // Num16 is a generic numeric attribute. It is represented by a uint32
 // and holds its own AttributeType.
 type Num16 struct {
@@ -39,7 +34,7 @@ type Num16 struct {
 }
 
 // Filled returns true if the Num16's type is non-zero.
-func (i Num16) Filled() bool {
+func (i Num16) filled() bool {
 	return i.Type != 0 || i.Value != 0
 }
 
@@ -47,8 +42,8 @@ func (i Num16) String() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Num16.
-func (i *Num16) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Num16.
+func (i *Num16) unmarshal(attr netfilter.Attribute) error {
 
 	if len(attr.Data) != 2 {
 		return errIncorrectSize
@@ -60,9 +55,9 @@ func (i *Num16) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a Num16 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
+// marshal marshals a Num16 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
 // it is used as Attribute's type; otherwise, the Num16's Type field is used.
-func (i Num16) MarshalAttribute(t AttributeType) netfilter.Attribute {
+func (i Num16) marshal(t AttributeType) netfilter.Attribute {
 
 	var nfa netfilter.Attribute
 
@@ -85,7 +80,7 @@ type Num32 struct {
 }
 
 // Filled returns true if the Num32's type is non-zero.
-func (i Num32) Filled() bool {
+func (i Num32) filled() bool {
 	return i.Type != 0 || i.Value != 0
 }
 
@@ -93,8 +88,8 @@ func (i Num32) String() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Num32.
-func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Num32.
+func (i *Num32) unmarshal(attr netfilter.Attribute) error {
 
 	if len(attr.Data) != 4 {
 		return errIncorrectSize
@@ -106,9 +101,9 @@ func (i *Num32) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a Num32 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
+// marshal marshals a Num32 into a netfilter.Attribute. If the AttributeType parameter is non-zero,
 // it is used as Attribute's type; otherwise, the Num32's Type field is used.
-func (i Num32) MarshalAttribute(t AttributeType) netfilter.Attribute {
+func (i Num32) marshal(t AttributeType) netfilter.Attribute {
 
 	var nfa netfilter.Attribute
 
@@ -130,12 +125,12 @@ type Binary struct {
 }
 
 // Filled returns true if the bitfield's values are non-zero.
-func (b Binary) Filled() bool {
+func (b Binary) filled() bool {
 	return b.Type != 0 || len(b.Data) != 0
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Binary struct.
-func (b *Binary) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Binary struct.
+func (b *Binary) unmarshal(attr netfilter.Attribute) error {
 
 	b.Type = AttributeType(attr.Type)
 	b.Data = attr.Data
@@ -150,12 +145,12 @@ type Helper struct {
 }
 
 // Filled returns true if the Helper's values are non-zero.
-func (hlp Helper) Filled() bool {
+func (hlp Helper) filled() bool {
 	return hlp.Name != "" || len(hlp.Info) != 0
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Helper.
-func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Helper.
+func (hlp *Helper) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTAHelp {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAHelp)
@@ -179,8 +174,8 @@ func (hlp *Helper) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a Helper into a netfilter.Attribute.
-func (hlp Helper) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a Helper into a netfilter.Attribute.
+func (hlp Helper) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTAHelp), Nested: true, Children: make([]netfilter.Attribute, 1, 2)}
 
@@ -202,16 +197,16 @@ type ProtoInfo struct {
 }
 
 // Filled returns true if one of the ProtoInfo's values are non-zero.
-func (pi ProtoInfo) Filled() bool {
+func (pi ProtoInfo) filled() bool {
 	return pi.TCP != nil || pi.DCCP != nil || pi.SCTP != nil
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfo structure.
+// unmarshal unmarshals a netfilter.Attribute into a ProtoInfo structure.
 // one of three ProtoInfo types; TCP, DCCP or SCTP.
-func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
+func (pi *ProtoInfo) unmarshal(attr netfilter.Attribute) error {
 
 	// Make sure we don't unmarshal into the same ProtoInfo twice.
-	if pi.Filled() {
+	if pi.filled() {
 		return errReusedProtoInfo
 	}
 
@@ -233,19 +228,19 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	switch ProtoInfoType(iattr.Type) {
 	case CTAProtoInfoTCP:
 		var tpi ProtoInfoTCP
-		if err := tpi.UnmarshalAttribute(iattr); err != nil {
+		if err := tpi.unmarshal(iattr); err != nil {
 			return err
 		}
 		pi.TCP = &tpi
 	case CTAProtoInfoDCCP:
 		var dpi ProtoInfoDCCP
-		if err := dpi.UnmarshalAttribute(iattr); err != nil {
+		if err := dpi.unmarshal(iattr); err != nil {
 			return err
 		}
 		pi.DCCP = &dpi
 	case CTAProtoInfoSCTP:
 		var spi ProtoInfoSCTP
-		if err := spi.UnmarshalAttribute(iattr); err != nil {
+		if err := spi.unmarshal(iattr); err != nil {
 			return err
 		}
 		pi.SCTP = &spi
@@ -256,17 +251,17 @@ func (pi *ProtoInfo) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a ProtoInfo into a netfilter.Attribute.
-func (pi ProtoInfo) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a ProtoInfo into a netfilter.Attribute.
+func (pi ProtoInfo) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfo), Nested: true, Children: make([]netfilter.Attribute, 0, 1)}
 
 	if pi.TCP != nil {
-		nfa.Children = append(nfa.Children, pi.TCP.MarshalAttribute())
+		nfa.Children = append(nfa.Children, pi.TCP.marshal())
 	} else if pi.DCCP != nil {
-		nfa.Children = append(nfa.Children, pi.DCCP.MarshalAttribute())
+		nfa.Children = append(nfa.Children, pi.DCCP.marshal())
 	} else if pi.SCTP != nil {
-		nfa.Children = append(nfa.Children, pi.SCTP.MarshalAttribute())
+		nfa.Children = append(nfa.Children, pi.SCTP.marshal())
 	}
 
 	return nfa
@@ -282,8 +277,8 @@ type ProtoInfoTCP struct {
 	ReplyFlags          uint16
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoTCP.
-func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a ProtoInfoTCP.
+func (tpi *ProtoInfoTCP) unmarshal(attr netfilter.Attribute) error {
 
 	if ProtoInfoType(attr.Type) != CTAProtoInfoTCP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoTCP)
@@ -318,8 +313,8 @@ func (tpi *ProtoInfoTCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a ProtoInfoTCP into a netfilter.Attribute.
-func (tpi ProtoInfoTCP) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a ProtoInfoTCP into a netfilter.Attribute.
+func (tpi ProtoInfoTCP) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoTCP), Nested: true, Children: make([]netfilter.Attribute, 3, 5)}
 
@@ -343,8 +338,8 @@ type ProtoInfoDCCP struct {
 	HandshakeSeq uint64
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoTCP.
-func (dpi *ProtoInfoDCCP) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a ProtoInfoTCP.
+func (dpi *ProtoInfoDCCP) unmarshal(attr netfilter.Attribute) error {
 
 	if ProtoInfoType(attr.Type) != CTAProtoInfoDCCP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoDCCP)
@@ -374,8 +369,8 @@ func (dpi *ProtoInfoDCCP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a ProtoInfoDCCP into a netfilter.Attribute.
-func (dpi ProtoInfoDCCP) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a ProtoInfoDCCP into a netfilter.Attribute.
+func (dpi ProtoInfoDCCP) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoDCCP), Nested: true, Children: make([]netfilter.Attribute, 3)}
 
@@ -392,8 +387,8 @@ type ProtoInfoSCTP struct {
 	VTagOriginal, VTagReply uint32
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a ProtoInfoSCTP.
-func (spi *ProtoInfoSCTP) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a ProtoInfoSCTP.
+func (spi *ProtoInfoSCTP) unmarshal(attr netfilter.Attribute) error {
 
 	if ProtoInfoType(attr.Type) != CTAProtoInfoSCTP {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAProtoInfoSCTP)
@@ -423,8 +418,8 @@ func (spi *ProtoInfoSCTP) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a ProtoInfoSCTP into a netfilter.Attribute.
-func (spi ProtoInfoSCTP) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a ProtoInfoSCTP into a netfilter.Attribute.
+func (spi ProtoInfoSCTP) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTAProtoInfoSCTP), Nested: true, Children: make([]netfilter.Attribute, 3)}
 
@@ -458,12 +453,12 @@ func (ctr Counter) String() string {
 }
 
 // Filled returns true if the counter's values are non-zero.
-func (ctr Counter) Filled() bool {
+func (ctr Counter) filled() bool {
 	return ctr.Bytes != 0 && ctr.Packets != 0
 }
 
-// UnmarshalAttribute unmarshals a nested counter attribute into a Counter structure.
-func (ctr *Counter) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a nested counter attribute into a Counter structure.
+func (ctr *Counter) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTACountersOrig &&
 		AttributeType(attr.Type) != CTACountersReply {
@@ -504,8 +499,8 @@ type Timestamp struct {
 	Stop  time.Time
 }
 
-// UnmarshalAttribute unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
-func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a nested timestamp attribute into a conntrack.Timestamp structure.
+func (ts *Timestamp) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTATimestamp {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTATimestamp)
@@ -539,8 +534,8 @@ func (ts *Timestamp) UnmarshalAttribute(attr netfilter.Attribute) error {
 // This attribute cannot be changed on a connection and thus cannot be marshaled.
 type Security string
 
-// UnmarshalAttribute unmarshals a nested security attribute into a conntrack.Security structure.
-func (sec *Security) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a nested security attribute into a conntrack.Security structure.
+func (sec *Security) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTASecCtx {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTASecCtx)
@@ -590,13 +585,13 @@ func (seq SequenceAdjust) String() string {
 
 // Filled returns true if the SequenceAdjust's values are non-zero.
 // SeqAdj qualify as filled if all of its members are non-zero.
-func (seq SequenceAdjust) Filled() bool {
+func (seq SequenceAdjust) filled() bool {
 	return seq.Position != 0 && seq.OffsetAfter != 0 && seq.OffsetBefore != 0
 }
 
-// UnmarshalAttribute unmarshals a nested sequence adjustment attribute into a
+// unmarshal unmarshals a nested sequence adjustment attribute into a
 // conntrack.SequenceAdjust structure.
-func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
+func (seq *SequenceAdjust) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTASeqAdjOrig &&
 		AttributeType(attr.Type) != CTASeqAdjReply {
@@ -631,8 +626,8 @@ func (seq *SequenceAdjust) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a SequenceAdjust into a netfilter.Attribute.
-func (seq SequenceAdjust) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a SequenceAdjust into a netfilter.Attribute.
+func (seq SequenceAdjust) marshal() netfilter.Attribute {
 
 	// Set orig/reply AttributeType
 	at := CTASeqAdjOrig
@@ -658,12 +653,12 @@ type SynProxy struct {
 
 // Filled returns true if the SynProxy's values are non-zero.
 // SynProxy qualifies as filled if one of its members is non-zero.
-func (sp SynProxy) Filled() bool {
+func (sp SynProxy) filled() bool {
 	return sp.ISN != 0 || sp.ITS != 0 || sp.TSOff != 0
 }
 
-// UnmarshalAttribute unmarshals a SYN proxy attribute into a SynProxy structure.
-func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a SYN proxy attribute into a SynProxy structure.
+func (sp *SynProxy) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTASynProxy {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTASynProxy)
@@ -693,8 +688,8 @@ func (sp *SynProxy) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a SynProxy into a netfilter.Attribute.
-func (sp SynProxy) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a SynProxy into a netfilter.Attribute.
+func (sp SynProxy) marshal() netfilter.Attribute {
 
 	nfa := netfilter.Attribute{Type: uint16(CTASynProxy), Nested: true, Children: make([]netfilter.Attribute, 3)}
 

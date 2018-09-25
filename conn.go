@@ -319,7 +319,7 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 func (c *Conn) Update(f Flow) error {
 
 	// Kernel rejects updates with a master tuple set
-	if f.TupleMaster.Filled() {
+	if f.TupleMaster.filled() {
 		return errUpdateMaster
 	}
 

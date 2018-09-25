@@ -16,8 +16,8 @@ type Status struct {
 	Value StatusFlag
 }
 
-// UnmarshalAttribute unmarshals a netfilter.Attribute into a Status structure.
-func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
+// unmarshal unmarshals a netfilter.Attribute into a Status structure.
+func (s *Status) unmarshal(attr netfilter.Attribute) error {
 
 	if AttributeType(attr.Type) != CTAStatus {
 		return fmt.Errorf(errAttributeWrongType, attr.Type, CTAStatus)
@@ -36,8 +36,8 @@ func (s *Status) UnmarshalAttribute(attr netfilter.Attribute) error {
 	return nil
 }
 
-// MarshalAttribute marshals a Status into a netfilter.Attribute.
-func (s Status) MarshalAttribute() netfilter.Attribute {
+// marshal marshals a Status into a netfilter.Attribute.
+func (s Status) marshal() netfilter.Attribute {
 	return netfilter.Attribute{
 		Type: uint16(CTAStatus),
 		Data: netfilter.Uint32Bytes(uint32(s.Value)),

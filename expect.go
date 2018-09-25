@@ -54,7 +54,7 @@ func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
 		case CTAExpectNATDir:
 			en.Direction = iattr.Uint32() == 1
 		case CTAExpectNATTuple:
-			if err := en.Tuple.UnmarshalAttribute(iattr); err != nil {
+			if err := en.Tuple.unmarshal(iattr); err != nil {
 				return err
 			}
 		default:
@@ -76,7 +76,7 @@ func (en ExpectNAT) marshal() (netfilter.Attribute, error) {
 
 	nfa.Children[0] = netfilter.Attribute{Type: uint16(CTAExpectNATDir), Data: netfilter.Uint32Bytes(dir)}
 
-	ta, err := en.Tuple.MarshalAttribute(uint16(CTAExpectNATTuple))
+	ta, err := en.Tuple.marshal(uint16(CTAExpectNATTuple))
 	if err != nil {
 		return nfa, err
 	}
@@ -93,15 +93,15 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 		switch at := ExpectType(attr.Type); at {
 
 		case CTAExpectMaster:
-			if err := ex.TupleMaster.UnmarshalAttribute(attr); err != nil {
+			if err := ex.TupleMaster.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTAExpectTuple:
-			if err := ex.Tuple.UnmarshalAttribute(attr); err != nil {
+			if err := ex.Tuple.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTAExpectMask:
-			if err := ex.Mask.UnmarshalAttribute(attr); err != nil {
+			if err := ex.Mask.unmarshal(attr); err != nil {
 				return err
 			}
 		case CTAExpectTimeout:
@@ -133,25 +133,25 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 func (ex Expect) marshal() ([]netfilter.Attribute, error) {
 
 	// Expectations need Tuple, Mask and TupleMaster filled to be valid.
-	if !ex.Tuple.Filled() || !ex.Mask.Filled() || !ex.TupleMaster.Filled() {
+	if !ex.Tuple.filled() || !ex.Mask.filled() || !ex.TupleMaster.filled() {
 		return nil, errExpectNeedTuples
 	}
 
 	attrs := make([]netfilter.Attribute, 4, 10)
 
-	tm, err := ex.TupleMaster.MarshalAttribute(uint16(CTAExpectMaster))
+	tm, err := ex.TupleMaster.marshal(uint16(CTAExpectMaster))
 	if err != nil {
 		return nil, err
 	}
 	attrs[0] = tm
 
-	tp, err := ex.Tuple.MarshalAttribute(uint16(CTAExpectTuple))
+	tp, err := ex.Tuple.marshal(uint16(CTAExpectTuple))
 	if err != nil {
 		return nil, err
 	}
 	attrs[1] = tp
 
-	ts, err := ex.Mask.MarshalAttribute(uint16(CTAExpectMask))
+	ts, err := ex.Mask.marshal(uint16(CTAExpectMask))
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (ex Expect) marshal() ([]netfilter.Attribute, error) {
 		attrs = append(attrs, netfilter.Attribute{Type: uint16(CTAExpectFN), Data: []byte(ex.Function)})
 	}
 
-	if ex.NAT.Tuple.Filled() {
+	if ex.NAT.Tuple.filled() {
 		en, err := ex.NAT.marshal()
 		if err != nil {
 			return nil, err
