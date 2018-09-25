@@ -527,9 +527,9 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 	b.ReportAllocs()
 
 	var tests []netfilter.Attribute
-	var f Flow
 
-	// Collect all tests from corpus that aren't expected to fail
+	// Collect all attributes from all tests in corpus that aren't expected to fail.
+	// This amounts to unmarshaling a flow with all attributes (including extensions) sent by the kernel.
 	for _, test := range corpusFlow {
 		if test.err == nil {
 			tests = append(tests, test.attrs...)
@@ -537,6 +537,7 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
+		var f Flow
 		f.unmarshal(tests)
 	}
 }
