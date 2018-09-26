@@ -44,14 +44,12 @@ func TestConnCreateFlows(t *testing.T) {
 
 	// Create IPv6 flows
 	for i := 1; i <= numFlows; i++ {
-		f = NewFlow(
+		err = c.Create(NewFlow(
 			17, 0,
 			net.ParseIP("2a00:1450:400e:804::200e"),
 			net.ParseIP("2a00:1450:400e:804::200f"),
 			1234, uint16(i), 120, 0,
-		)
-
-		err = c.Create(f)
+		))
 		require.NoError(t, err, "creating IPv6 flow", i)
 	}
 
