@@ -19,7 +19,7 @@ type Event struct {
 type eventType uint8
 
 // List of all types of Conntrack events. This is an internal representation
-// that unrelated to any event types in the kernel.
+// unrelated to any message types in the kernel source.
 const (
 	EventUnknown eventType = iota
 	EventNew
