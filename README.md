@@ -1,4 +1,4 @@
-# conntrack
+# conntrack [![Build Status](https://semaphoreci.com/api/v1/ti-mo/conntrack/branches/master/shields_badge.svg)](https://semaphoreci.com/ti-mo/conntrack) [![Coverage Status](https://coveralls.io/repos/github/ti-mo/conntrack/badge.svg?branch=master)](https://coveralls.io/github/ti-mo/conntrack?branch=master)
 
 Package `conntrack` implements the Conntrack subsystem of the Netfilter (Netlink) protocol family.
 The package is intended to be clear, user-friendly, thoroughly tested and easy to understand.
