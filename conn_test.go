@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/ti-mo/netfilter"
 	"github.com/ti-mo/conntrack"
+	"github.com/ti-mo/netfilter"
 )
 
 func ExampleConn_createUpdateFlow() {

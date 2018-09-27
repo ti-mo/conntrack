@@ -12,7 +12,7 @@ const (
 	opUnExpectNAT = "ExpectNAT unmarshal"
 )
 
-// Expect represents an 'expected' conenction, created by Conntrack/IPTables helpers.
+// Expect represents an 'expected' connection, created by Conntrack/IPTables helpers.
 // Active connections created by helpers are shown by the conntrack tooling as 'RELATED'.
 type Expect struct {
 	ID, Timeout uint32
