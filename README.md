@@ -1,4 +1,4 @@
-# conntrack [![Build Status](https://semaphoreci.com/api/v1/ti-mo/conntrack/branches/master/shields_badge.svg)](https://semaphoreci.com/ti-mo/conntrack) [![Coverage Status](https://coveralls.io/repos/github/ti-mo/conntrack/badge.svg?branch=master)](https://coveralls.io/github/ti-mo/conntrack?branch=master)
+# conntrack [![GoDoc](https://godoc.org/github.com/ti-mo/conntrack?status.svg)](https://godoc.org/github.com/ti-mo/conntrack) [![Build Status](https://semaphoreci.com/api/v1/ti-mo/conntrack/branches/master/shields_badge.svg)](https://semaphoreci.com/ti-mo/conntrack) [![Coverage Status](https://coveralls.io/repos/github/ti-mo/conntrack/badge.svg?branch=master)](https://coveralls.io/github/ti-mo/conntrack?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/ti-mo/conntrack)](https://goreportcard.com/report/github.com/ti-mo/conntrack)
 
 Package `conntrack` implements the Conntrack subsystem of the Netfilter (Netlink) protocol family.
 The package is intended to be clear, user-friendly, thoroughly tested and easy to understand.
@@ -31,3 +31,5 @@ There are many usage examples in the [godoc](https://godoc.org/github.com/ti-mo/
 
 Contributions are absolutely welcome! Before starting work on large changes, please create an issue first,
 or join #networking on Gophers Slack to discuss the design.
+
+If you encounter a problem implementing the library, please open a GitHub issue for help.
