@@ -415,3 +415,23 @@ func (c *Conn) Delete(f Flow) error {
 
 	return nil
 }
+
+func (c *Conn) Statistics() ([]Statistics, error) {
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(ctGetStatsCPU),
+			Family:      netfilter.ProtoUnspec,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+		}, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := c.conn.Query(req)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalStatistics(msgs)
+}
