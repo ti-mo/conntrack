@@ -76,3 +76,8 @@ func TestEventString(t *testing.T) {
 		"[EventExpDestroy] Timeout: 0, Master: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Tuple: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Mask: <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Zone: 0, Helper: 'ftp', Class: 0x42",
 		ee.String())
 }
+
+func TestStatsString(t *testing.T) {
+	s := Stats{CPUID: 42, Found: 2, SearchRestart: 999}
+	assert.Equal(t, "<CPU 42 - Searched: 0, Found: 2, New: 0, Invalid: 0, Ignore: 0, Delete: 0, DeleteList: 0, Insert: 0, InsertFailed: 0, Drop: 0, EarlyDrop: 0, Error: 0, SearchRestart: 999>", s.String())
+}
