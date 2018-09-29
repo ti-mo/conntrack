@@ -415,3 +415,28 @@ func (c *Conn) Delete(f Flow) error {
 
 	return nil
 }
+
+// Stats returns a list of Stats structures, one per CPU present in the machine.
+// Each Stats structure contains performance counters of all Conntrack actions
+// performed on that specific CPU.
+func (c *Conn) Stats() ([]Stats, error) {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(ctGetStatsCPU),
+			Family:      netfilter.ProtoUnspec,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+		}, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := c.conn.Query(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalStats(msgs)
+}
