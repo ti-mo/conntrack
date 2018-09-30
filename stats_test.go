@@ -105,3 +105,48 @@ func TestUnmarshalStatsError(t *testing.T) {
 	_, err = unmarshalStats([]netlink.Message{nlm})
 	assert.EqualError(t, err, "attribute type '255' unknown")
 }
+
+func TestStatsExpectUnmarshal(t *testing.T) {
+
+	nfa := []netfilter.Attribute{
+		{
+			Type: uint16(ctaStatsExpNew),
+			Data: []byte{0x01, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsExpCreate),
+			Data: []byte{0x02, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsExpDelete),
+			Data: []byte{0x03, 0xab, 0xcd, 0xef},
+		},
+	}
+
+	want := StatsExpect{
+		New:    0x01abcdef,
+		Create: 0x02abcdef,
+		Delete: 0x03abcdef,
+	}
+
+	var se StatsExpect
+	err := se.unmarshal(nfa)
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(want, se); diff != "" {
+		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+	}
+
+	assert.EqualError(t, se.unmarshal([]netfilter.Attribute{{Type: 255}}), "attribute type '255' unknown")
+}
+
+func TestUnmarshalExpectStatsError(t *testing.T) {
+
+	_, err := unmarshalStatsExpect([]netlink.Message{{}})
+	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+
+	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
+	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
+	_, err = unmarshalStatsExpect([]netlink.Message{nlm})
+	assert.EqualError(t, err, "attribute type '255' unknown")
+}

@@ -440,3 +440,28 @@ func (c *Conn) Stats() ([]Stats, error) {
 
 	return unmarshalStats(msgs)
 }
+
+// StatsExpect returns a list of StatsExpect structures, one per CPU present in the machine.
+// Each StatsExpect structure indicates how many Expect entries were initialized,
+// created or deleted on each CPU.
+func (c *Conn) StatsExpect() ([]StatsExpect, error) {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
+			MessageType: netfilter.MessageType(ctExpGetStatsCPU),
+			Family:      netfilter.ProtoUnspec,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+		}, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := c.conn.Query(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalStatsExpect(msgs)
+}

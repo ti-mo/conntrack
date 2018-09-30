@@ -22,3 +22,17 @@ func TestConnStats(t *testing.T) {
 		assert.EqualValues(t, i, s.CPUID)
 	}
 }
+
+func TestConnStatsExpect(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	statsExpect, err := c.StatsExpect()
+	require.NoError(t, err)
+
+	for i, s := range statsExpect {
+		// Make sure the array index corresponds to the CPUID of each entry.
+		assert.EqualValues(t, i, s.CPUID)
+	}
+}
