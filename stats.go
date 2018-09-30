@@ -9,6 +9,7 @@ import (
 )
 
 // Stats represents the Conntrack performance counters of a single CPU (core).
+// It indicates which and how many Flow operations took place on each CPU.
 type Stats struct {
 	CPUID         uint16
 	Searched      uint32
@@ -72,6 +73,32 @@ func (s *Stats) unmarshal(attrs []netfilter.Attribute) error {
 	return nil
 }
 
+// StatsExpect represents the Conntrack Expect performance counters of a single CPU (core).
+// It indicates how many Expect entries were initialized, created or deleted on each CPU.
+type StatsExpect struct {
+	CPUID               uint16
+	New, Create, Delete uint32
+}
+
+// unmarshal unmarshals a list of netfilter.Attributes into a StatsExpect structure.
+func (se *StatsExpect) unmarshal(attrs []netfilter.Attribute) error {
+
+	for _, attr := range attrs {
+		switch at := expectStatsType(attr.Type); at {
+		case ctaStatsExpNew:
+			se.New = attr.Uint32()
+		case ctaStatsExpCreate:
+			se.Create = attr.Uint32()
+		case ctaStatsExpDelete:
+			se.Delete = attr.Uint32()
+		default:
+			return fmt.Errorf(errAttributeUnknown, at)
+		}
+	}
+
+	return nil
+}
+
 // unmarshalStats unmarshals a list of Stats from a list of netlink.Messages.
 func unmarshalStats(nlm []netlink.Message) ([]Stats, error) {
 
@@ -92,6 +119,31 @@ func unmarshalStats(nlm []netlink.Message) ([]Stats, error) {
 		}
 
 		stats[idx] = s
+	}
+
+	return stats, nil
+}
+
+// unmarshalStatsExpect unmarshals a list of StatsExpect from a list of netlink.Messages.
+func unmarshalStatsExpect(nlm []netlink.Message) ([]StatsExpect, error) {
+
+	stats := make([]StatsExpect, len(nlm))
+
+	for idx, m := range nlm {
+
+		hdr, nfa, err := netfilter.UnmarshalNetlink(m)
+		if err != nil {
+			return nil, err
+		}
+
+		se := StatsExpect{CPUID: hdr.ResourceID}
+
+		err = se.unmarshal(nfa)
+		if err != nil {
+			return nil, err
+		}
+
+		stats[idx] = se
 	}
 
 	return stats, nil
