@@ -148,3 +148,19 @@ func unmarshalStatsExpect(nlm []netlink.Message) ([]StatsExpect, error) {
 
 	return stats, nil
 }
+
+// unmarshalStatsGlobal unmarshals the global Conntrack counter from a netlink.Message.
+func unmarshalStatsGlobal(nlm netlink.Message) (uint32, error) {
+
+	_, nfa, err := netfilter.UnmarshalNetlink(nlm)
+	if err != nil {
+		return 0, err
+	}
+
+	// Assert the first (and only) attribute to be a GlobalEntries
+	if at := nfa[0].Type; globalStatsType(at) != ctaStatsGlobalEntries {
+		return 0, fmt.Errorf(errAttributeUnknown, at)
+	}
+
+	return nfa[0].Uint32(), nil
+}

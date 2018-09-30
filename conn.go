@@ -465,3 +465,29 @@ func (c *Conn) StatsExpect() ([]StatsExpect, error) {
 
 	return unmarshalStatsExpect(msgs)
 }
+
+// Count queries Conntrack for an internal global counter that describes the total amount
+// of Flow entries currently in the Conntrack table. Only the main Conntrack table has this
+// fast query available. To get the amount of Expect entries, execute DumpExpect() and count
+// the amount of entries returned.
+func (c *Conn) Count() (uint32, error) {
+
+	req, err := netfilter.MarshalNetlink(
+		netfilter.Header{
+			SubsystemID: netfilter.NFSubsysCTNetlink,
+			MessageType: netfilter.MessageType(ctGetStats),
+			Family:      netfilter.ProtoUnspec,
+			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
+		}, nil)
+
+	if err != nil {
+		return 0, err
+	}
+
+	msgs, err := c.conn.Query(req)
+	if err != nil {
+		return 0, err
+	}
+
+	return unmarshalStatsGlobal(msgs[0])
+}
