@@ -15,53 +15,73 @@ func TestStatsUnmarshal(t *testing.T) {
 
 	nfa := []netfilter.Attribute{
 		{
-			Type: uint16(ctaStatsFound),
+			Type: uint16(ctaStatsSearched),
 			Data: []byte{0x01, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsInvalid),
+			Type: uint16(ctaStatsFound),
 			Data: []byte{0x02, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsIgnore),
+			Type: uint16(ctaStatsNew),
 			Data: []byte{0x03, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsInsert),
+			Type: uint16(ctaStatsInvalid),
 			Data: []byte{0x04, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsInsertFailed),
+			Type: uint16(ctaStatsIgnore),
 			Data: []byte{0x05, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsDrop),
+			Type: uint16(ctaStatsDelete),
 			Data: []byte{0x06, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsEarlyDrop),
+			Type: uint16(ctaStatsDeleteList),
 			Data: []byte{0x07, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsError),
+			Type: uint16(ctaStatsInsert),
 			Data: []byte{0x08, 0xab, 0xcd, 0xef},
 		},
 		{
-			Type: uint16(ctaStatsSearchRestart),
+			Type: uint16(ctaStatsInsertFailed),
 			Data: []byte{0x09, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsDrop),
+			Data: []byte{0x0a, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsEarlyDrop),
+			Data: []byte{0x0b, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsError),
+			Data: []byte{0x0c, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsSearchRestart),
+			Data: []byte{0x0d, 0xab, 0xcd, 0xef},
 		},
 	}
 
 	want := Stats{
-		Found:         0x01abcdef,
-		Invalid:       0x02abcdef,
-		Ignore:        0x03abcdef,
-		Insert:        0x04abcdef,
-		InsertFailed:  0x05abcdef,
-		Drop:          0x06abcdef,
-		EarlyDrop:     0x07abcdef,
-		Error:         0x08abcdef,
-		SearchRestart: 0x09abcdef,
+		Searched:      0x01abcdef,
+		Found:         0x02abcdef,
+		New:           0x03abcdef,
+		Invalid:       0x04abcdef,
+		Ignore:        0x05abcdef,
+		Delete:        0x06abcdef,
+		DeleteList:    0x07abcdef,
+		Insert:        0x08abcdef,
+		InsertFailed:  0x09abcdef,
+		Drop:          0x0aabcdef,
+		EarlyDrop:     0x0babcdef,
+		Error:         0x0cabcdef,
+		SearchRestart: 0x0dabcdef,
 	}
 
 	var s Stats
