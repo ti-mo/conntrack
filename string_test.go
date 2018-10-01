@@ -79,5 +79,5 @@ func TestEventString(t *testing.T) {
 
 func TestStatsString(t *testing.T) {
 	s := Stats{CPUID: 42, Found: 2, SearchRestart: 999}
-	assert.Equal(t, "<CPU 42 - Searched: 0, Found: 2, New: 0, Invalid: 0, Ignore: 0, Delete: 0, DeleteList: 0, Insert: 0, InsertFailed: 0, Drop: 0, EarlyDrop: 0, Error: 0, SearchRestart: 999>", s.String())
+	assert.Equal(t, "<CPU 42 - Found: 2, Invalid: 0, Ignore: 0, Insert: 0, InsertFailed: 0, Drop: 0, EarlyDrop: 0, Error: 0, SearchRestart: 999>", s.String())
 }

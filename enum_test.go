@@ -1,11 +1,14 @@
 package conntrack
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 // Create references to unused enums (deprecated or other) to avoid tripping go-unused.
 // These consts cannot be removed as they would break the iota sequence.
 func TestUnusedEnums(t *testing.T) {
-	t.Log(
+	_ = fmt.Sprint(
 		ctGetCtrZero,     // TODO(timo): Could be added as feature
 		ctGetDying,       // Narrow time window for query
 		ctGetUnconfirmed, // Narrow time window for query
@@ -22,30 +25,8 @@ func TestUnusedEnums(t *testing.T) {
 		ctaProtoInfoDCCPPad,
 		ctaExpectUnspec,
 		ctaExpectNATUnspec,
-
-		// TODO(timo): Implement stats queries
-		ctGetStatsCPU,
-		ctGetStats,
-		ctExpGetStatsCPU,
 		ctaStatsUnspec,
-		ctaStatsSearched,
-		ctaStatsFound,
-		ctaStatsNew,
-		ctaStatsInvalid,
-		ctaStatsIgnore,
-		ctaStatsDelete,
-		ctaStatsDeleteList,
-		ctaStatsInsert,
-		ctaStatsInsertFailed,
-		ctaStatsDrop,
-		ctaStatsEarlyDrop,
-		ctaStatsError,
-		ctaStatsSearchRestart,
 		ctaStatsGlobalUnspec,
-		ctaStatsGlobalEntries,
 		ctaStatsExpUnspec,
-		ctaStatsExpNew,
-		ctaStatsExpCreate,
-		ctaStatsExpDelete,
 	)
 }
