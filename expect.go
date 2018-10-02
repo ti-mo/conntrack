@@ -122,8 +122,6 @@ func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
 			}
 		case ctaExpectFN:
 			ex.Function = string(attr.Data)
-		default:
-			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
 

@@ -169,12 +169,12 @@ func TestEventUnmarshalError(t *testing.T) {
 	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{
 		Header: netlink.Header{}, Data: []byte{1, 2, 3, 4}}), "trying to decode a non-conntrack or conntrack-exp message")
 
-	// Flow unmarshal error
+	// Cause a random error during Flow unmarshal
 	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{
 		Header: netlink.Header{Type: netlink.HeaderType(netfilter.NFSubsysCTNetlink) << 8},
 		Data: []byte{
 			1, 2, 3, 4, // random 4-byte nfgenmsg
-			4, 0, 0xff, 0, // 4-byte (empty) netlink attribute with maxed-out MessageType byte
-		}}), "attribute type '255' unknown")
+			4, 0, 1, 0, // 4-byte (empty) netlink attribute of type 1
+		}}), "Tuple unmarshal: need a Nested attribute to decode this structure")
 
 }

@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/mdlayher/netlink"
@@ -169,8 +168,6 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 			if err := f.SynProxy.unmarshal(attr); err != nil {
 				return err
 			}
-		default:
-			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
 

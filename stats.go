@@ -31,7 +31,7 @@ func (s Stats) String() string {
 }
 
 // unmarshal unmarshals a list of netfilter.Attributes into a Stats structure.
-func (s *Stats) unmarshal(attrs []netfilter.Attribute) error {
+func (s *Stats) unmarshal(attrs []netfilter.Attribute) {
 
 	for _, attr := range attrs {
 		switch at := cpuStatsType(attr.Type); at {
@@ -56,12 +56,8 @@ func (s *Stats) unmarshal(attrs []netfilter.Attribute) error {
 		case ctaStatsSearched, ctaStatsNew, ctaStatsDelete, ctaStatsDeleteList:
 			// Deprecated performance counters, not parsed into Stats.
 			// See torvalds/linux@8e8118f.
-		default:
-			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
-
-	return nil
 }
 
 // StatsExpect represents the Conntrack Expect performance counters of a single CPU (core).
@@ -72,7 +68,7 @@ type StatsExpect struct {
 }
 
 // unmarshal unmarshals a list of netfilter.Attributes into a StatsExpect structure.
-func (se *StatsExpect) unmarshal(attrs []netfilter.Attribute) error {
+func (se *StatsExpect) unmarshal(attrs []netfilter.Attribute) {
 
 	for _, attr := range attrs {
 		switch at := expectStatsType(attr.Type); at {
@@ -82,12 +78,8 @@ func (se *StatsExpect) unmarshal(attrs []netfilter.Attribute) error {
 			se.Create = attr.Uint32()
 		case ctaStatsExpDelete:
 			se.Delete = attr.Uint32()
-		default:
-			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
-
-	return nil
 }
 
 // StatsGlobal represents global statistics about the conntrack subsystem.
@@ -96,7 +88,7 @@ type StatsGlobal struct {
 }
 
 // unmarshal unmarshals a list of netfilter.Attributes into a Stats structure.
-func (sg *StatsGlobal) unmarshal(attrs []netfilter.Attribute) error {
+func (sg *StatsGlobal) unmarshal(attrs []netfilter.Attribute) {
 
 	for _, attr := range attrs {
 		switch at := globalStatsType(attr.Type); at {
@@ -104,12 +96,8 @@ func (sg *StatsGlobal) unmarshal(attrs []netfilter.Attribute) error {
 			sg.Entries = attr.Uint32()
 		case ctaStatsGlobalMaxEntries:
 			sg.MaxEntries = attr.Uint32()
-		default:
-			return fmt.Errorf(errAttributeUnknown, at)
 		}
 	}
-
-	return nil
 }
 
 // unmarshalStats unmarshals a list of Stats from a list of netlink.Messages.
@@ -125,11 +113,7 @@ func unmarshalStats(nlm []netlink.Message) ([]Stats, error) {
 		}
 
 		s := Stats{CPUID: hdr.ResourceID}
-
-		err = s.unmarshal(nfa)
-		if err != nil {
-			return nil, err
-		}
+		s.unmarshal(nfa)
 
 		stats[idx] = s
 	}
@@ -150,11 +134,7 @@ func unmarshalStatsExpect(nlm []netlink.Message) ([]StatsExpect, error) {
 		}
 
 		se := StatsExpect{CPUID: hdr.ResourceID}
-
-		err = se.unmarshal(nfa)
-		if err != nil {
-			return nil, err
-		}
+		se.unmarshal(nfa)
 
 		stats[idx] = se
 	}
@@ -172,7 +152,7 @@ func unmarshalStatsGlobal(nlm netlink.Message) (StatsGlobal, error) {
 		return sg, err
 	}
 
-	err = sg.unmarshal(nfa)
+	sg.unmarshal(nfa)
 
-	return sg, err
+	return sg, nil
 }

@@ -246,11 +246,6 @@ var corpusExpectUnmarshalError = []struct {
 	nfa    netfilter.Attribute
 }{
 	{
-		name:   "error unmarshal unknown attribute",
-		nfa:    netfilter.Attribute{Type: 255},
-		errStr: "attribute type '255' unknown",
-	},
-	{
 		name:   "error unmarshal invalid master tuple",
 		nfa:    netfilter.Attribute{Type: uint16(ctaExpectMaster)},
 		errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",

@@ -476,10 +476,12 @@ func TestUnmarshalFlowsError(t *testing.T) {
 	_, err := unmarshalFlows([]netlink.Message{{}})
 	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
 
-	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
-	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
+	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute with empty data.
+	// Cause a random error in unmarshalFlows to cover error return.
+	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 1}})
 	_, err = unmarshalFlows([]netlink.Message{nlm})
-	assert.EqualError(t, err, "attribute type '255' unknown")
+	assert.EqualError(t, err, "Tuple unmarshal: need a Nested attribute to decode this structure")
+
 }
 
 func TestNewFlow(t *testing.T) {

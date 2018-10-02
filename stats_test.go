@@ -7,7 +7,6 @@ import (
 	"github.com/mdlayher/netlink"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -69,25 +68,17 @@ func TestStatsUnmarshal(t *testing.T) {
 	}
 
 	var s Stats
-	err := s.unmarshal(nfa)
-	require.NoError(t, err)
+	s.unmarshal(nfa)
 
 	if diff := cmp.Diff(want, s); diff != "" {
 		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 	}
-
-	assert.EqualError(t, s.unmarshal([]netfilter.Attribute{{Type: 255}}), "attribute type '255' unknown")
 }
 
 func TestUnmarshalStatsError(t *testing.T) {
 
 	_, err := unmarshalStats([]netlink.Message{{}})
 	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
-
-	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
-	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
-	_, err = unmarshalStats([]netlink.Message{nlm})
-	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
 func TestStatsExpectUnmarshal(t *testing.T) {
@@ -114,25 +105,17 @@ func TestStatsExpectUnmarshal(t *testing.T) {
 	}
 
 	var se StatsExpect
-	err := se.unmarshal(nfa)
-	require.NoError(t, err)
+	se.unmarshal(nfa)
 
 	if diff := cmp.Diff(want, se); diff != "" {
 		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 	}
-
-	assert.EqualError(t, se.unmarshal([]netfilter.Attribute{{Type: 255}}), "attribute type '255' unknown")
 }
 
 func TestUnmarshalStatsExpectError(t *testing.T) {
 
 	_, err := unmarshalStatsExpect([]netlink.Message{{}})
 	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
-
-	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
-	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
-	_, err = unmarshalStatsExpect([]netlink.Message{nlm})
-	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
 func TestStatsGlobalUnmarshal(t *testing.T) {
@@ -154,23 +137,15 @@ func TestStatsGlobalUnmarshal(t *testing.T) {
 	}
 
 	var sg StatsGlobal
-	err := sg.unmarshal(nfa)
-	require.NoError(t, err)
+	sg.unmarshal(nfa)
 
 	if diff := cmp.Diff(want, sg); diff != "" {
 		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 	}
-
-	assert.EqualError(t, sg.unmarshal([]netfilter.Attribute{{Type: 255}}), "attribute type '255' unknown")
 }
 
 func TestUnmarshalStatsGlobalError(t *testing.T) {
 
 	_, err := unmarshalStatsGlobal(netlink.Message{})
 	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
-
-	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute of unknown type
-	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 255}})
-	_, err = unmarshalStatsGlobal(nlm)
-	assert.EqualError(t, err, "attribute type '255' unknown")
 }
