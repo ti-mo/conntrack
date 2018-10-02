@@ -90,6 +90,28 @@ func (se *StatsExpect) unmarshal(attrs []netfilter.Attribute) error {
 	return nil
 }
 
+// StatsGlobal represents global statistics about the conntrack subsystem.
+type StatsGlobal struct {
+	Entries, MaxEntries uint32
+}
+
+// unmarshal unmarshals a list of netfilter.Attributes into a Stats structure.
+func (sg *StatsGlobal) unmarshal(attrs []netfilter.Attribute) error {
+
+	for _, attr := range attrs {
+		switch at := globalStatsType(attr.Type); at {
+		case ctaStatsGlobalEntries:
+			sg.Entries = attr.Uint32()
+		case ctaStatsGlobalMaxEntries:
+			sg.MaxEntries = attr.Uint32()
+		default:
+			return fmt.Errorf(errAttributeUnknown, at)
+		}
+	}
+
+	return nil
+}
+
 // unmarshalStats unmarshals a list of Stats from a list of netlink.Messages.
 func unmarshalStats(nlm []netlink.Message) ([]Stats, error) {
 
@@ -140,18 +162,17 @@ func unmarshalStatsExpect(nlm []netlink.Message) ([]StatsExpect, error) {
 	return stats, nil
 }
 
-// unmarshalStatsGlobal unmarshals the global Conntrack counter from a netlink.Message.
-func unmarshalStatsGlobal(nlm netlink.Message) (uint32, error) {
+// unmarshalStatsGlobal unmarshals a StatsGlobal from a netlink.Message.
+func unmarshalStatsGlobal(nlm netlink.Message) (StatsGlobal, error) {
+
+	var sg StatsGlobal
 
 	_, nfa, err := netfilter.UnmarshalNetlink(nlm)
 	if err != nil {
-		return 0, err
+		return sg, err
 	}
 
-	// Assert the first (and only) attribute to be a GlobalEntries
-	if at := nfa[0].Type; globalStatsType(at) != ctaStatsGlobalEntries {
-		return 0, fmt.Errorf(errAttributeUnknown, at)
-	}
+	err = sg.unmarshal(nfa)
 
-	return nfa[0].Uint32(), nil
+	return sg, err
 }

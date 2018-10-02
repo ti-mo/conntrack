@@ -466,11 +466,14 @@ func (c *Conn) StatsExpect() ([]StatsExpect, error) {
 	return unmarshalStatsExpect(msgs)
 }
 
-// Count queries Conntrack for an internal global counter that describes the total amount
+// StatsGlobal queries Conntrack for an internal global counter that describes the total amount
 // of Flow entries currently in the Conntrack table. Only the main Conntrack table has this
 // fast query available. To get the amount of Expect entries, execute DumpExpect() and count
 // the amount of entries returned.
-func (c *Conn) Count() (uint32, error) {
+//
+// Starting from kernels 4.18 and higher, MaxEntries is returned, describing the maximum size
+// of the Conntrack table.
+func (c *Conn) StatsGlobal() (StatsGlobal, error) {
 
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
@@ -480,13 +483,15 @@ func (c *Conn) Count() (uint32, error) {
 			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
 		}, nil)
 
+	var sg StatsGlobal
+
 	if err != nil {
-		return 0, err
+		return sg, err
 	}
 
 	msgs, err := c.conn.Query(req)
 	if err != nil {
-		return 0, err
+		return sg, err
 	}
 
 	return unmarshalStatsGlobal(msgs[0])

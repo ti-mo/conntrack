@@ -275,8 +275,9 @@ type globalStatsType uint8
 
 // enum ctattr_stats_global
 const (
-	ctaStatsGlobalUnspec  globalStatsType = iota // CTA_STATS_GLOBAL_UNSPEC
-	ctaStatsGlobalEntries                        // CTA_STATS_GLOBAL_ENTRIES
+	ctaStatsGlobalUnspec     globalStatsType = iota // CTA_STATS_GLOBAL_UNSPEC
+	ctaStatsGlobalEntries                           // CTA_STATS_GLOBAL_ENTRIES
+	ctaStatsGlobalMaxEntries                        // CTA_STATS_GLOBAL_MAX_ENTRIES
 )
 
 // expectStatsType describes the type of expectation statistics attribute in this container.

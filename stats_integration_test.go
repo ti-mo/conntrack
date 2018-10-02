@@ -66,8 +66,8 @@ func TestConnStatsGlobal(t *testing.T) {
 		require.NoError(t, err, "creating IPv6 flow", i)
 	}
 
-	count, err := c.Count()
-	require.NoError(t, err, "query flow count")
+	sg, err := c.StatsGlobal()
+	require.NoError(t, err, "query StatsGlobal")
 
-	assert.EqualValues(t, numFlows*2, count)
+	assert.EqualValues(t, numFlows*2, sg.Entries)
 }

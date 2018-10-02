@@ -135,6 +135,35 @@ func TestUnmarshalStatsExpectError(t *testing.T) {
 	assert.EqualError(t, err, "attribute type '255' unknown")
 }
 
+func TestStatsGlobalUnmarshal(t *testing.T) {
+
+	nfa := []netfilter.Attribute{
+		{
+			Type: uint16(ctaStatsGlobalEntries),
+			Data: []byte{0x01, 0xab, 0xcd, 0xef},
+		},
+		{
+			Type: uint16(ctaStatsGlobalMaxEntries),
+			Data: []byte{0x02, 0xab, 0xcd, 0xef},
+		},
+	}
+
+	want := StatsGlobal{
+		Entries:    0x01abcdef,
+		MaxEntries: 0x02abcdef,
+	}
+
+	var sg StatsGlobal
+	err := sg.unmarshal(nfa)
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(want, sg); diff != "" {
+		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
+	}
+
+	assert.EqualError(t, sg.unmarshal([]netfilter.Attribute{{Type: 255}}), "attribute type '255' unknown")
+}
+
 func TestUnmarshalStatsGlobalError(t *testing.T) {
 
 	_, err := unmarshalStatsGlobal(netlink.Message{})
