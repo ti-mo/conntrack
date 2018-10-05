@@ -51,20 +51,20 @@ func checkKmod() error {
 }
 
 // makeNSConn creates a Conn in a new network namespace to use for testing.
-func makeNSConn() (*Conn, error) {
+// Returns the Conn, the netns identifier and error.
+func makeNSConn() (*Conn, int, error) {
 
 	newns, err := netns.New()
 	if err != nil {
-		return nil, fmt.Errorf("unexpected error creating network namespace: %s", err)
+		return nil, 0, fmt.Errorf("unexpected error creating network namespace: %s", err)
 	}
-	defer newns.Close()
 
 	newConn, err := Dial(&netlink.Config{NetNS: int(newns)})
 	if err != nil {
-		return nil, fmt.Errorf("unexpected error dialing namespaced connection: %s", err)
+		return nil, 0, fmt.Errorf("unexpected error dialing namespaced connection: %s", err)
 	}
 
-	return newConn, nil
+	return newConn, int(newns), nil
 }
 
 // getKsyms gets a list of all symbols in the kernel. (/proc/kallsyms)

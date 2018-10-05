@@ -17,7 +17,7 @@ import (
 // of flows present in the table. Clean up by flushing the table.
 func TestConnCreateFlows(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	defer func() {
@@ -62,7 +62,7 @@ func TestConnCreateFlows(t *testing.T) {
 
 func TestConnCreateError(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	err = c.Create(Flow{Timeout: 0})
@@ -71,7 +71,7 @@ func TestConnCreateError(t *testing.T) {
 
 func TestConnFlush(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	// Expect empty result from empty table dump
@@ -120,7 +120,7 @@ func TestConnFlushFilter(t *testing.T) {
 		t.Skip("FlushFilter not supported in this kernel")
 	}
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	// Expect empty result from empty table dump
@@ -165,7 +165,7 @@ func TestConnFlushFilter(t *testing.T) {
 // Expects table to be empty at the end of the run.
 func TestConnCreateDeleteFlows(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	numFlows := 42
@@ -196,7 +196,7 @@ func TestConnCreateDeleteFlows(t *testing.T) {
 // Creates a flow, updates it and checks the result.
 func TestConnCreateUpdateFlow(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	f := NewFlow(
@@ -225,7 +225,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 
 func TestConnUpdateError(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	f := NewFlow(
@@ -244,7 +244,7 @@ func TestConnUpdateError(t *testing.T) {
 // Creates IPv4 and IPv6 flows and queries them using a simple get.
 func TestConnCreateGetFlow(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	flows := map[string]Flow{
@@ -276,7 +276,7 @@ func TestConnDumpFilter(t *testing.T) {
 		t.Skip("DumpFilter not supported in this kernel")
 	}
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	flows := map[string]Flow{
@@ -315,7 +315,7 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 
 	b.ReportAllocs()
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	if err != nil {
 		b.Fatal(err)
 	}
