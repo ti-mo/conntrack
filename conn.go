@@ -32,10 +32,16 @@ func (c *Conn) Close() error {
 
 // Listen joins the Netfilter connection to a multicast group and starts a given
 // amount of Flow decoders from the Conn to the Flow channel. Returns an error channel
-// the workers will return any errors on. Any errors during Flow decoding are fatal.
+// the workers will return any errors on. Any error during Flow decoding is fatal and
+// will halt the worker it occurs on. When numWorkers amount of errors have been received on
+// the error channel, no more events will be produced on evChan.
 //
 // The Conn will be marked as having listeners active, which will prevent Listen from being
 // called again. For listening on other groups, open another socket.
+//
+// evChan consumers need to be able to keep up with the Event producers. When the channel is full,
+// messages will pile up in the Netlink socket's buffer, putting the socket at risk of being closed
+// by the kernel when it eventually fills up.
 func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.NetlinkGroup) (chan error, error) {
 
 	if numWorkers == 0 {

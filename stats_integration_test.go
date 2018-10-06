@@ -16,7 +16,7 @@ func TestConnStats(t *testing.T) {
 		t.Skip("Per-CPU stats not implemented in this kernel")
 	}
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	stats, err := c.Stats()
@@ -34,7 +34,7 @@ func TestConnStatsExpect(t *testing.T) {
 		t.Skip("Per-CPU Expect stats not implemented in this kernel")
 	}
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	statsExpect, err := c.StatsExpect()
@@ -52,7 +52,7 @@ func TestConnStatsGlobal(t *testing.T) {
 		t.Skip("Global stats not implemented in this kernel")
 	}
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	numFlows := 42

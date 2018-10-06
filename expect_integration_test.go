@@ -13,7 +13,7 @@ import (
 // to create expects from userspace.
 func TestConnDumpExpect(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	_, err = c.DumpExpect()
@@ -23,7 +23,7 @@ func TestConnDumpExpect(t *testing.T) {
 // Attempt at creating conntrack expectation from userspace.
 func TestConnCreateExpect(t *testing.T) {
 
-	c, err := makeNSConn()
+	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
 	f := NewFlow(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 42000, 21, 120, 0)
