@@ -113,6 +113,13 @@ func TestConnFlush(t *testing.T) {
 
 func TestConnFlushFilter(t *testing.T) {
 
+	// Kernels 3.x and earlier don't have filtered flush implemented yet.
+	// This is implemented in a separate function, ctnetlink_flush_conntrack,
+	// so we check if it is present before executing and checking the result.
+	if !findKsym("ctnetlink_flush_iterate") {
+		t.Skip("FlushFilter not supported in this kernel")
+	}
+
 	c, err := makeNSConn()
 	require.NoError(t, err)
 
@@ -144,22 +151,14 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err, "dumping table before filtered flush")
 	assert.Equal(t, 2, len(flows))
 
-	// Kernels 3.x and earlier don't have filtered flush implemented yet.
-	// This is implemented in a separate function, ctnetlink_flush_conntrack,
-	// so we check if it is present before executing and checking the result.
-	ff, err := findKsym("ctnetlink_flush_conntrack")
-	require.NoError(t, err, "finding ctnetlink_flush_conntrack in kallsyms")
+	// Flush only the flow matching the filter
+	err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
+	require.NoError(t, err, "flushing table")
 
-	if ff {
-		// Flush only the flow matching the filter
-		err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
-		require.NoError(t, err, "flushing table")
-
-		// Expect only one flow to remain in the table
-		flows, err = c.Dump()
-		require.NoError(t, err, "dumping table after filtered flush")
-		assert.Equal(t, 1, len(flows))
-	}
+	// Expect only one flow to remain in the table
+	flows, err = c.Dump()
+	require.NoError(t, err, "dumping table after filtered flush")
+	assert.Equal(t, 1, len(flows))
 }
 
 // Creates and deletes a number of flows with a randomized component.
@@ -272,6 +271,10 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 // Creates IPv4 and IPv6 flows with connmarks and queries them using a filtered dump.
 func TestConnDumpFilter(t *testing.T) {
+
+	if !findKsym("ctnetlink_alloc_filter") {
+		t.Skip("DumpFilter not supported in this kernel")
+	}
 
 	c, err := makeNSConn()
 	require.NoError(t, err)

@@ -3,8 +3,8 @@
 package conntrack
 
 import (
-	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -14,9 +14,18 @@ import (
 	"github.com/vishvananda/netns"
 )
 
+var ksyms []string
+
 func TestMain(m *testing.M) {
 
-	if err := checkKmod(); err != nil {
+	var err error
+
+	if err = checkKmod(); err != nil {
+		log.Fatal(err)
+	}
+
+	ksyms, err = getKsyms()
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -58,22 +67,38 @@ func makeNSConn() (*Conn, error) {
 	return newConn, nil
 }
 
-// findKsym finds a given string in /proc/kallsyms. True means the string was found.
-func findKsym(sym string) (bool, error) {
+// getKsyms gets a list of all symbols in the kernel. (/proc/kallsyms)
+func getKsyms() ([]string, error) {
 
-	f, err := os.Open("/proc/kallsyms")
+	f, err := ioutil.ReadFile("/proc/kallsyms")
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
+	// Trim trailing newlines and split by newline
+	content := strings.Split(strings.TrimSuffix(string(f), "\n"), "\n")
+	out := make([]string, len(content))
 
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), sym) {
-			return true, nil
+	for i, l := range content {
+
+		// Replace any tabs by spaces
+		l = strings.Replace(l, "\t", " ", -1)
+
+		// Get the third column
+		out[i] = strings.Split(l, " ")[2]
+	}
+
+	return out, nil
+}
+
+// findKsym finds a given string in /proc/kallsyms. True means the string was found.
+func findKsym(sym string) bool {
+
+	for _, v := range ksyms {
+		if v == sym {
+			return true
 		}
 	}
 
-	return false, scanner.Err()
+	return false
 }

@@ -12,6 +12,10 @@ import (
 
 func TestConnStats(t *testing.T) {
 
+	if !findKsym("ctnetlink_ct_stat_cpu_dump") {
+		t.Skip("Per-CPU stats not implemented in this kernel")
+	}
+
 	c, err := makeNSConn()
 	require.NoError(t, err)
 
@@ -26,6 +30,10 @@ func TestConnStats(t *testing.T) {
 
 func TestConnStatsExpect(t *testing.T) {
 
+	if !findKsym("ctnetlink_exp_stat_cpu_dump") {
+		t.Skip("Per-CPU Expect stats not implemented in this kernel")
+	}
+
 	c, err := makeNSConn()
 	require.NoError(t, err)
 
@@ -39,6 +47,10 @@ func TestConnStatsExpect(t *testing.T) {
 }
 
 func TestConnStatsGlobal(t *testing.T) {
+
+	if !findKsym("ctnetlink_stat_ct") {
+		t.Skip("Global stats not implemented in this kernel")
+	}
 
 	c, err := makeNSConn()
 	require.NoError(t, err)
