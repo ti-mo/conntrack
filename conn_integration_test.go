@@ -3,9 +3,11 @@
 package conntrack
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/mdlayher/netlink"
@@ -54,4 +56,24 @@ func makeNSConn() (*Conn, error) {
 	}
 
 	return newConn, nil
+}
+
+// findKsym finds a given string in /proc/kallsyms. True means the string was found.
+func findKsym(sym string) (bool, error) {
+
+	f, err := os.Open("/proc/kallsyms")
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), sym) {
+			return true, nil
+		}
+	}
+
+	return false, scanner.Err()
 }

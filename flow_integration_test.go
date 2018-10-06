@@ -144,14 +144,22 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err, "dumping table before filtered flush")
 	assert.Equal(t, 2, len(flows))
 
-	// Flush only the flow matching the filter
-	err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
-	require.NoError(t, err, "flushing table")
+	// Kernels 3.x and earlier don't have filtered flush implemented yet.
+	// This is implemented in a separate function, ctnetlink_flush_conntrack,
+	// so we check if it is present before executing and checking the result.
+	ff, err := findKsym("ctnetlink_flush_conntrack")
+	require.NoError(t, err, "finding ctnetlink_flush_conntrack in kallsyms")
 
-	// Expect only one flow to remain in the table
-	flows, err = c.Dump()
-	require.NoError(t, err, "dumping table after filtered flush")
-	assert.Equal(t, 1, len(flows))
+	if ff {
+		// Flush only the flow matching the filter
+		err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
+		require.NoError(t, err, "flushing table")
+
+		// Expect only one flow to remain in the table
+		flows, err = c.Dump()
+		require.NoError(t, err, "dumping table after filtered flush")
+		assert.Equal(t, 1, len(flows))
+	}
 }
 
 // Creates and deletes a number of flows with a randomized component.
