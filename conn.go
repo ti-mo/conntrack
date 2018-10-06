@@ -38,7 +38,7 @@ func (c *Conn) Close() error {
 // called again. For listening on other groups, open another socket.
 func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.NetlinkGroup) (chan error, error) {
 
-	if numWorkers < 1 {
+	if numWorkers == 0 {
 		return nil, errors.Errorf(errWorkerCount, numWorkers)
 	}
 
