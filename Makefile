@@ -63,3 +63,26 @@ check: test cover
 	go vet ./...
 	megacheck ./...
 	golint -set_exit_status ./...
+
+# Build integration test binary to run in Vagrant VM
+build-integration: build/integration.test
+build/integration.test: $(SOURCES)
+	go test -c -o build/integration.test -covermode=atomic -tags integration
+
+# Execute the integration tests in Vagrant VM
+CMD := sudo /build/integration.test -test.v -test.coverprofile /build/
+vagrant-integration: build/integration.test
+
+	@echo -e "\n\e[33m-> centos7"
+	@vagrant ssh centos7 -c "${CMD}centos7.out" && echo "centos7 successful!"
+
+	@echo -e "\n\e[94m-> ubuntu-precise"
+	@vagrant ssh precise -c "${CMD}precise.out" && echo "ubuntu-precise successful!"
+
+	@echo -e "\n\e[95m-> ubuntu-trusty"
+	@vagrant ssh trusty -c "${CMD}trusty.out" && echo "ubuntu-trusty successful!"
+
+	@echo -e "\n\e[96m-> ubuntu-xenial"
+	@vagrant ssh xenial -c "${CMD}xenial.out" && echo "ubuntu-xenial successful!"
+
+	@echo -e "\e[0m"
