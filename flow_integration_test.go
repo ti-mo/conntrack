@@ -60,6 +60,15 @@ func TestConnCreateFlows(t *testing.T) {
 	assert.Equal(t, numFlows*2, len(flows))
 }
 
+func TestConnCreateError(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	err = c.Create(Flow{Timeout: 0})
+	require.EqualError(t, err, errNeedTimeout.Error())
+}
+
 func TestConnFlush(t *testing.T) {
 
 	c, err := makeNSConn()
@@ -205,6 +214,24 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	if got := flows[0].Timeout; !(got > 120) {
 		t.Fatalf("unexpected updated flow:\n- want: > 120\n-  got: %d", got)
 	}
+}
+
+func TestConnUpdateError(t *testing.T) {
+
+	c, err := makeNSConn()
+	require.NoError(t, err)
+
+	f := NewFlow(
+		17, 0,
+		net.ParseIP("1.2.3.4"),
+		net.ParseIP("5.6.7.8"),
+		1234, 5678, 120, 0,
+	)
+
+	f.TupleMaster = f.TupleOrig
+
+	err = c.Update(f)
+	require.EqualError(t, err, errUpdateMaster.Error())
 }
 
 // Creates IPv4 and IPv6 flows and queries them using a simple get.
