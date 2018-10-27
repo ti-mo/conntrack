@@ -1,0 +1,21 @@
+---
+version: v1.0
+name: Conntrack golang pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Integration
+    task:
+      prologue:
+        commands:
+          - checkout
+          - go get github.com/mattn/goveralls
+          - go get -t -tags=integration -d -v ./...
+      jobs:
+        - name: Run Integration Test Suite
+          commands:
+            - make integration
+            - $GOPATH/bin/goveralls -coverprofile cover-int.out -service semaphore -repotoken "$COVERALLS_REPO_TOKEN"
