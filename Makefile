@@ -23,9 +23,9 @@ testv:
 .PHONY: modprobe
 modprobe:
 ifeq ($(shell id -u),0)
-	modprobe -a nf_conntrack_ipv4 nf_conntrack_ipv6
+	-modprobe -a nf_conntrack nf_conntrack_ipv4 nf_conntrack_ipv6
 else
-	sudo modprobe -a nf_conntrack_ipv4 nf_conntrack_ipv6
+	-sudo modprobe -a nf_conntrack nf_conntrack_ipv4 nf_conntrack_ipv6
 endif
 
 .PHONY: integration

@@ -34,6 +34,8 @@ func TestMain(m *testing.M) {
 }
 
 // checkKmod checks if the kernel modules required for this test suite are loaded into the kernel.
+// Since around 4.19, conntrack is a single module, so only warn about _ipv4/6 when that one
+// is not loaded.
 func checkKmod() error {
 
 	kmods := []string{
@@ -41,9 +43,12 @@ func checkKmod() error {
 		"nf_conntrack_ipv6",
 	}
 
-	for _, km := range kmods {
-		if _, err := os.Stat(fmt.Sprintf("/sys/module/%s", km)); os.IsNotExist(err) {
-			return fmt.Errorf("required kernel module not loaded: %s", km)
+	if _, err := os.Stat("/sys/module/nf_conntrack"); os.IsNotExist(err) {
+		// Fall back to _ipv4/6 if nf_conntrack is missing.
+		for _, km := range kmods {
+			if _, err := os.Stat(fmt.Sprintf("/sys/module/%s", km)); os.IsNotExist(err) {
+				return fmt.Errorf("missing kernel module %s and module nf_conntrack", km)
+			}
 		}
 	}
 
