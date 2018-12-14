@@ -30,6 +30,11 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
+// SetOption enables or disables a netlink socket option for the Conn.
+func (c *Conn) SetOption(option netlink.ConnOption, enable bool) error {
+	return c.conn.SetOption(option, enable)
+}
+
 // Listen joins the Netfilter connection to a multicast group and starts a given
 // amount of Flow decoders from the Conn to the Flow channel. Returns an error channel
 // the workers will return any errors on. Any error during Flow decoding is fatal and

@@ -4,10 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"testing"
+
+	"github.com/mdlayher/netlink"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ti-mo/conntrack"
 	"github.com/ti-mo/netfilter"
 )
+
+func TestConnDialError(t *testing.T) {
+
+	// Attempt to open a Netlink socket into a netns that is highly unlikely
+	// to exist, so we can catch an error from Dial.
+	_, err := conntrack.Dial(&netlink.Config{NetNS: 1337})
+	assert.EqualError(t, err, "bad file descriptor")
+}
 
 func ExampleConn_createUpdateFlow() {
 	// Open a Conntrack connection.
@@ -170,6 +182,12 @@ func ExampleConn_listen() {
 	// Listen for all Conntrack and Conntrack-Expect events with 4 decoder goroutines.
 	// All errors caught in the decoders are passed on channel errCh.
 	errCh, err := c.Listen(evCh, 4, append(netfilter.GroupsCT, netfilter.GroupsCTExp...))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Listen to Conntrack events from all network namespaces on the system.
+	err = c.SetOption(netlink.ListenAllNSID, true)
 	if err != nil {
 		log.Fatal(err)
 	}

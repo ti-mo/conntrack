@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mdlayher/netlink"
 	"github.com/vishvananda/netns"
 )
@@ -31,6 +33,19 @@ func TestMain(m *testing.M) {
 
 	rc := m.Run()
 	os.Exit(rc)
+}
+
+// Open a Netlink socket and set an option on it.
+func TestConnDialSetOption(t *testing.T) {
+
+	c, err := Dial(nil)
+	require.NoError(t, err, "opening Conn")
+
+	err = c.SetOption(netlink.ListenAllNSID, true)
+	require.NoError(t, err, "setting SockOption")
+
+	err = c.Close()
+	require.NoError(t, err, "closing Conn")
 }
 
 // checkKmod checks if the kernel modules required for this test suite are loaded into the kernel.
