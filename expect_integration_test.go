@@ -6,6 +6,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/mdlayher/netlink"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,6 +62,9 @@ func TestConnCreateExpect(t *testing.T) {
 		Class:    0x30,
 	}
 
-	err = c.CreateExpect(ex)
-	require.EqualError(t, err, "error executing Netlink query: invalid argument", ex)
+	opErr := errors.Cause(c.CreateExpect(ex))
+
+	require.IsType(t, &netlink.OpError{}, opErr)
+
+	require.EqualError(t, opErr, "netlink receive: invalid argument", ex)
 }

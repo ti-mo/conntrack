@@ -4,15 +4,15 @@ package conntrack
 
 import (
 	"net"
+	"os"
 	"testing"
 
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
-	"github.com/ti-mo/netfilter"
-	"golang.org/x/sys/unix"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/ti-mo/netfilter"
+	"golang.org/x/sys/unix"
 )
 
 func TestConnListen(t *testing.T) {
@@ -36,7 +36,9 @@ func TestConnListen(t *testing.T) {
 	go func() {
 		err, ok := <-errChan
 		if ok {
-			require.Equal(t, errors.Cause(err), unix.EBADF)
+			opErr := errors.Cause(err)
+			require.IsType(t, &netlink.OpError{}, opErr)
+			require.Equal(t, opErr.(*netlink.OpError), os.NewSyscallError("recvmsg", unix.EBADF))
 		}
 	}()
 
