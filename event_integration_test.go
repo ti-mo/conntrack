@@ -38,7 +38,7 @@ func TestConnListen(t *testing.T) {
 		if ok {
 			opErr := errors.Cause(err)
 			require.IsType(t, &netlink.OpError{}, opErr)
-			require.Equal(t, opErr.(*netlink.OpError), os.NewSyscallError("recvmsg", unix.EBADF))
+			require.Equal(t, opErr.(*netlink.OpError).Err, os.NewSyscallError("recvmsg", unix.EBADF))
 		}
 	}()
 
