@@ -30,7 +30,7 @@ func TestConnListen(t *testing.T) {
 	// ourselves, while making sure the worker exits before re-entering Receive().
 	ev := make(chan Event)
 	errChan, err := lc.Listen(ev, 1, []netfilter.NetlinkGroup{netfilter.GroupCTNew, netfilter.GroupCTUpdate})
-	require.NoError(t, err)
+	require.NoError(t, esrr)
 
 	// Watch for listen channel errors in the background
 	go func() {
