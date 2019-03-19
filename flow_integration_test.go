@@ -6,11 +6,11 @@ import (
 	"net"
 	"testing"
 
+	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/unix"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // Create a given number of flows with a randomized component and check the amount
@@ -256,7 +256,10 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 	for n, f := range flows {
 		_, err := c.Get(f)
-		require.EqualError(t, errors.Cause(err), unix.ENOENT.Error(), "get flow before creating")
+
+		opErr := errors.Cause(err)
+		require.IsType(t, &netlink.OpError{}, opErr)
+		require.EqualError(t, opErr.(*netlink.OpError).Err, unix.ENOENT.Error(), "get flow before creating")
 
 		err = c.Create(f)
 		require.NoError(t, err, "creating flow", n)
