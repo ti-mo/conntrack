@@ -25,7 +25,7 @@ var eventTypeTests = []struct {
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctNew),
-			Flags:       netlink.HeaderFlagsCreate | netlink.HeaderFlagsExcl,
+			Flags:       netlink.Create | netlink.Excl,
 		},
 		et: EventNew,
 	},
@@ -112,7 +112,7 @@ var eventTests = []struct {
 		name: "correct empty new flow event",
 		nfh: netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			Flags:       netlink.HeaderFlagsCreate | netlink.HeaderFlagsExcl,
+			Flags:       netlink.Create | netlink.Excl,
 		},
 		e: Event{
 			Type: EventNew,
