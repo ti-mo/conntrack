@@ -7,12 +7,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
-	"golang.org/x/sys/unix"
 )
 
 func TestConnListen(t *testing.T) {
@@ -36,9 +38,9 @@ func TestConnListen(t *testing.T) {
 	go func() {
 		err, ok := <-errChan
 		if ok {
-			opErr := errors.Cause(err)
-			require.IsType(t, &netlink.OpError{}, opErr)
-			require.Equal(t, opErr.(*netlink.OpError).Err, os.NewSyscallError("recvmsg", unix.EBADF))
+			opErr, ok := errors.Cause(err).(*netlink.OpError)
+			require.True(t, ok)
+			require.EqualError(t, os.NewSyscallError("recvmsg", unix.EBADF), opErr.Err.Error())
 		}
 	}()
 

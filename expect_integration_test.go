@@ -6,9 +6,12 @@ import (
 	"net"
 	"testing"
 
-	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+
 	"github.com/stretchr/testify/require"
+
+	"github.com/mdlayher/netlink"
 )
 
 // No meaningful integration test possible until we can figure out how
@@ -62,9 +65,9 @@ func TestConnCreateExpect(t *testing.T) {
 		Class:    0x30,
 	}
 
-	opErr := errors.Cause(c.CreateExpect(ex))
+	err = c.CreateExpect(ex)
 
-	require.IsType(t, &netlink.OpError{}, opErr)
-
-	require.EqualError(t, opErr, "netlink receive: invalid argument", ex)
+	opErr, ok := errors.Cause(err).(*netlink.OpError)
+	require.True(t, ok)
+	require.EqualError(t, unix.EINVAL, opErr.Err.Error())
 }
