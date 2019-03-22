@@ -116,7 +116,7 @@ func (c *Conn) Dump() ([]Flow, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+			Flags:       netlink.Request | netlink.Dump,
 		},
 		nil)
 
@@ -141,7 +141,7 @@ func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+			Flags:       netlink.Request | netlink.Dump,
 		},
 		f.marshal())
 
@@ -166,7 +166,7 @@ func (c *Conn) DumpExpect() ([]Expect, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
 			MessageType: netfilter.MessageType(ctGet),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Dump | netlink.Acknowledge,
 		},
 		nil)
 
@@ -190,7 +190,7 @@ func (c *Conn) Flush() error {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctDelete),
 			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Acknowledge,
 		},
 		nil)
 
@@ -215,7 +215,7 @@ func (c *Conn) FlushFilter(f Filter) error {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctDelete),
 			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Acknowledge,
 		},
 		f.marshal())
 
@@ -254,8 +254,8 @@ func (c *Conn) Create(f Flow) error {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctNew),
 			Family:      pf,
-			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
-				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+			Flags: netlink.Request | netlink.Acknowledge |
+				netlink.Excl | netlink.Create,
 		}, attrs)
 
 	if err != nil {
@@ -289,8 +289,8 @@ func (c *Conn) CreateExpect(ex Expect) error {
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
 			MessageType: netfilter.MessageType(ctExpNew),
 			Family:      pf,
-			Flags: netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge |
-				netlink.HeaderFlagsExcl | netlink.HeaderFlagsCreate,
+			Flags: netlink.Request | netlink.Acknowledge |
+				netlink.Excl | netlink.Create,
 		}, attrs)
 
 	if err != nil {
@@ -327,7 +327,7 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctGet),
 			Family:      pf,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Acknowledge,
 		}, attrs)
 
 	if err != nil {
@@ -376,7 +376,7 @@ func (c *Conn) Update(f Flow) error {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctNew),
 			Family:      pf,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Acknowledge,
 		}, attrs)
 
 	if err != nil {
@@ -412,7 +412,7 @@ func (c *Conn) Delete(f Flow) error {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctDelete),
 			Family:      pf,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Acknowledge,
 		}, attrs)
 
 	if err != nil {
@@ -437,7 +437,7 @@ func (c *Conn) Stats() ([]Stats, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctGetStatsCPU),
 			Family:      netfilter.ProtoUnspec,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+			Flags:       netlink.Request | netlink.Dump,
 		}, nil)
 
 	if err != nil {
@@ -462,7 +462,7 @@ func (c *Conn) StatsExpect() ([]StatsExpect, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
 			MessageType: netfilter.MessageType(ctExpGetStatsCPU),
 			Family:      netfilter.ProtoUnspec,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump,
+			Flags:       netlink.Request | netlink.Dump,
 		}, nil)
 
 	if err != nil {
@@ -491,7 +491,7 @@ func (c *Conn) StatsGlobal() (StatsGlobal, error) {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctGetStats),
 			Family:      netfilter.ProtoUnspec,
-			Flags:       netlink.HeaderFlagsRequest | netlink.HeaderFlagsDump | netlink.HeaderFlagsAcknowledge,
+			Flags:       netlink.Request | netlink.Dump | netlink.Acknowledge,
 		}, nil)
 
 	var sg StatsGlobal

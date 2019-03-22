@@ -8,7 +8,6 @@ import (
 
 	"github.com/mdlayher/netlink"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/ti-mo/conntrack"
 	"github.com/ti-mo/netfilter"
 )
@@ -18,7 +17,7 @@ func TestConnDialError(t *testing.T) {
 	// Attempt to open a Netlink socket into a netns that is highly unlikely
 	// to exist, so we can catch an error from Dial.
 	_, err := conntrack.Dial(&netlink.Config{NetNS: 1337})
-	assert.EqualError(t, err, "bad file descriptor")
+	assert.EqualError(t, err, "setns: bad file descriptor")
 }
 
 func ExampleConn_createUpdateFlow() {
