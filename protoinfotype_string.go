@@ -4,6 +4,16 @@ package conntrack
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[ctaProtoInfoUnspec-0]
+	_ = x[ctaProtoInfoTCP-1]
+	_ = x[ctaProtoInfoDCCP-2]
+	_ = x[ctaProtoInfoSCTP-3]
+}
+
 const _protoInfoType_name = "ctaProtoInfoUnspecctaProtoInfoTCPctaProtoInfoDCCPctaProtoInfoSCTP"
 
 var _protoInfoType_index = [...]uint8{0, 18, 33, 49, 65}

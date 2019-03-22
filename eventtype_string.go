@@ -4,6 +4,18 @@ package conntrack
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[EventUnknown-0]
+	_ = x[EventNew-1]
+	_ = x[EventUpdate-2]
+	_ = x[EventDestroy-3]
+	_ = x[EventExpNew-4]
+	_ = x[EventExpDestroy-5]
+}
+
 const _eventType_name = "EventUnknownEventNewEventUpdateEventDestroyEventExpNewEventExpDestroy"
 
 var _eventType_index = [...]uint8{0, 12, 20, 31, 43, 54, 69}

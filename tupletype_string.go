@@ -4,6 +4,16 @@ package conntrack
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[ctaTupleUnspec-0]
+	_ = x[ctaTupleIP-1]
+	_ = x[ctaTupleProto-2]
+	_ = x[ctaTupleZone-3]
+}
+
 const _tupleType_name = "ctaTupleUnspecctaTupleIPctaTupleProtoctaTupleZone"
 
 var _tupleType_index = [...]uint8{0, 14, 24, 37, 49}
