@@ -261,7 +261,7 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 		opErr, ok := errors.Cause(err).(*netlink.OpError)
 		require.True(t, ok)
-		require.EqualError(t, unix.ENOENT, opErr.Err.Error(), "get flow before creating")
+		require.EqualError(t, opErr.Err, unix.ENOENT.Error(), "get flow before creating")
 
 		err = c.Create(f)
 		require.NoError(t, err, "creating flow", n)

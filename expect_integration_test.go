@@ -69,5 +69,5 @@ func TestConnCreateExpect(t *testing.T) {
 
 	opErr, ok := errors.Cause(err).(*netlink.OpError)
 	require.True(t, ok)
-	require.EqualError(t, unix.EINVAL, opErr.Err.Error())
+	require.EqualError(t, opErr.Err, unix.EINVAL.Error())
 }

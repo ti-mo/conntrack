@@ -4,11 +4,9 @@ package conntrack
 
 import (
 	"net"
-	"os"
 	"testing"
 
 	"github.com/pkg/errors"
-	"golang.org/x/sys/unix"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,7 +38,7 @@ func TestConnListen(t *testing.T) {
 		if ok {
 			opErr, ok := errors.Cause(err).(*netlink.OpError)
 			require.True(t, ok)
-			require.EqualError(t, os.NewSyscallError("recvmsg", unix.EBADF), opErr.Err.Error())
+			require.EqualError(t, opErr.Err, "recvmsg: bad file descriptor")
 		}
 	}()
 
