@@ -449,8 +449,9 @@ func (ctr *Counter) unmarshal(attr netfilter.Attribute) error {
 		return errors.Wrap(errNotNested, opUnCounter)
 	}
 
-	// A Counter will always consist of packet and byte attributes
-	if len(attr.Children) != 2 {
+	// A Counter consists of packet and byte attributes but may have
+	// help attributes as well if nf_conntrack_helper enabled
+	if len(attr.Children) < 2 {
 		return fmt.Errorf(errExactChildren, 2, ctaCountersOrigReplyCat)
 	}
 
@@ -463,6 +464,9 @@ func (ctr *Counter) unmarshal(attr netfilter.Attribute) error {
 			ctr.Packets = iattr.Uint64()
 		case ctaCountersBytes:
 			ctr.Bytes = iattr.Uint64()
+		case counterType(ctaHelp):
+			// Ignore any helper children if nf_conntrack_helper is enabled
+			continue
 		default:
 			return fmt.Errorf(errAttributeChild, iattr.Type, ctaCountersOrigReplyCat)
 		}
