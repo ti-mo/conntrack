@@ -4,7 +4,6 @@ import (
 	"net"
 
 	"github.com/mdlayher/netlink"
-
 	"github.com/ti-mo/netfilter"
 )
 
@@ -178,23 +177,27 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
 	// Each connection sent to the kernel should have at least an original and reply tuple.
-	if !f.TupleOrig.filled() || !f.TupleReply.filled() {
+	if !f.TupleOrig.filled() && !f.TupleReply.filled() {
 		return nil, errNeedTuples
 	}
 
-	attrs := make([]netfilter.Attribute, 2, 12)
+	attrs := make([]netfilter.Attribute, 0, 12)
 
-	to, err := f.TupleOrig.marshal(uint16(ctaTupleOrig))
-	if err != nil {
-		return nil, err
+	if f.TupleOrig.filled() {
+		to, err := f.TupleOrig.marshal(uint16(ctaTupleOrig))
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, to)
 	}
-	attrs[0] = to
 
-	tr, err := f.TupleReply.marshal(uint16(ctaTupleReply))
-	if err != nil {
-		return nil, err
+	if f.TupleReply.filled() {
+		tr, err := f.TupleReply.marshal(uint16(ctaTupleReply))
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, tr)
 	}
-	attrs[1] = tr
 
 	// Optional attributes appended to the list when filled
 	if f.Timeout != 0 {
