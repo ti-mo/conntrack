@@ -460,7 +460,7 @@ func TestAttributeCounters(t *testing.T) {
 
 			assert.EqualError(t, ctr.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, ctaUnspec, ctaCountersOrigReplyCat))
 			assert.EqualError(t, ctr.unmarshal(nfaNotNested), errors.Wrap(errNotNested, opUnCounter).Error())
-			assert.EqualError(t, ctr.unmarshal(nfaNestedNoChildren), fmt.Sprintf(errExactChildren, 2, ctaCountersOrigReplyCat))
+			assert.EqualError(t, ctr.unmarshal(nfaNestedNoChildren), errors.Wrap(errNeedChildren, opUnCounter).Error())
 
 			nfaCounter := netfilter.Attribute{
 				Type:   uint16(at),
