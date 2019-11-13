@@ -32,5 +32,4 @@ const (
 	errWorkerReceive      = "netlink.Receive error in listenWorker %d, exiting"
 	errAttributeWrongType = "attribute type '%d' is not a %s"
 	errAttributeChild     = "child Type '%d' unknown for attribute type %s"
-	errExactChildren      = "need exactly %d child attributes for attribute type %s"
 )
