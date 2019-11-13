@@ -129,6 +129,9 @@ const (
 	ctaCountersUnspec  counterType = iota // CTA_COUNTERS_UNSPEC
 	ctaCountersPackets                    // CTA_COUNTERS_PACKETS
 	ctaCountersBytes                      // CTA_COUNTERS_BYTES
+	_                                     // CTA_COUNTERS32_PACKETS, old 32bit counters, unused
+	_                                     // CTA_COUNTERS32_BYTES, old 32bit counters, unused
+	ctaCountersPad                        // CTA_COUNTERS_PAD
 )
 
 // timestampType describes the type of timestamp in this container.
