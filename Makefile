@@ -21,11 +21,12 @@ testv:
 	go test -v -race ./...
 
 .PHONY: modprobe
+kmods = nf_nat nf_conntrack xt_conntrack xt_MASQUERADE
 modprobe:
 ifeq ($(shell id -u),0)
-	-modprobe -a nf_conntrack nf_conntrack_ipv4 nf_conntrack_ipv6
+	-modprobe -a $(kmods)
 else
-	-sudo modprobe -a nf_conntrack nf_conntrack_ipv4 nf_conntrack_ipv6
+	-sudo modprobe -a $(kmods)
 endif
 
 .PHONY: integration
