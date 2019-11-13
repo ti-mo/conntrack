@@ -86,7 +86,9 @@ func TestConnListen(t *testing.T) {
 		// Validate update event attributes
 		assert.Equal(t, EventUpdate, re.Type)
 		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
-		assert.Equal(t, f.Timeout, re.Flow.Timeout, "timeout")
+
+		// Compare the timeout on the connection, but within a 2-second window.
+		assert.GreaterOrEqual(t, re.Flow.Timeout, f.Timeout - 2, "timeout")
 	}
 
 	// Generate an event to unblock the listen worker goroutine
