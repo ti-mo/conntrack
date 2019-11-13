@@ -474,6 +474,10 @@ func TestAttributeCounters(t *testing.T) {
 						Type: uint16(ctaCountersPackets),
 						Data: make([]byte, 8),
 					},
+					{
+						Type: uint16(ctaCountersPad),
+						Data: make([]byte, 8),
+					},
 				},
 			}
 
