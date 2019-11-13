@@ -212,7 +212,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	require.NoError(t, err, "creating flow")
 
 	// Increase the flow's timeout from 120 in NewFlow().
-	f.Timeout = 240
+	f.Timeout = 210
 
 	err = c.Update(f)
 	require.NoError(t, err, "updating flow")
@@ -220,8 +220,42 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	flows, err := c.Dump()
 	require.NoError(t, err, "dumping table")
 
-	if got := flows[0].Timeout; !(got > 120) {
-		t.Fatalf("unexpected updated flow:\n- want: > 120\n-  got: %d", got)
+	if got := flows[0].Timeout; !(got > 200) {
+		t.Fatalf("unexpected updated flow:\n- want: > 200\n-  got: %d", got)
+	}
+
+	// Update the flow using only the TupleReply.
+	// The kernel allows an existing flow to be updated
+	// using only the TupleReply.
+	fNoOrig := f
+	fNoOrig.TupleOrig = Tuple{}
+	fNoOrig.Timeout = 310
+
+	err = c.Update(fNoOrig)
+	require.NoError(t, err, "updating flow without TupleOrig")
+
+	flows, err = c.Dump()
+	require.NoError(t, err, "dumping table")
+
+	if got := flows[0].Timeout; !(got > 300) {
+		t.Fatalf("unexpected updated flow:\n- want: > 300\n-  got: %d", got)
+	}
+
+	// Update the flow using only the TupleOrig.
+	// The kernel allows an existing flow to be updated
+	// using only the TupleOrig.
+	fNoReply := f
+	fNoReply.TupleReply = Tuple{}
+	fNoReply.Timeout = 410
+
+	err = c.Update(fNoReply)
+	require.NoError(t, err, "updating flow without TupleReply")
+
+	flows, err = c.Dump()
+	require.NoError(t, err, "dumping table")
+
+	if got := flows[0].Timeout; !(got > 400) {
+		t.Fatalf("unexpected updated flow:\n- want: > 400\n-  got: %d", got)
 	}
 }
 
