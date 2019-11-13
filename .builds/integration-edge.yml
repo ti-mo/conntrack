@@ -29,6 +29,9 @@ tasks:
       make integration
 
   - coverage: |
+      # Enter project directory.
+      cd conntrack
+
       # Upload coverage report.
       set +x
       /home/build/go/bin/goveralls -coverprofile cover-int.out -service sr.ht-edge -repotoken "$(< ~/.coveralls-token)" || true
