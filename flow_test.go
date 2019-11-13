@@ -546,6 +546,6 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		var f Flow
-		f.unmarshal(tests)
+		_ = f.unmarshal(tests)
 	}
 }

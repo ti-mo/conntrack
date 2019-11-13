@@ -544,6 +544,6 @@ func BenchmarkExpectUnmarshal(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		ex.unmarshal(tests)
+		_ = ex.unmarshal(tests)
 	}
 }

@@ -88,13 +88,13 @@ func TestConnListen(t *testing.T) {
 		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
 
 		// Compare the timeout on the connection, but within a 2-second window.
-		assert.GreaterOrEqual(t, re.Flow.Timeout, f.Timeout - 2, "timeout")
+		assert.GreaterOrEqual(t, re.Flow.Timeout, f.Timeout-2, "timeout")
 	}
 
 	// Generate an event to unblock the listen worker goroutine
 	go func() {
 		f.Timeout = 1
-		sc.Update(f)
+		_ = sc.Update(f)
 	}()
 
 	// Close the sockets
