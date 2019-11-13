@@ -67,10 +67,11 @@ coverhtml: cover
 	go tool cover -html=cover.out
 
 .PHONY: check
-check: test cover
-	go vet ./...
-	megacheck ./...
-	golint -set_exit_status ./...
+check: test cover lint
+
+.PHONY: lint
+lint:
+	golangci-lint run
 
 # Build integration test binary to run in Vagrant VM
 build-integration: build/integration.test

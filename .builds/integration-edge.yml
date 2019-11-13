@@ -21,6 +21,8 @@ tasks:
       # Enter project directory.
       cd conntrack
       go get -t -tags=integration -d -v ./...
+
+      make lint
       make integration
 
   - coverage: |
