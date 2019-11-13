@@ -18,6 +18,9 @@ tasks:
       go version
       uname -a
 
+      # golangci-lint installs in $HOME/bin.
+      export PATH="$HOME/bin:$PATH"
+
       # Enter project directory.
       cd conntrack
       go get -t -tags=integration -d -v ./...
