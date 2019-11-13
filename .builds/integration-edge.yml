@@ -23,9 +23,10 @@ tasks:
       go get -t -tags=integration -d -v ./...
       make integration
 
+  - coverage: |
       # Upload coverage report.
       set +x
-      /home/build/go/bin/goveralls -coverprofile cover-int.out -service sr.ht-edge -repotoken "$(< ~/.coveralls-token)"
+      /home/build/go/bin/goveralls -coverprofile cover-int.out -service sr.ht-edge -repotoken "$(< ~/.coveralls-token)" || true
 
 secrets:
 - e7382734-cbf0-41fe-bf23-a99080da2598
