@@ -464,7 +464,7 @@ func TestFlowMarshal(t *testing.T) {
 	_, err = Flow{TupleReply: flowIPPT}.marshal()
 	assert.NoError(t, err)
 
-	// Cannot marshal without orig and reply tuples empty.
+	// Cannot marshal with both orig and reply tuples empty.
 	_, err = Flow{}.marshal()
 	assert.EqualError(t, err, errNeedTuples.Error())
 

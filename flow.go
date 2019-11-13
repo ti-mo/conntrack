@@ -176,7 +176,8 @@ func (f *Flow) unmarshal(attrs []netfilter.Attribute) error {
 // marshal marshals a Flow object into a list of netfilter.Attributes.
 func (f Flow) marshal() ([]netfilter.Attribute, error) {
 
-	// Each connection sent to the kernel should have at least an original and reply tuple.
+	// Flow updates need one of TupleOrig or TupleReply,
+	// so we enforce having either of those.
 	if !f.TupleOrig.filled() && !f.TupleReply.filled() {
 		return nil, errNeedTuples
 	}
