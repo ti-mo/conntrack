@@ -21,7 +21,7 @@ testv:
 	go test -v -race ./...
 
 .PHONY: modprobe
-kmods = nf_nat nf_conntrack xt_conntrack xt_MASQUERADE
+kmods = nf_nat nf_conntrack xt_conntrack xt_MASQUERADE nf_conntrack_netlink
 modprobe:
 ifeq ($(shell id -u),0)
 	-modprobe -a $(kmods)
