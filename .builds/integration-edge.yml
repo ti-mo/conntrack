@@ -1,0 +1,31 @@
+# Integration test against a rolling/cutting-edge distribution.
+# Uploads coverage reports to coveralls.
+image: archlinux
+packages:
+  - go
+  - curl
+sources:
+  - https://github.com/ti-mo/conntrack
+environment:
+  GOTRACEBACK: "all"
+tasks:
+  - prepare: |
+      go get github.com/mattn/goveralls
+      curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.21.0
+
+  - test: |
+      # Display environment.
+      go version
+      uname -a
+
+      # Enter project directory.
+      cd conntrack
+      go get -t -tags=integration -d -v ./...
+      make integration
+
+      # Upload coverage report.
+      set +x
+      /home/build/go/bin/goveralls -coverprofile cover-int.out -service sr.ht-stable -repotoken "$(< ~/.coveralls-token)"
+
+secrets:
+- e7382734-cbf0-41fe-bf23-a99080da2598
