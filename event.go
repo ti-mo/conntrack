@@ -74,25 +74,25 @@ func (e *Event) unmarshal(nlmsg netlink.Message) error {
 
 	var err error
 
-	// Unmarshal a netlink.Message into netfilter.Attributes and Header
-	h, attrs, err := netfilter.UnmarshalNetlink(nlmsg)
+	// Obtain the nlmsg's Netfilter header and AttributeDecoder.
+	h, ad, err := netfilter.DecodeNetlink(nlmsg)
 	if err != nil {
 		return err
 	}
 
-	// Decode the header to make sure we're dealing with a Conntrack event
+	// Decode the header to make sure we're dealing with a Conntrack event.
 	err = e.Type.unmarshal(h)
 	if err != nil {
 		return err
 	}
 
-	// Unmarshal Netfilter attributes into the event's Flow or Expect entry
+	// Unmarshal Netfilter attributes into the event's Flow or Expect entry.
 	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
 		e.Flow = new(Flow)
-		err = e.Flow.unmarshal(attrs)
+		err = e.Flow.unmarshal(ad)
 	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
 		e.Expect = new(Expect)
-		err = e.Expect.unmarshal(attrs)
+		err = e.Expect.unmarshal(ad)
 	}
 
 	if err != nil {

@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,14 +10,19 @@ import (
 	"github.com/ti-mo/netfilter"
 )
 
-func TestStatusError(t *testing.T) {
+var nfaUnspecU16 = netfilter.Attribute{Type: uint16(ctaUnspec), Data: []byte{0, 0}}
 
-	nfaNested := netfilter.Attribute{Type: uint16(ctaStatus), Nested: true}
+func TestStatusError(t *testing.T) {
 
 	var s Status
 
-	assert.EqualError(t, s.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, ctaUnspec, ctaStatus))
-	assert.EqualError(t, s.unmarshal(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(emptyAttributeDecoder), errors.Wrap(errNeedSingleChild, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(mustDecodeAttribute(nfaUnspecU16)), errors.Wrap(errIncorrectSize, opUnStatus).Error())
+
+	// Exhaust the AttributeDecoder before passing to unmarshal.
+	finishedAD := mustDecodeAttribute(nfaUnspecU16)
+	finishedAD.Next()
+	assert.NoError(t, s.unmarshal(finishedAD))
 }
 
 func TestStatusMarshalTwoWay(t *testing.T) {
@@ -63,7 +67,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 
 			var s Status
 
-			err := s.unmarshal(nfa)
+			err := s.unmarshal(mustDecodeAttribute(nfa))
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -158,7 +162,7 @@ func BenchmarkStatusUnmarshalAttribute(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		nfa.Data = inputs[n%len(inputs)]
-		if err := ss.unmarshal(nfa); err != nil {
+		if err := ss.unmarshal(mustDecodeAttribute(nfa)); err != nil {
 			b.Fatal(err)
 		}
 	}

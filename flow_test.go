@@ -366,11 +366,6 @@ var (
 			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
 		},
 		{
-			name:   "error unmarshal status",
-			nfa:    netfilter.Attribute{Type: uint16(ctaStatus), Nested: true},
-			errStr: "Status unmarshal: unexpected Nested attribute",
-		},
-		{
 			name:   "error unmarshal protoinfo",
 			nfa:    netfilter.Attribute{Type: uint16(ctaProtoInfo)},
 			errStr: "ProtoInfo unmarshal: need a Nested attribute to decode this structure",
@@ -422,13 +417,15 @@ func TestFlowUnmarshal(t *testing.T) {
 	for _, tt := range corpusFlow {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
-			err := f.unmarshal(tt.attrs)
+			err := f.unmarshal(mustDecodeAttributes(tt.attrs))
 
-			if err != nil || tt.err != nil {
+			if tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.flow, f); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -439,7 +436,7 @@ func TestFlowUnmarshal(t *testing.T) {
 	for _, tt := range corpusFlowUnmarshalError {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
-			assert.EqualError(t, f.unmarshal([]netfilter.Attribute{tt.nfa}), tt.errStr)
+			assert.EqualError(t, f.unmarshal(mustDecodeAttributes([]netfilter.Attribute{tt.nfa})), tt.errStr)
 		})
 	}
 }
@@ -544,8 +541,14 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 		}
 	}
 
+	// Marshal these netfilter attributes and return netlink.AttributeDecoder.
+	ad := mustDecodeAttributes(tests)
+
 	for n := 0; n < b.N; n++ {
+		// Make a new copy of the AD to avoid reinstantiation.
+		iad := ad
+
 		var f Flow
-		_ = f.unmarshal(tests)
+		_ = f.unmarshal(iad)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 
@@ -41,41 +42,30 @@ func (t Tuple) String() string {
 }
 
 // unmarshal unmarshals a netfilter.Attribute into a Tuple.
-func (t *Tuple) unmarshal(attr netfilter.Attribute) error {
+func (t *Tuple) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	if !attr.Nested {
-		return errors.Wrap(errNotNested, opUnTup)
-	}
-
-	if len(attr.Children) < 2 {
+	if ad.Len() < 2 {
 		return errors.Wrap(errNeedChildren, opUnTup)
 	}
 
-	for _, iattr := range attr.Children {
-		switch tupleType(iattr.Type) {
+	for ad.Next() {
+		switch tupleType(ad.Type()) {
 		case ctaTupleIP:
 			var ti IPTuple
-			if err := ti.unmarshal(iattr); err != nil {
-				return err
-			}
+			ad.Nested(ti.unmarshal)
 			t.IP = ti
 		case ctaTupleProto:
 			var tp ProtoTuple
-			if err := tp.unmarshal(iattr); err != nil {
-				return err
-			}
+			ad.Nested(tp.unmarshal)
 			t.Proto = tp
 		case ctaTupleZone:
-			if len(iattr.Data) != 2 {
-				return errIncorrectSize
-			}
-			t.Zone = iattr.Uint16()
+			t.Zone = ad.Uint16()
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, attributeType(attr.Type)), opUnTup)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnTup)
 		}
 	}
 
-	return nil
+	return ad.Err()
 }
 
 // marshal marshals a Tuple to a netfilter.Attribute.
@@ -114,37 +104,31 @@ func (ipt IPTuple) filled() bool {
 // IPv4 addresses will be represented by a 4-byte net.IP, IPv6 addresses by 16-byte.
 // The net.IP object is created with the raw bytes, NOT with net.ParseIP().
 // Use IP.Equal() to compare addresses in implementations and tests.
-func (ipt *IPTuple) unmarshal(attr netfilter.Attribute) error {
+func (ipt *IPTuple) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	if tupleType(attr.Type) != ctaTupleIP {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleIP)
-	}
-
-	if !attr.Nested {
-		return errors.Wrap(errNotNested, opUnIPTup)
-	}
-
-	if len(attr.Children) != 2 {
+	if ad.Len() != 2 {
 		return errors.Wrap(errNeedChildren, opUnIPTup)
 	}
 
-	for _, iattr := range attr.Children {
+	for ad.Next() {
 
-		if len(iattr.Data) != 4 && len(iattr.Data) != 16 {
+		b := ad.Bytes()
+
+		if len(b) != 4 && len(b) != 16 {
 			return errIncorrectSize
 		}
 
-		switch ipTupleType(iattr.Type) {
+		switch ipTupleType(ad.Type()) {
 		case ctaIPv4Src:
-			ipt.SourceAddress = net.IPv4(iattr.Data[0], iattr.Data[1], iattr.Data[2], iattr.Data[3])
+			ipt.SourceAddress = net.IPv4(b[0], b[1], b[2], b[3])
 		case ctaIPv6Src:
-			ipt.SourceAddress = net.IP(iattr.Data)
+			ipt.SourceAddress = net.IP(b)
 		case ctaIPv4Dst:
-			ipt.DestinationAddress = net.IPv4(iattr.Data[0], iattr.Data[1], iattr.Data[2], iattr.Data[3])
+			ipt.DestinationAddress = net.IPv4(b[0], b[1], b[2], b[3])
 		case ctaIPv6Dst:
-			ipt.DestinationAddress = net.IP(iattr.Data)
+			ipt.DestinationAddress = net.IP(b)
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, ctaTupleIP), opUnIPTup)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnIPTup)
 		}
 	}
 
@@ -208,24 +192,16 @@ func (pt ProtoTuple) filled() bool {
 }
 
 // unmarshal unmarshals a netfilter.Attribute into a ProtoTuple.
-func (pt *ProtoTuple) unmarshal(attr netfilter.Attribute) error {
+func (pt *ProtoTuple) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	if tupleType(attr.Type) != ctaTupleProto {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaTupleProto)
-	}
-
-	if !attr.Nested {
-		return errors.Wrap(errNotNested, opUnPTup)
-	}
-
-	if len(attr.Children) == 0 {
+	if ad.Len() == 0 {
 		return errors.Wrap(errNeedSingleChild, opUnPTup)
 	}
 
-	for _, iattr := range attr.Children {
-		switch protoTupleType(iattr.Type) {
+	for ad.Next() {
+		switch protoTupleType(ad.Type()) {
 		case ctaProtoNum:
-			pt.Protocol = iattr.Data[0]
+			pt.Protocol = ad.Uint8()
 
 			if pt.Protocol == syscall.IPPROTO_ICMP {
 				pt.ICMPv4 = true
@@ -233,17 +209,17 @@ func (pt *ProtoTuple) unmarshal(attr netfilter.Attribute) error {
 				pt.ICMPv6 = true
 			}
 		case ctaProtoSrcPort:
-			pt.SourcePort = iattr.Uint16()
+			pt.SourcePort = ad.Uint16()
 		case ctaProtoDstPort:
-			pt.DestinationPort = iattr.Uint16()
+			pt.DestinationPort = ad.Uint16()
 		case ctaProtoICMPID, ctaProtoICMPv6ID:
-			pt.ICMPID = iattr.Uint16()
+			pt.ICMPID = ad.Uint16()
 		case ctaProtoICMPType, ctaProtoICMPv6Type:
-			pt.ICMPType = iattr.Data[0]
+			pt.ICMPType = ad.Uint8()
 		case ctaProtoICMPCode, ctaProtoICMPv6Code:
-			pt.ICMPCode = iattr.Data[0]
+			pt.ICMPCode = ad.Uint8()
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, ctaTupleProto), opUnPTup)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnPTup)
 		}
 	}
 

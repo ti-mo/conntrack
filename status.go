@@ -1,8 +1,7 @@
 package conntrack
 
 import (
-	"fmt"
-
+	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"github.com/ti-mo/netfilter"
 )
@@ -17,23 +16,23 @@ type Status struct {
 }
 
 // unmarshal unmarshals a netfilter.Attribute into a Status structure.
-func (s *Status) unmarshal(attr netfilter.Attribute) error {
+func (s *Status) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	if attributeType(attr.Type) != ctaStatus {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaStatus)
+	if ad.Len() != 1 {
+		return errors.Wrap(errNeedSingleChild, opUnStatus)
 	}
 
-	if attr.Nested {
-		return errors.Wrap(errNested, opUnStatus)
+	if !ad.Next() {
+		return ad.Err()
 	}
 
-	if len(attr.Data) != 4 {
+	if len(ad.Bytes()) != 4 {
 		return errors.Wrap(errIncorrectSize, opUnStatus)
 	}
 
-	s.Value = StatusFlag(attr.Uint32())
+	s.Value = StatusFlag(ad.Uint32())
 
-	return nil
+	return ad.Err()
 }
 
 // marshal marshals a Status into a netfilter.Attribute.
