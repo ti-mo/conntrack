@@ -48,18 +48,20 @@ func TestEventString(t *testing.T) {
 	ef.Flow.CountersOrig.Bytes = 42
 	ef.Flow.CountersOrig.Packets = 1
 
+	ef.Flow.CountersReply.Direction = true
+
 	ef.Flow.Labels = []byte{0xf0, 0xf0}
 	ef.Flow.LabelsMask = []byte{0xff, 0xff}
 
 	ef.Flow.Mark = 0xf000baaa
 
 	ef.Flow.SeqAdjOrig = SequenceAdjust{OffsetBefore: 80, OffsetAfter: 747811, Position: 42}
-	ef.Flow.SeqAdjReply = SequenceAdjust{OffsetBefore: 123, OffsetAfter: 456, Position: 889999}
+	ef.Flow.SeqAdjReply = SequenceAdjust{Direction: true, OffsetBefore: 123, OffsetAfter: 456, Position: 889999}
 
 	ef.Flow.SecurityContext = "selinux_t"
 
 	assert.Equal(t,
-		"[EventUnknown] (Unreplied) Timeout: 0, <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Zone 0, Acct: [orig: 1 pkts/42 B] [orig: 0 pkts/0 B], Label: <0xf0f0/0xffff>, Mark: <0xf000baaa>, SeqAdjOrig: [dir: orig, pos: 42, before: 80, after: 747811], SeqAdjReply: [dir: orig, pos: 889999, before: 123, after: 456], SecCtx: selinux_t",
+		"[EventUnknown] (Unreplied) Timeout: 0, <0, Src: 1.2.3.4:54321, Dst: [fe80::1]:80>, Zone 0, Acct: [orig: 1 pkts/42 B] [reply: 0 pkts/0 B], Label: <0xf0f0/0xffff>, Mark: <0xf000baaa>, SeqAdjOrig: [dir: orig, pos: 42, before: 80, after: 747811], SeqAdjReply: [dir: reply, pos: 889999, before: 123, after: 456], SecCtx: selinux_t",
 		ef.String())
 
 	// Event with Expect
