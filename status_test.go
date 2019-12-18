@@ -16,13 +16,13 @@ func TestStatusError(t *testing.T) {
 
 	var s Status
 
-	assert.EqualError(t, s.unmarshal(emptyAttributeDecoder), errors.Wrap(errNeedSingleChild, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnStatus).Error())
 	assert.EqualError(t, s.unmarshal(mustDecodeAttribute(nfaUnspecU16)), errors.Wrap(errIncorrectSize, opUnStatus).Error())
 
 	// Exhaust the AttributeDecoder before passing to unmarshal.
-	finishedAD := mustDecodeAttribute(nfaUnspecU16)
-	finishedAD.Next()
-	assert.NoError(t, s.unmarshal(finishedAD))
+	ad := mustDecodeAttribute(nfaUnspecU16)
+	ad.Next()
+	assert.NoError(t, s.unmarshal(ad))
 }
 
 func TestStatusMarshalTwoWay(t *testing.T) {
