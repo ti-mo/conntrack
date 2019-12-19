@@ -78,7 +78,7 @@ func TestStatsUnmarshal(t *testing.T) {
 func TestUnmarshalStatsError(t *testing.T) {
 
 	_, err := unmarshalStats([]netlink.Message{{}})
-	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 }
 
 func TestStatsExpectUnmarshal(t *testing.T) {
@@ -115,7 +115,7 @@ func TestStatsExpectUnmarshal(t *testing.T) {
 func TestUnmarshalStatsExpectError(t *testing.T) {
 
 	_, err := unmarshalStatsExpect([]netlink.Message{{}})
-	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 }
 
 func TestStatsGlobalUnmarshal(t *testing.T) {
@@ -147,5 +147,5 @@ func TestStatsGlobalUnmarshal(t *testing.T) {
 func TestUnmarshalStatsGlobalError(t *testing.T) {
 
 	_, err := unmarshalStatsGlobal(netlink.Message{})
-	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 }

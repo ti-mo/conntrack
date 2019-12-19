@@ -163,7 +163,7 @@ func TestEventUnmarshalError(t *testing.T) {
 
 	// Netlink unmarshal error
 	emptyEvent := Event{}
-	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{}), "expected at least 4 bytes in netlink message payload")
+	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{}), "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 
 	// EventType unmarshal error, blank SubsystemID
 	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{

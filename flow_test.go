@@ -477,7 +477,7 @@ func TestFlowMarshal(t *testing.T) {
 func TestUnmarshalFlowsError(t *testing.T) {
 
 	_, err := unmarshalFlows([]netlink.Message{{}})
-	assert.EqualError(t, err, "expected at least 4 bytes in netlink message payload")
+	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 
 	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute with empty data.
 	// Cause a random error in unmarshalFlows to cover error return.
