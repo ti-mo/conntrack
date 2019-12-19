@@ -1,24 +1,31 @@
 package conntrack
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/mdlayher/netlink"
+	"github.com/mdlayher/netlink/nlenc"
+	"github.com/mdlayher/netlink/nltest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
 )
 
-func TestStatusError(t *testing.T) {
+var nfaUnspecU16 = netfilter.Attribute{Type: uint16(ctaUnspec), Data: []byte{0, 0}}
 
-	nfaNested := netfilter.Attribute{Type: uint16(ctaStatus), Nested: true}
+func TestStatusError(t *testing.T) {
 
 	var s Status
 
-	assert.EqualError(t, s.unmarshal(nfaBadType), fmt.Sprintf(errAttributeWrongType, ctaUnspec, ctaStatus))
-	assert.EqualError(t, s.unmarshal(nfaNested), errors.Wrap(errNested, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnStatus).Error())
+	assert.EqualError(t, s.unmarshal(mustDecodeAttribute(nfaUnspecU16)), errors.Wrap(errIncorrectSize, opUnStatus).Error())
+
+	// Exhaust the AttributeDecoder before passing to unmarshal.
+	ad := mustDecodeAttribute(nfaUnspecU16)
+	ad.Next()
+	assert.NoError(t, s.unmarshal(ad))
 }
 
 func TestStatusMarshalTwoWay(t *testing.T) {
@@ -63,7 +70,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 
 			var s Status
 
-			err := s.unmarshal(nfa)
+			err := s.unmarshal(mustDecodeAttribute(nfa))
 			if err != nil || tt.err != nil {
 				require.Error(t, err)
 				require.EqualError(t, tt.err, err.Error())
@@ -147,18 +154,25 @@ func TestStatusString(t *testing.T) {
 }
 
 func BenchmarkStatusUnmarshalAttribute(b *testing.B) {
-	inputs := [][]byte{
-		{0x00, 0x00, 0x00, 0x01}, {0x00, 0x00, 0x00, 0x02}, {0x00, 0x00, 0x00, 0x03}, {0x00, 0x00, 0x00, 0x04},
-		{0x00, 0x00, 0x00, 0x05}, {0x00, 0x00, 0x00, 0x06}, {0x00, 0x00, 0x00, 0x07}, {0x00, 0x00, 0x00, 0x08},
+
+	var ads []netlink.AttributeDecoder
+	for i := 1; i <= 8; i++ {
+		nla := netlink.Attribute{Data: nlenc.Uint32Bytes(uint32(i))}
+		ad, err := netfilter.NewAttributeDecoder(nltest.MustMarshalAttributes([]netlink.Attribute{nla}))
+		if err != nil {
+			b.Error(err)
+		}
+		ads = append(ads, *ad)
 	}
 
 	var ss Status
-	var nfa netfilter.Attribute
-	nfa.Type = uint16(ctaStatus)
+	var ad netlink.AttributeDecoder
+	adl := len(ads)
 
 	for n := 0; n < b.N; n++ {
-		nfa.Data = inputs[n%len(inputs)]
-		if err := ss.unmarshal(nfa); err != nil {
+		// Make a fresh copy of the AttributeDecoder.
+		ad = ads[n%adl]
+		if err := ss.unmarshal(&ad); err != nil {
 			b.Fatal(err)
 		}
 	}

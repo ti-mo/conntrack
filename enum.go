@@ -295,3 +295,10 @@ const (
 )
 
 // enum ctattr_natseq is unused in the kernel source
+
+// Unused unspec constants.
+var _ = []uint8{
+	uint8(ctaHelpUnspec), uint8(ctaCountersUnspec), uint8(ctaTimestampUnspec),
+	uint8(ctaSecCtxUnspec), uint8(ctaProtoInfoTCPUnspec), uint8(ctaProtoInfoDCCPUnspec),
+	uint8(ctaProtoInfoSCTPUnspec), uint8(ctaSeqAdjUnspec), uint8(ctaSynProxyUnspec),
+}

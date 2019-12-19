@@ -18,13 +18,11 @@ import (
 var (
 	// Template attribute with Nested disabled
 	attrDefault = netfilter.Attribute{Nested: false}
-	// Attribute with random, unused type 65535
-	attrUnknown = netfilter.Attribute{Type: 0xFFFF}
+	// Attribute with random, unused type 16383
+	attrUnknown = netfilter.Attribute{Type: 0x3FFF}
 	// Nested structure of attributes with random, unused type 65535
 	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true,
 		Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
-	// Tuple attribute without Nested flag
-	attrTupleNotNested = netfilter.Attribute{Type: uint16(ctaTupleOrig)}
 	// Tuple attribute with Nested flag
 	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true, Children: []netfilter.Attribute{attrDefault}}
 )
@@ -38,7 +36,7 @@ var ipTupleTests = []struct {
 	{
 		name: "correct ipv4 tuple",
 		nfa: netfilter.Attribute{
-			Type:   0x1,
+			Type:   uint16(ctaTupleIP),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
@@ -61,7 +59,7 @@ var ipTupleTests = []struct {
 	{
 		name: "correct ipv6 tuple",
 		nfa: netfilter.Attribute{
-			Type:   0x1,
+			Type:   uint16(ctaTupleIP),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
@@ -88,17 +86,9 @@ var ipTupleTests = []struct {
 		},
 	},
 	{
-		name: "error nested flag not set on attribute",
-		nfa: netfilter.Attribute{
-			Type:   0x1,
-			Nested: false,
-		},
-		err: errors.Wrap(errNotNested, opUnIPTup),
-	},
-	{
 		name: "error incorrect amount of children",
 		nfa: netfilter.Attribute{
-			Type:     0x1,
+			Type:     uint16(ctaTupleIP),
 			Nested:   true,
 			Children: []netfilter.Attribute{attrDefault},
 		},
@@ -107,7 +97,7 @@ var ipTupleTests = []struct {
 	{
 		name: "error child incorrect length",
 		nfa: netfilter.Attribute{
-			Type:   0x1,
+			Type:   uint16(ctaTupleIP),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
@@ -121,20 +111,14 @@ var ipTupleTests = []struct {
 		err: errIncorrectSize,
 	},
 	{
-		name: "error iptuple unmarshal with wrong type",
-		nfa:  attrUnknown,
-		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, ctaTupleIP),
-	},
-	{
 		name: "error iptuple unmarshal with unknown IPTupleType",
 		nfa: netfilter.Attribute{
-			// CTA_TUPLE_IP
-			Type:   0x1,
+			Type:   uint16(ctaTupleIP),
 			Nested: true,
 			Children: []netfilter.Attribute{
 				{
 					// Unknown type
-					Type: 0xFFFF,
+					Type: 0x3FFF,
 					// Correct IP address length
 					Data: []byte{0, 0, 0, 0},
 				},
@@ -142,7 +126,7 @@ var ipTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0xFFFF, ctaTupleIP), opUnIPTup),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0x3FFF), opUnIPTup),
 	},
 }
 
@@ -153,12 +137,15 @@ func TestIPTupleMarshalTwoWay(t *testing.T) {
 
 			var ipt IPTuple
 
-			err := ipt.unmarshal(tt.nfa)
-			if err != nil || tt.err != nil {
+			err := ipt.unmarshal(mustDecodeAttributes(tt.nfa.Children))
+
+			if tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.cta, ipt); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -193,8 +180,12 @@ var protoTupleTests = []struct {
 }{
 	{
 		name: "error unmarshal with wrong type",
-		nfa:  attrUnknown,
-		err:  fmt.Errorf(errAttributeWrongType, attrUnknown.Type, ctaTupleProto),
+		nfa: netfilter.Attribute{
+			Type:     uint16(ctaTupleProto),
+			Nested:   true,
+			Children: []netfilter.Attribute{attrUnknown},
+		},
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type), opUnPTup),
 	},
 	{
 		name: "error unmarshal with incorrect amount of children",
@@ -215,7 +206,7 @@ var protoTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type, ctaTupleProto), opUnPTup),
+		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type), opUnPTup),
 	},
 	{
 		name: "correct icmpv4 prototuple",
@@ -290,12 +281,15 @@ func TestProtoTupleMarshalTwoWay(t *testing.T) {
 
 			var pt ProtoTuple
 
-			err := pt.unmarshal(tt.nfa)
-			if err != nil || tt.err != nil {
+			err := pt.unmarshal(mustDecodeAttributes(tt.nfa.Children))
+
+			if tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.cta, pt); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -400,46 +394,7 @@ var tupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errIncorrectSize,
-	},
-	{
-		name: "error returned from iptuple unmarshal",
-		nfa: netfilter.Attribute{
-			// CTA_TUPLE_ORIG
-			Type:   0x1,
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					// CTA_TUPLE_IP
-					Type: 0x1,
-				},
-				// Padding element
-				attrDefault,
-			},
-		},
-		err: errors.Wrap(errNotNested, opUnIPTup),
-	},
-	{
-		name: "error returned from prototuple unmarshal",
-		nfa: netfilter.Attribute{
-			// CTA_TUPLE_ORIG
-			Type:   0x1,
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					// CTA_TUPLE_PROTO
-					Type: 0x2,
-				},
-				// Padding element
-				attrDefault,
-			},
-		},
-		err: errors.Wrap(errNotNested, opUnPTup),
-	},
-	{
-		name: "error nested flag not set on tuple",
-		nfa:  attrTupleNotNested,
-		err:  errors.Wrap(errNotNested, opUnTup),
+		err: errors.New("netlink: attribute 3 is not a uint16; length: 4"),
 	},
 	{
 		name: "error too few children",
@@ -449,7 +404,7 @@ var tupleTests = []struct {
 	{
 		name: "error unknown nested tuple type",
 		nfa:  attrTupleUnknownNested,
-		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type, ctaTupleOrig), opUnTup),
+		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type), opUnTup),
 	},
 }
 
@@ -460,12 +415,15 @@ func TestTupleMarshalTwoWay(t *testing.T) {
 
 			var tpl Tuple
 
-			err := tpl.unmarshal(tt.nfa)
-			if err != nil || tt.err != nil {
+			err := tpl.unmarshal(mustDecodeAttributes(tt.nfa.Children))
+
+			if tt.err != nil {
 				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.cta, tpl); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)

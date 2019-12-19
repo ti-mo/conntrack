@@ -273,14 +273,15 @@ func TestExpectUnmarshal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			var ex Expect
-			err := ex.unmarshal(tt.attrs)
+			err := ex.unmarshal(mustDecodeAttributes(tt.attrs))
 
-			if err != nil || tt.err != nil {
+			if tt.err != nil {
 				require.Error(t, err)
-				require.Error(t, tt.err)
 				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.exp, ex); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -291,7 +292,7 @@ func TestExpectUnmarshal(t *testing.T) {
 	for _, tt := range corpusExpectUnmarshalError {
 		t.Run(tt.name, func(t *testing.T) {
 			var ex Expect
-			assert.EqualError(t, ex.unmarshal([]netfilter.Attribute{tt.nfa}), tt.errStr)
+			assert.EqualError(t, ex.unmarshal(mustDecodeAttributes([]netfilter.Attribute{tt.nfa})), tt.errStr)
 		})
 	}
 }
@@ -395,25 +396,21 @@ func TestExpectMarshal(t *testing.T) {
 
 var corpusExpectNAT = []struct {
 	name string
-	attr netfilter.Attribute
+	attr []netfilter.Attribute
 	enat ExpectNAT
 	err  error
 }{
 	{
 		name: "simple direction, tuple unmarshal",
-		attr: netfilter.Attribute{
-			Type:   uint16(ctaExpectNAT),
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					Type: uint16(ctaExpectNATDir),
-					Data: []byte{0x00, 0x00, 0x00, 0x01},
-				},
-				{
-					Type:     uint16(ctaExpectNATTuple),
-					Nested:   true,
-					Children: nfaIPPT,
-				},
+		attr: []netfilter.Attribute{
+			{
+				Type: uint16(ctaExpectNATDir),
+				Data: []byte{0x00, 0x00, 0x00, 0x01},
+			},
+			{
+				Type:     uint16(ctaExpectNATTuple),
+				Nested:   true,
+				Children: nfaIPPT,
 			},
 		},
 		enat: ExpectNAT{
@@ -422,49 +419,9 @@ var corpusExpectNAT = []struct {
 		},
 	},
 	{
-		name: "error bad tuple",
-		attr: netfilter.Attribute{
-			Type:   uint16(ctaExpectNAT),
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					Type: uint16(ctaExpectNATDir),
-					Data: []byte{0x00, 0x00, 0x00, 0x00},
-				},
-				{
-					Type: uint16(ctaExpectNATTuple),
-				},
-			},
-		},
-		err: errors.New("Tuple unmarshal: need a Nested attribute to decode this structure"),
-	},
-	{
 		name: "error unknown type",
-		attr: netfilter.Attribute{Type: 255},
-		err:  fmt.Errorf(errAttributeWrongType, 255, ctaExpectNAT),
-	},
-	{
-		name: "error not nested",
-		attr: netfilter.Attribute{Type: uint16(ctaExpectNAT)},
-		err:  errors.Wrap(errNotNested, opUnExpectNAT),
-	},
-	{
-		name: "error no children",
-		attr: netfilter.Attribute{Type: uint16(ctaExpectNAT), Nested: true},
-		err:  errors.Wrap(errNeedSingleChild, opUnExpectNAT),
-	},
-	{
-		name: "error unknown child type",
-		attr: netfilter.Attribute{
-			Type:   uint16(ctaExpectNAT),
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					Type: 255,
-				},
-			},
-		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, 255, ctaExpectNAT), opUnExpectNAT),
+		attr: []netfilter.Attribute{{Type: 255}},
+		err:  errors.Wrap(fmt.Errorf(errAttributeChild, 255), opUnExpectNAT),
 	},
 }
 
@@ -474,14 +431,15 @@ func TestExpectNATUnmarshal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			var enat ExpectNAT
-			err := enat.unmarshal(tt.attr)
+			err := enat.unmarshal(mustDecodeAttributes(tt.attr))
 
-			if err != nil || tt.err != nil {
+			if tt.err != nil {
 				require.Error(t, err)
-				require.Error(t, tt.err)
 				require.EqualError(t, err, tt.err.Error())
 				return
 			}
+
+			require.NoError(t, err)
 
 			if diff := cmp.Diff(tt.enat, enat); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -534,7 +492,6 @@ func BenchmarkExpectUnmarshal(b *testing.B) {
 	b.ReportAllocs()
 
 	var tests []netfilter.Attribute
-	var ex Expect
 
 	// Collect all tests from corpus that aren't expected to fail
 	for _, test := range corpusExpect {
@@ -543,7 +500,14 @@ func BenchmarkExpectUnmarshal(b *testing.B) {
 		}
 	}
 
+	// Marshal these netfilter attributes and return netlink.AttributeDecoder.
+	ad := mustDecodeAttributes(tests)
+
 	for n := 0; n < b.N; n++ {
-		_ = ex.unmarshal(tests)
+		// Make a new copy of the AD to avoid reinstantiation.
+		iad := ad
+
+		var ex Expect
+		_ = ex.unmarshal(iad)
 	}
 }

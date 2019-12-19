@@ -7,7 +7,6 @@ var (
 	errConnHasListeners = errors.New("Conn has existing listeners, open another to listen on more groups")
 	errMultipartEvent   = errors.New("received multicast event with more than one Netlink message")
 
-	errNested          = errors.New("unexpected Nested attribute")
 	errNotNested       = errors.New("need a Nested attribute to decode this structure")
 	errNeedSingleChild = errors.New("need (at least) 1 child attribute")
 	errNeedChildren    = errors.New("need (at least) 2 child attributes")
@@ -27,9 +26,8 @@ var (
 )
 
 const (
-	errUnknownEventType   = "unknown event type %d"
-	errWorkerCount        = "invalid worker count %d"
-	errWorkerReceive      = "netlink.Receive error in listenWorker %d, exiting"
-	errAttributeWrongType = "attribute type '%d' is not a %s"
-	errAttributeChild     = "child Type '%d' unknown for attribute type %s"
+	errUnknownEventType = "unknown event type %d"
+	errWorkerCount      = "invalid worker count %d"
+	errWorkerReceive    = "netlink.Receive error in listenWorker %d, exiting"
+	errAttributeChild   = "unknown attribute child Type '%d'"
 )

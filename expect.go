@@ -35,34 +35,24 @@ type ExpectNAT struct {
 }
 
 // unmarshal unmarshals a netfilter.Attribute into an ExpectNAT.
-func (en *ExpectNAT) unmarshal(attr netfilter.Attribute) error {
+func (en *ExpectNAT) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	if expectType(attr.Type) != ctaExpectNAT {
-		return fmt.Errorf(errAttributeWrongType, attr.Type, ctaExpectNAT)
-	}
-
-	if !attr.Nested {
-		return errors.Wrap(errNotNested, opUnExpectNAT)
-	}
-
-	if len(attr.Children) == 0 {
+	if ad.Len() == 0 {
 		return errors.Wrap(errNeedSingleChild, opUnExpectNAT)
 	}
 
-	for _, iattr := range attr.Children {
-		switch expectNATType(iattr.Type) {
+	for ad.Next() {
+		switch expectNATType(ad.Type()) {
 		case ctaExpectNATDir:
-			en.Direction = iattr.Uint32() == 1
+			en.Direction = ad.Uint32() == 1
 		case ctaExpectNATTuple:
-			if err := en.Tuple.unmarshal(iattr); err != nil {
-				return err
-			}
+			ad.Nested(en.Tuple.unmarshal)
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, iattr.Type, ctaExpectNAT), opUnExpectNAT)
+			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnExpectNAT)
 		}
 	}
 
-	return nil
+	return ad.Err()
 }
 
 func (en ExpectNAT) marshal() (netfilter.Attribute, error) {
@@ -86,46 +76,48 @@ func (en ExpectNAT) marshal() (netfilter.Attribute, error) {
 }
 
 // unmarshal unmarshals a list of netfilter.Attributes into an Expect structure.
-func (ex *Expect) unmarshal(attrs []netfilter.Attribute) error {
+func (ex *Expect) unmarshal(ad *netlink.AttributeDecoder) error {
 
-	for _, attr := range attrs {
-
-		switch at := expectType(attr.Type); at {
-
+	for ad.Next() {
+		switch at := expectType(ad.Type()); at {
 		case ctaExpectMaster:
-			if err := ex.TupleMaster.unmarshal(attr); err != nil {
-				return err
+			if !nestedFlag(ad.TypeFlags()) {
+				return errors.Wrap(errNotNested, opUnTup)
 			}
+			ad.Nested(ex.TupleMaster.unmarshal)
 		case ctaExpectTuple:
-			if err := ex.Tuple.unmarshal(attr); err != nil {
-				return err
+			if !nestedFlag(ad.TypeFlags()) {
+				return errors.Wrap(errNotNested, opUnTup)
 			}
+			ad.Nested(ex.Tuple.unmarshal)
 		case ctaExpectMask:
-			if err := ex.Mask.unmarshal(attr); err != nil {
-				return err
+			if !nestedFlag(ad.TypeFlags()) {
+				return errors.Wrap(errNotNested, opUnTup)
 			}
+			ad.Nested(ex.Mask.unmarshal)
 		case ctaExpectTimeout:
-			ex.Timeout = attr.Uint32()
+			ex.Timeout = ad.Uint32()
 		case ctaExpectID:
-			ex.ID = attr.Uint32()
+			ex.ID = ad.Uint32()
 		case ctaExpectHelpName:
-			ex.HelpName = string(attr.Data)
+			ex.HelpName = ad.String()
 		case ctaExpectZone:
-			ex.Zone = attr.Uint16()
+			ex.Zone = ad.Uint16()
 		case ctaExpectFlags:
-			ex.Flags = attr.Uint32()
+			ex.Flags = ad.Uint32()
 		case ctaExpectClass:
-			ex.Class = attr.Uint32()
+			ex.Class = ad.Uint32()
 		case ctaExpectNAT:
-			if err := ex.NAT.unmarshal(attr); err != nil {
-				return err
+			if !nestedFlag(ad.TypeFlags()) {
+				return errors.Wrap(errNotNested, opUnExpectNAT)
 			}
+			ad.Nested(ex.NAT.unmarshal)
 		case ctaExpectFN:
-			ex.Function = string(attr.Data)
+			ex.Function = ad.String()
 		}
 	}
 
-	return nil
+	return ad.Err()
 }
 
 func (ex Expect) marshal() ([]netfilter.Attribute, error) {
@@ -194,12 +186,12 @@ func unmarshalExpect(nlm netlink.Message) (Expect, error) {
 
 	var ex Expect
 
-	_, nfa, err := netfilter.UnmarshalNetlink(nlm)
+	_, ad, err := netfilter.DecodeNetlink(nlm)
 	if err != nil {
 		return ex, err
 	}
 
-	err = ex.unmarshal(nfa)
+	err = ex.unmarshal(ad)
 	if err != nil {
 		return ex, err
 	}
