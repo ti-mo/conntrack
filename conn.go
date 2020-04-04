@@ -35,6 +35,25 @@ func (c *Conn) SetOption(option netlink.ConnOption, enable bool) error {
 	return c.conn.SetOption(option, enable)
 }
 
+// SetReadBuffer sets the size of the operating system's receive buffer
+// associated with the Conn.
+//
+// The default read buffer size of a socket is configured with
+// `sysctl net.core.rmem_default`. The maximum buffer size that can be set
+// without elevated privileges is `sysctl net.core.rmem_max`.
+func (c *Conn) SetReadBuffer(bytes int) error {
+	return c.conn.SetReadBuffer(bytes)
+}
+
+// SetWriteBuffer sets the size of the operating system's transmit buffer associated with the Conn.
+//
+// The default write buffer size of a socket is configured with
+// `sysctl net.core.wmem_default`. The maximum buffer size that can be set
+// without elevated privileges is `sysctl net.core.wmem_max`.
+func (c *Conn) SetWriteBuffer(bytes int) error {
+	return c.conn.SetWriteBuffer(bytes)
+}
+
 // Listen joins the Netfilter connection to a multicast group and starts a given
 // amount of Flow decoders from the Conn to the Flow channel. Returns an error channel
 // the workers will return any errors on. Any error during Flow decoding is fatal and
