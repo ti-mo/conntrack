@@ -8,6 +8,8 @@ import (
 
 	"github.com/mdlayher/netlink"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ti-mo/conntrack"
 	"github.com/ti-mo/netfilter"
 )
@@ -18,6 +20,17 @@ func TestConnDialError(t *testing.T) {
 	// to exist, so we can catch an error from Dial.
 	_, err := conntrack.Dial(&netlink.Config{NetNS: 1337})
 	assert.EqualError(t, err, "setns: bad file descriptor")
+}
+
+func TestConnBufferSizes(t *testing.T) {
+
+	c, err := conntrack.Dial(nil)
+	require.NoError(t, err, "dialing conn")
+
+	assert.NoError(t, c.SetReadBuffer(256))
+	assert.NoError(t, c.SetWriteBuffer(256))
+
+	require.NoError(t, c.Close(), "closing conn")
 }
 
 func ExampleConn_createUpdateFlow() {
