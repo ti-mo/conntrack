@@ -2,13 +2,17 @@
 # Does not upload coverage reports.
 image: debian/stable
 packages:
-  - golang
   - curl
 sources:
   - https://github.com/ti-mo/conntrack
 environment:
   GOTRACEBACK: "all"
 tasks:
+  - go: |
+      curl -sf https://dl.google.com/go/go1.12.17.linux-amd64.tar.gz -o go-linux-amd64.tar.gz
+      sudo tar -C /usr/local -xzf go-linux-amd64.tar.gz
+      echo 'export PATH="$PATH:/usr/local/go/bin"' >> ~/.buildenv
+
   - prepare: |
       go get github.com/mattn/goveralls
       curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.21.0
