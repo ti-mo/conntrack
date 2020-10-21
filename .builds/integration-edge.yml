@@ -13,13 +13,13 @@ tasks:
       go get github.com/mattn/goveralls
       curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.31.0
 
+      # golangci-lint installs in $HOME/bin.
+      echo 'export PATH="$PATH:$HOME/bin"' >> ~/.buildenv
+
   - test: |
       # Display environment.
       go version
       uname -a
-
-      # golangci-lint installs in $HOME/bin.
-      export PATH="$HOME/bin:$PATH"
 
       # Enter project directory.
       cd conntrack
@@ -29,6 +29,8 @@ tasks:
       make integration
 
   - coverage: |
+      [ ! -f "$HOME/.coveralls-token" ] && echo 'Coveralls token missing, skipping stage.' && exit 0
+
       # Enter project directory.
       cd conntrack
 
