@@ -28,7 +28,7 @@ func TestConnCreateFlows(t *testing.T) {
 	}()
 
 	// Expect empty result from empty table dump
-	de, err := c.Dump()
+	de, err := c.Dump(nil)
 	require.NoError(t, err, "dumping empty table")
 	require.Len(t, de, 0, "expecting 0-length dump from empty table")
 
@@ -55,7 +55,7 @@ func TestConnCreateFlows(t *testing.T) {
 		require.NoError(t, err, "creating IPv6 flow", i)
 	}
 
-	flows, err := c.Dump()
+	flows, err := c.Dump(nil)
 	require.NoError(t, err, "dumping table")
 
 	// Expect twice the amount of numFlows, both for IPv4 and IPv6
@@ -77,7 +77,7 @@ func TestConnFlush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Expect empty result from empty table dump
-	de, err := c.Dump()
+	de, err := c.Dump(nil)
 	require.NoError(t, err, "dumping empty table")
 	require.Len(t, de, 0, "expecting 0-length dump from empty table")
 
@@ -100,7 +100,7 @@ func TestConnFlush(t *testing.T) {
 	require.NoError(t, err, "creating IPv6 flow")
 
 	// Expect both flows to be in the table
-	flows, err := c.Dump()
+	flows, err := c.Dump(nil)
 	require.NoError(t, err, "dumping table before flush")
 	assert.Equal(t, 2, len(flows))
 
@@ -108,7 +108,7 @@ func TestConnFlush(t *testing.T) {
 	require.NoError(t, err, "flushing table")
 
 	// Expect empty table
-	flows, err = c.Dump()
+	flows, err = c.Dump(nil)
 	require.NoError(t, err, "dumping table after flush")
 	assert.Equal(t, 0, len(flows))
 }
@@ -126,7 +126,7 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err)
 
 	// Expect empty result from empty table dump
-	de, err := c.Dump()
+	de, err := c.Dump(nil)
 	require.NoError(t, err, "dumping empty table")
 	require.Len(t, de, 0, "expecting 0-length dump from empty table")
 
@@ -149,7 +149,7 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err, "creating IPv6 flow")
 
 	// Expect both flows to be in the table
-	flows, err := c.Dump()
+	flows, err := c.Dump(nil)
 	require.NoError(t, err, "dumping table before filtered flush")
 	assert.Equal(t, 2, len(flows))
 
@@ -158,7 +158,7 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err, "flushing table")
 
 	// Expect only one flow to remain in the table
-	flows, err = c.Dump()
+	flows, err = c.Dump(nil)
 	require.NoError(t, err, "dumping table after filtered flush")
 	assert.Equal(t, 1, len(flows))
 }
@@ -189,7 +189,7 @@ func TestConnCreateDeleteFlows(t *testing.T) {
 		require.NoError(t, err, "deleting flow", i)
 	}
 
-	flows, err := c.Dump()
+	flows, err := c.Dump(nil)
 	require.NoError(t, err, "dumping table")
 
 	assert.Equal(t, 0, len(flows))
@@ -217,7 +217,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	err = c.Update(f)
 	require.NoError(t, err, "updating flow")
 
-	flows, err := c.Dump()
+	flows, err := c.Dump(nil)
 	require.NoError(t, err, "dumping table")
 
 	if got := flows[0].Timeout; !(got > 200) {
@@ -234,7 +234,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	err = c.Update(fNoOrig)
 	require.NoError(t, err, "updating flow without TupleOrig")
 
-	flows, err = c.Dump()
+	flows, err = c.Dump(nil)
 	require.NoError(t, err, "dumping table")
 
 	if got := flows[0].Timeout; !(got > 300) {
@@ -251,7 +251,7 @@ func TestConnCreateUpdateFlow(t *testing.T) {
 	err = c.Update(fNoReply)
 	require.NoError(t, err, "updating flow without TupleReply")
 
-	flows, err = c.Dump()
+	flows, err = c.Dump(nil)
 	require.NoError(t, err, "dumping table")
 
 	if got := flows[0].Timeout; !(got > 400) {
@@ -308,6 +308,26 @@ func TestConnCreateGetFlow(t *testing.T) {
 	}
 }
 
+// Creates IPv4 and IPv6 flows and dumps them while zeroing the accounting counters.
+func TestDumpZero(t *testing.T) {
+	c, _, err := makeNSConn()
+	require.NoError(t, err)
+
+	f := NewFlow(17, 0, net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8"), 1234, 5678, 120, 0xff000000)
+
+	f.CountersOrig.Bytes = 1337
+	f.CountersReply.Bytes = 9001
+	require.NoError(t, c.Create(f), "creating flow")
+
+	df, err := c.Dump(&DumpOptions{
+		ZeroCounters: true,
+	})
+	require.NoError(t, err, "dumping flows (zeroing enabled)")
+
+	assert.Equal(t, df[0].CountersOrig.Bytes, uint64(0))
+	assert.Equal(t, df[0].CountersReply.Bytes, uint64(0))
+}
+
 // Creates IPv4 and IPv6 flows with connmarks and queries them using a filtered dump.
 func TestConnDumpFilter(t *testing.T) {
 
@@ -326,7 +346,7 @@ func TestConnDumpFilter(t *testing.T) {
 	}
 
 	// Expect empty result from empty table dump
-	de, err := c.DumpFilter(Filter{Mark: 0x00000000, Mask: 0xffffffff})
+	de, err := c.DumpFilter(Filter{Mark: 0x00000000, Mask: 0xffffffff}, nil)
 	require.NoError(t, err, "dumping empty table")
 	require.Len(t, de, 0, "expecting 0-length dump from empty table")
 
@@ -334,7 +354,7 @@ func TestConnDumpFilter(t *testing.T) {
 		err = c.Create(f)
 		require.NoError(t, err, "creating flow", n)
 
-		df, err := c.DumpFilter(Filter{Mark: f.Mark, Mask: f.Mark})
+		df, err := c.DumpFilter(Filter{Mark: f.Mark, Mask: f.Mark}, nil)
 		require.NoError(t, err, "dumping filtered flows", n)
 
 		assert.Len(t, df, 1)
@@ -343,7 +363,7 @@ func TestConnDumpFilter(t *testing.T) {
 	}
 
 	// Expect table to be empty at end of run
-	d, err := c.Dump()
+	d, err := c.Dump(nil)
 	require.NoError(t, err, "dumping flows")
 	assert.Len(t, d, len(flows))
 }

@@ -94,7 +94,7 @@ func ExampleConn_dumpFilter() {
 	_ = c.Create(f2)
 
 	// Dump all records in the Conntrack table that match the filter's mark/mask.
-	df, err := c.DumpFilter(conntrack.Filter{Mark: 0xff00, Mask: 0xff00})
+	df, err := c.DumpFilter(conntrack.Filter{Mark: 0xff00, Mask: 0xff00}, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
