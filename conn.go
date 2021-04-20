@@ -14,6 +14,12 @@ type Conn struct {
 	conn *netfilter.Conn
 }
 
+// DumpOptions is passed as an option to `Dump`-related methods to modify their behaviour.
+type DumpOptions struct {
+	// ZeroCounters resets all flows' counters to zero after the dump operation.
+	ZeroCounters bool
+}
+
 // Dial opens a new Netfilter Netlink connection and returns it
 // wrapped in a Conn structure that implements the Conntrack API.
 func Dial(config *netlink.Config) (*Conn, error) {
@@ -128,12 +134,16 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 
 // Dump gets all Conntrack connections from the kernel in the form of a list
 // of Flow objects.
-func (c *Conn) Dump() ([]Flow, error) {
+func (c *Conn) Dump(opts *DumpOptions) ([]Flow, error) {
+	msgType := ctGet
+	if opts != nil && opts.ZeroCounters {
+		msgType = ctGetCtrZero
+	}
 
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(ctGet),
+			MessageType: netfilter.MessageType(msgType),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.Request | netlink.Dump,
 		},
@@ -153,12 +163,16 @@ func (c *Conn) Dump() ([]Flow, error) {
 
 // DumpFilter gets all Conntrack connections from the kernel in the form of a list
 // of Flow objects, but only returns Flows matching the connmark specified in the Filter parameter.
-func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
+func (c *Conn) DumpFilter(f Filter, opts *DumpOptions) ([]Flow, error) {
+	msgType := ctGet
+	if opts != nil && opts.ZeroCounters {
+		msgType = ctGetCtrZero
+	}
 
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
-			MessageType: netfilter.MessageType(ctGet),
+			MessageType: netfilter.MessageType(msgType),
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.Request | netlink.Dump,
 		},
@@ -179,7 +193,6 @@ func (c *Conn) DumpFilter(f Filter) ([]Flow, error) {
 // DumpExpect gets all expected Conntrack expectations from the kernel in the form
 // of a list of Expect objects.
 func (c *Conn) DumpExpect() ([]Expect, error) {
-
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
