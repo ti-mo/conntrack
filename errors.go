@@ -28,6 +28,5 @@ var (
 const (
 	errUnknownEventType = "unknown event type %d"
 	errWorkerCount      = "invalid worker count %d"
-	errWorkerReceive    = "netlink.Receive error in listenWorker %d, exiting"
 	errAttributeChild   = "unknown attribute child Type '%d'"
 )

@@ -6,8 +6,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/pkg/errors"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,31 +14,18 @@ import (
 )
 
 func TestConnListen(t *testing.T) {
-
-	// Dial a send connection to Netlink in a new namespace
+	// Dial a send connection to Netlink in a new namespace.
 	sc, nsid, err := makeNSConn()
 	require.NoError(t, err)
 
-	// Create a listener connection in the same namespace
+	// Create a listener connection in the same namespace.
 	lc, err := Dial(&netlink.Config{NetNS: nsid})
 	require.NoError(t, err)
 
-	// This needs to be an unbuffered channel with a single producer worker. Multicast connections
-	// currently cannot be terminated gracefully when stuck in Receive(), so we have to inject an event
-	// ourselves, while making sure the worker exits before re-entering Receive().
+	// Subscribe to new/update conntrack events using a single worker.
 	ev := make(chan Event)
 	errChan, err := lc.Listen(ev, 1, []netfilter.NetlinkGroup{netfilter.GroupCTNew, netfilter.GroupCTUpdate})
 	require.NoError(t, err)
-
-	// Watch for listen channel errors in the background
-	go func() {
-		err, ok := <-errChan
-		if ok {
-			opErr, ok := errors.Cause(err).(*netlink.OpError)
-			require.True(t, ok)
-			require.EqualError(t, opErr.Err, "recvmsg: bad file descriptor")
-		}
-	}()
 
 	numFlows := 100
 
@@ -48,8 +33,7 @@ func TestConnListen(t *testing.T) {
 	var warn bool
 
 	for i := 1; i <= numFlows; i++ {
-
-		// Create the Flow
+		// Create the Flow.
 		f = NewFlow(
 			17, 0,
 			net.ParseIP("2a00:1450:400e:804::200e"),
@@ -59,7 +43,7 @@ func TestConnListen(t *testing.T) {
 		err = sc.Create(f)
 		require.NoError(t, err, "creating IPv6 flow", i)
 
-		// Read a new event from the channel
+		// Read a new event from the channel.
 		re := <-ev
 
 		// Validate new event attributes
@@ -75,15 +59,15 @@ func TestConnListen(t *testing.T) {
 		}
 		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
 
-		// Update the flow
+		// Update the Flow.
 		f.Timeout = 240
 		err = sc.Update(f)
 		require.NoError(t, err)
 
-		// Read an update event from the channel
+		// Read an update event from the channel.
 		re = <-ev
 
-		// Validate update event attributes
+		// Validate update event attributes.
 		assert.Equal(t, EventUpdate, re.Type)
 		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
 
@@ -91,15 +75,16 @@ func TestConnListen(t *testing.T) {
 		assert.GreaterOrEqual(t, re.Flow.Timeout, f.Timeout-2, "timeout")
 	}
 
-	// Generate an event to unblock the listen worker goroutine
-	go func() {
-		f.Timeout = 1
-		_ = sc.Update(f)
-	}()
-
-	// Close the sockets
+	// Close the sockets, interrupting any blocked listeners.
 	assert.NoError(t, lc.Close())
 	assert.NoError(t, sc.Close())
+
+	// Non-blocking read on errChan. No messages should appear when workers die.
+	select {
+	case err := <-errChan:
+		assert.NoError(t, err)
+	default:
+	}
 }
 
 func TestConnListenError(t *testing.T) {

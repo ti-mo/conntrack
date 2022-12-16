@@ -2,6 +2,7 @@ package conntrack
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
@@ -12,6 +13,8 @@ import (
 // subsystem and implements all Conntrack actions.
 type Conn struct {
 	conn *netfilter.Conn
+
+	workers sync.WaitGroup
 }
 
 // DumpOptions is passed as an option to `Dump`-related methods to modify their behaviour.
@@ -28,12 +31,21 @@ func Dial(config *netlink.Config) (*Conn, error) {
 		return nil, err
 	}
 
-	return &Conn{c}, nil
+	return &Conn{conn: c}, nil
 }
 
 // Close closes a Conn.
+//
+// If any workers were started using [Conn.Listen], blocks until all have
+// terminated.
 func (c *Conn) Close() error {
-	return c.conn.Close()
+	if err := c.conn.Close(); err != nil {
+		return err
+	}
+
+	c.workers.Wait()
+
+	return nil
 }
 
 // SetOption enables or disables a netlink socket option for the Conn.
@@ -72,8 +84,9 @@ func (c *Conn) SetWriteBuffer(bytes int) error {
 // evChan consumers need to be able to keep up with the Event producers. When the channel is full,
 // messages will pile up in the Netlink socket's buffer, putting the socket at risk of being closed
 // by the kernel when it eventually fills up.
+//
+// Closing the Conn makes all workers terminate silently.
 func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.NetlinkGroup) (chan error, error) {
-
 	if numWorkers == 0 {
 		return nil, errors.Errorf(errWorkerCount, numWorkers)
 	}
@@ -101,16 +114,29 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 
 // eventWorker is a worker function that decodes Netlink messages into Events.
 func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- error) {
-
 	var err error
 	var recv []netlink.Message
 	var ev Event
 
+	c.workers.Add(1)
+	defer c.workers.Done()
+
 	for {
-		// Receive data from the Netlink socket
+		// Receive data from the Netlink socket.
 		recv, err = c.conn.Receive()
+
+		// If the Conn gets closed while blocked in Receive(), Go's runtime poller
+		// will return an src/internal/poll.ErrFileClosing. Since we cannot match
+		// the underlying error using errors.Is(), retrieve it from the netlink.OpErr.
+		var opErr *netlink.OpError
+		if errors.As(err, &opErr) {
+			if opErr.Err.Error() == "use of closed file" {
+				return
+			}
+		}
+
 		if err != nil {
-			errChan <- errors.Wrap(err, fmt.Sprintf(errWorkerReceive, workerID))
+			errChan <- fmt.Errorf("Receive() netlink event, closing worker %d: %w", workerID, err)
 			return
 		}
 
