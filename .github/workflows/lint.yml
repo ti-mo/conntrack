@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  pull_request: {}
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        go-version: [1.18, 1.19]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+        id: go
+
+      - name: Check out Go module
+        uses: actions/checkout@v3
+
+      - name: Tidy Go module
+        run: |
+          go mod tidy
+          test -z "$(git status --porcelain)" || (echo "please run 'go mod tidy' and submit your changes"; exit 1)
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
