@@ -6,12 +6,9 @@ import (
 	"net"
 	"testing"
 
-	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/mdlayher/netlink"
 )
 
 // No meaningful integration test possible until we can figure out how
@@ -27,7 +24,6 @@ func TestConnDumpExpect(t *testing.T) {
 
 // Attempt at creating conntrack expectation from userspace.
 func TestConnCreateExpect(t *testing.T) {
-
 	c, _, err := makeNSConn()
 	require.NoError(t, err)
 
@@ -65,9 +61,5 @@ func TestConnCreateExpect(t *testing.T) {
 		Class:    0x30,
 	}
 
-	err = c.CreateExpect(ex)
-
-	opErr, ok := errors.Cause(err).(*netlink.OpError)
-	require.True(t, ok)
-	require.EqualError(t, opErr.Err, unix.EINVAL.Error())
+	require.ErrorIs(t, c.CreateExpect(ex), unix.EINVAL)
 }

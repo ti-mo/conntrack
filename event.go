@@ -31,7 +31,6 @@ const (
 
 // unmarshal unmarshals a Conntrack EventType from a Netfilter header.
 func (et *eventType) unmarshal(h netfilter.Header) error {
-
 	// Fail when the message is not a conntrack message
 	if h.SubsystemID == netfilter.NFSubsysCTNetlink {
 		switch messageType(h.MessageType) {
@@ -46,7 +45,7 @@ func (et *eventType) unmarshal(h netfilter.Header) error {
 		case ctDelete:
 			*et = EventDestroy
 		default:
-			return fmt.Errorf(errUnknownEventType, h.MessageType)
+			return fmt.Errorf("type %d: %w", h.MessageType, errUnknownEventType)
 		}
 	} else if h.SubsystemID == netfilter.NFSubsysCTNetlinkExp {
 		switch expMessageType(h.MessageType) {
@@ -55,7 +54,7 @@ func (et *eventType) unmarshal(h netfilter.Header) error {
 		case ctExpDelete:
 			*et = EventExpDestroy
 		default:
-			return fmt.Errorf(errUnknownEventType, h.MessageType)
+			return fmt.Errorf("type %d: %w", h.MessageType, errUnknownEventType)
 		}
 	} else {
 		return errNotConntrack
@@ -66,7 +65,6 @@ func (et *eventType) unmarshal(h netfilter.Header) error {
 
 // unmarshal unmarshals a Netlink message into an Event structure.
 func (e *Event) unmarshal(nlmsg netlink.Message) error {
-
 	// Make sure we don't re-use an Event structure
 	if e.Expect != nil || e.Flow != nil {
 		return errReusedEvent

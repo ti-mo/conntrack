@@ -1,10 +1,8 @@
 package conntrack
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mdlayher/netlink"
@@ -12,10 +10,19 @@ import (
 )
 
 var (
-	adEmpty, _     = netfilter.NewAttributeDecoder([]byte{})
-	adOneUnknown   = *mustDecodeAttribute(netfilter.Attribute{Type: uint16(ctaUnspec)})
-	adTwoUnknown   = *mustDecodeAttributes([]netfilter.Attribute{{Type: uint16(ctaUnspec)}, {Type: uint16(ctaUnspec)}})
-	adThreeUnknown = *mustDecodeAttributes([]netfilter.Attribute{{Type: uint16(ctaUnspec)}, {Type: uint16(ctaUnspec)}, {Type: uint16(ctaUnspec)}})
+	adEmpty, _   = netfilter.NewAttributeDecoder([]byte{})
+	adOneUnknown = *mustDecodeAttribute(netfilter.Attribute{Type: uint16(ctaUnspec)})
+	adTwoUnknown = *mustDecodeAttributes(
+		[]netfilter.Attribute{
+			{Type: uint16(ctaUnspec)},
+			{Type: uint16(ctaUnspec)},
+		})
+	adThreeUnknown = *mustDecodeAttributes(
+		[]netfilter.Attribute{
+			{Type: uint16(ctaUnspec)},
+			{Type: uint16(ctaUnspec)},
+			{Type: uint16(ctaUnspec)},
+		})
 )
 
 // mustDecodeAttribute wraps attr in a list of netfilter.Attributes and calls
@@ -47,7 +54,6 @@ func TestAttributeTypeString(t *testing.T) {
 }
 
 func TestAttributeHelper(t *testing.T) {
-
 	hlp := Helper{}
 	assert.Equal(t, false, hlp.filled())
 	assert.Equal(t, true, Helper{Info: []byte{1}}.filled())
@@ -72,18 +78,17 @@ func TestAttributeHelper(t *testing.T) {
 	assert.EqualValues(t, hlp.marshal(), nfaNameInfo)
 
 	ad := adOneUnknown
-	assert.EqualError(t, hlp.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, hlp.unmarshal(&ad), errUnknownAttribute)
 }
 
 func TestAttributeProtoInfo(t *testing.T) {
-
-	pi := ProtoInfo{}
+	var pi ProtoInfo
 	assert.Equal(t, false, pi.filled())
 	assert.Equal(t, true, ProtoInfo{DCCP: &ProtoInfoDCCP{}}.filled())
 	assert.Equal(t, true, ProtoInfo{TCP: &ProtoInfoTCP{}}.filled())
 	assert.Equal(t, true, ProtoInfo{SCTP: &ProtoInfoSCTP{}}.filled())
 
-	assert.EqualError(t, pi.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnProtoInfo).Error())
+	assert.ErrorIs(t, pi.unmarshal(adEmpty), errNeedSingleChild)
 
 	// Exhaust the AttributeDecoder before passing to unmarshal.
 	ead := mustDecodeAttribute(nfaUnspecU16)
@@ -91,7 +96,7 @@ func TestAttributeProtoInfo(t *testing.T) {
 	assert.NoError(t, pi.unmarshal(ead))
 
 	ad := adOneUnknown
-	assert.EqualError(t, pi.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, pi.unmarshal(&ad), errUnknownAttribute)
 
 	// Attempt marshal of empty ProtoInfo, expect attribute with zero children.
 	assert.Len(t, pi.marshal().Children, 0)
@@ -204,7 +209,7 @@ func TestAttributeProtoInfo(t *testing.T) {
 
 	// Attempt to unmarshal into re-used ProtoInfo
 	pi.TCP = &ProtoInfoTCP{}
-	assert.EqualError(t, pi.unmarshal(mustDecodeAttribute(nfaInfoTCP)), errReusedProtoInfo.Error())
+	assert.ErrorIs(t, pi.unmarshal(mustDecodeAttribute(nfaInfoTCP)), errReusedProtoInfo)
 }
 
 func TestProtoInfoTypeString(t *testing.T) {
@@ -218,13 +223,11 @@ func TestProtoInfoTypeString(t *testing.T) {
 }
 
 func TestAttributeProtoInfoTCP(t *testing.T) {
-
-	pit := ProtoInfoTCP{}
-
-	assert.EqualError(t, pit.unmarshal(adEmpty), errors.Wrap(errNeedChildren, opUnProtoInfoTCP).Error())
+	var pit ProtoInfoTCP
+	assert.ErrorIs(t, pit.unmarshal(adEmpty), errNeedChildren)
 
 	ad := adThreeUnknown
-	assert.EqualError(t, pit.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, pit.unmarshal(&ad), errUnknownAttribute)
 
 	nfaProtoInfoTCP := netfilter.Attribute{
 		Type:   uint16(ctaProtoInfoTCP),
@@ -256,13 +259,11 @@ func TestAttributeProtoInfoTCP(t *testing.T) {
 }
 
 func TestAttributeProtoInfoDCCP(t *testing.T) {
-
-	pid := ProtoInfoDCCP{}
-
-	assert.EqualError(t, pid.unmarshal(adEmpty), errors.Wrap(errNeedChildren, opUnProtoInfoDCCP).Error())
+	var pid ProtoInfoDCCP
+	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedChildren)
 
 	ad := adThreeUnknown
-	assert.EqualError(t, pid.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
 
 	nfaProtoInfoDCCP := netfilter.Attribute{
 		Type:   uint16(ctaProtoInfoDCCP),
@@ -286,13 +287,11 @@ func TestAttributeProtoInfoDCCP(t *testing.T) {
 }
 
 func TestAttributeProtoInfoSCTP(t *testing.T) {
-
-	pid := ProtoInfoSCTP{}
-
-	assert.EqualError(t, pid.unmarshal(adEmpty), errors.Wrap(errNeedChildren, opUnProtoInfoSCTP).Error())
+	var pid ProtoInfoSCTP
+	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedChildren)
 
 	ad := adOneUnknown
-	assert.EqualError(t, pid.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
 
 	nfaProtoInfoSCTP := netfilter.Attribute{
 		Type:   uint16(ctaProtoInfoSCTP),
@@ -316,9 +315,7 @@ func TestAttributeProtoInfoSCTP(t *testing.T) {
 }
 
 func TestAttributeCounters(t *testing.T) {
-
 	ctr := Counter{}
-
 	assert.Equal(t, false, ctr.filled())
 	assert.Equal(t, true, Counter{Packets: 1, Bytes: 1}.filled())
 
@@ -327,8 +324,7 @@ func TestAttributeCounters(t *testing.T) {
 
 	for _, at := range attrTypes {
 		t.Run(at.String(), func(t *testing.T) {
-
-			assert.EqualError(t, ctr.unmarshal(adEmpty), errors.Wrap(errNeedChildren, opUnCounter).Error())
+			assert.ErrorIs(t, ctr.unmarshal(adEmpty), errNeedChildren)
 
 			nfaCounter := netfilter.Attribute{
 				Type:   uint16(at),
@@ -351,19 +347,17 @@ func TestAttributeCounters(t *testing.T) {
 			assert.NoError(t, ctr.unmarshal(mustDecodeAttributes(nfaCounter.Children)))
 
 			ad := adTwoUnknown
-			assert.EqualError(t, ctr.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+			assert.ErrorIs(t, ctr.unmarshal(&ad), errUnknownAttribute)
 		})
 	}
 }
 
 func TestAttributeTimestamp(t *testing.T) {
-
-	ts := Timestamp{}
-
-	assert.EqualError(t, ts.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnTimestamp).Error())
+	var ts Timestamp
+	assert.ErrorIs(t, ts.unmarshal(adEmpty), errNeedSingleChild)
 
 	ad := adOneUnknown
-	assert.EqualError(t, ts.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, ts.unmarshal(&ad), errUnknownAttribute)
 
 	nfaTimestamp := netfilter.Attribute{
 		Type:   uint16(ctaTimestamp),
@@ -383,13 +377,11 @@ func TestAttributeTimestamp(t *testing.T) {
 }
 
 func TestAttributeSecCtx(t *testing.T) {
-
 	var sc Security
-
-	assert.EqualError(t, sc.unmarshal(adEmpty), errors.Wrap(errNeedChildren, opUnSecurity).Error())
+	assert.ErrorIs(t, sc.unmarshal(adEmpty), errNeedChildren)
 
 	ad := adOneUnknown
-	assert.EqualError(t, sc.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, sc.unmarshal(&ad), errUnknownAttribute)
 
 	nfaSecurity := netfilter.Attribute{
 		Type:   uint16(ctaSecCtx),
@@ -405,9 +397,7 @@ func TestAttributeSecCtx(t *testing.T) {
 }
 
 func TestAttributeSeqAdj(t *testing.T) {
-
 	sa := SequenceAdjust{}
-
 	assert.Equal(t, false, sa.filled())
 	assert.Equal(t, true, SequenceAdjust{Position: 1, OffsetBefore: 1, OffsetAfter: 1}.filled())
 
@@ -416,11 +406,10 @@ func TestAttributeSeqAdj(t *testing.T) {
 
 	for _, at := range attrTypes {
 		t.Run(at.String(), func(t *testing.T) {
-
-			assert.EqualError(t, sa.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnSeqAdj).Error())
+			assert.ErrorIs(t, sa.unmarshal(adEmpty), errNeedSingleChild)
 
 			ad := adOneUnknown
-			assert.EqualError(t, sa.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+			assert.ErrorIs(t, sa.unmarshal(&ad), errUnknownAttribute)
 
 			nfaSeqAdj := netfilter.Attribute{
 				Type:   uint16(at),
@@ -456,17 +445,16 @@ func TestAttributeSeqAdj(t *testing.T) {
 }
 
 func TestAttributeSynProxy(t *testing.T) {
-
 	sp := SynProxy{}
 	assert.Equal(t, false, sp.filled())
 	assert.Equal(t, true, SynProxy{ISN: 1}.filled())
 	assert.Equal(t, true, SynProxy{ITS: 1}.filled())
 	assert.Equal(t, true, SynProxy{TSOff: 1}.filled())
 
-	assert.EqualError(t, sp.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnSynProxy).Error())
+	assert.ErrorIs(t, sp.unmarshal(adEmpty), errNeedSingleChild)
 
 	ad := adOneUnknown
-	assert.EqualError(t, sp.unmarshal(&ad), fmt.Errorf(errAttributeChild, ctaUnspec).Error())
+	assert.ErrorIs(t, sp.unmarshal(&ad), errUnknownAttribute)
 
 	nfaSynProxy := netfilter.Attribute{
 		Type:   uint16(ctaSynProxy),

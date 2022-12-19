@@ -6,13 +6,10 @@ import (
 	"net"
 	"testing"
 
-	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/mdlayher/netlink"
 )
 
 // Create a given number of flows with a randomized component and check the amount
@@ -68,7 +65,7 @@ func TestConnCreateError(t *testing.T) {
 	require.NoError(t, err)
 
 	err = c.Create(Flow{Timeout: 0})
-	require.EqualError(t, err, errNeedTimeout.Error())
+	require.ErrorIs(t, err, errNeedTimeout)
 }
 
 func TestConnFlush(t *testing.T) {
@@ -274,7 +271,7 @@ func TestConnUpdateError(t *testing.T) {
 	f.TupleMaster = f.TupleOrig
 
 	err = c.Update(f)
-	require.EqualError(t, err, errUpdateMaster.Error())
+	require.ErrorIs(t, err, errUpdateMaster)
 }
 
 // Creates IPv4 and IPv6 flows and queries them using a simple get.
@@ -292,10 +289,7 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 	for n, f := range flows {
 		_, err := c.Get(f)
-
-		opErr, ok := errors.Cause(err).(*netlink.OpError)
-		require.True(t, ok)
-		require.EqualError(t, opErr.Err, unix.ENOENT.Error(), "get flow before creating")
+		require.ErrorIs(t, err, unix.ENOENT, "get flow before creating")
 
 		err = c.Create(f)
 		require.NoError(t, err, "creating flow", n)

@@ -4,9 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/mdlayher/netlink"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -75,12 +73,6 @@ func TestStatsUnmarshal(t *testing.T) {
 	}
 }
 
-func TestUnmarshalStatsError(t *testing.T) {
-
-	_, err := unmarshalStats([]netlink.Message{{}})
-	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
-}
-
 func TestStatsExpectUnmarshal(t *testing.T) {
 
 	nfa := []netfilter.Attribute{
@@ -112,12 +104,6 @@ func TestStatsExpectUnmarshal(t *testing.T) {
 	}
 }
 
-func TestUnmarshalStatsExpectError(t *testing.T) {
-
-	_, err := unmarshalStatsExpect([]netlink.Message{{}})
-	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
-}
-
 func TestStatsGlobalUnmarshal(t *testing.T) {
 
 	nfa := []netfilter.Attribute{
@@ -142,10 +128,4 @@ func TestStatsGlobalUnmarshal(t *testing.T) {
 	if diff := cmp.Diff(want, sg); diff != "" {
 		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
 	}
-}
-
-func TestUnmarshalStatsGlobalError(t *testing.T) {
-
-	_, err := unmarshalStatsGlobal(netlink.Message{})
-	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
 }

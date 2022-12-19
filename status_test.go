@@ -7,7 +7,6 @@ import (
 	"github.com/mdlayher/netlink"
 	"github.com/mdlayher/netlink/nlenc"
 	"github.com/mdlayher/netlink/nltest"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
@@ -16,11 +15,9 @@ import (
 var nfaUnspecU16 = netfilter.Attribute{Type: uint16(ctaUnspec), Data: []byte{0, 0}}
 
 func TestStatusError(t *testing.T) {
-
 	var s Status
-
-	assert.EqualError(t, s.unmarshal(adEmpty), errors.Wrap(errNeedSingleChild, opUnStatus).Error())
-	assert.EqualError(t, s.unmarshal(mustDecodeAttribute(nfaUnspecU16)), errors.Wrap(errIncorrectSize, opUnStatus).Error())
+	assert.ErrorIs(t, s.unmarshal(adEmpty), errNeedSingleChild)
+	assert.ErrorIs(t, s.unmarshal(mustDecodeAttribute(nfaUnspecU16)), errIncorrectSize)
 
 	// Exhaust the AttributeDecoder before passing to unmarshal.
 	ad := mustDecodeAttribute(nfaUnspecU16)
@@ -29,7 +26,6 @@ func TestStatusError(t *testing.T) {
 }
 
 func TestStatusMarshalTwoWay(t *testing.T) {
-
 	tests := []struct {
 		name   string
 		b      []byte
@@ -49,12 +45,12 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 		{
 			name: "error, byte array too short",
 			b:    []byte{0xBE, 0xEF},
-			err:  errors.Wrap(errIncorrectSize, opUnStatus),
+			err:  errIncorrectSize,
 		},
 		{
 			name: "error, byte array too long",
 			b:    []byte{0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00},
-			err:  errors.Wrap(errIncorrectSize, opUnStatus),
+			err:  errIncorrectSize,
 		},
 	}
 
@@ -72,8 +68,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 
 			err := s.unmarshal(mustDecodeAttribute(nfa))
 			if err != nil || tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
@@ -141,7 +136,8 @@ func TestStatusString(t *testing.T) {
 	full := Status{Value: 0xffffffff}
 	empty := Status{}
 
-	wantFull := "EXPECTED|SEEN_REPLY|ASSURED|CONFIRMED|SRC_NAT|DST_NAT|SEQ_ADJUST|SRC_NAT_DONE|DST_NAT_DONE|DYING|FIXED_TIMEOUT|TEMPLATE|UNTRACKED|HELPER|OFFLOAD"
+	wantFull := "EXPECTED|SEEN_REPLY|ASSURED|CONFIRMED|SRC_NAT|DST_NAT|SEQ_ADJUST|SRC_NAT_DONE|DST_NAT_DONE|" +
+		"DYING|FIXED_TIMEOUT|TEMPLATE|UNTRACKED|HELPER|OFFLOAD"
 	if want, got := wantFull, full.String(); want != got {
 		t.Errorf("unexpected string:\n- want: %s\n-  got: %s", wantFull, got)
 	}

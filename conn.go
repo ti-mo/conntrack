@@ -89,7 +89,7 @@ func (c *Conn) SetWriteBuffer(bytes int) error {
 // Closing the Conn makes all workers terminate silently.
 func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.NetlinkGroup) (chan error, error) {
 	if numWorkers == 0 {
-		return nil, errors.Errorf(errWorkerCount, numWorkers)
+		return nil, errNoWorkers
 	}
 
 	// Prevent Listen() from being called twice on the same Conn.
