@@ -1,14 +1,12 @@
 package conntrack
 
 import (
-	"fmt"
 	"net"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sys/unix"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -21,10 +19,11 @@ var (
 	// Attribute with random, unused type 16383
 	attrUnknown = netfilter.Attribute{Type: 0x3FFF}
 	// Nested structure of attributes with random, unused type 65535
-	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true,
-		Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
+	attrTupleUnknownNested = netfilter.Attribute{Type: uint16(ctaTupleOrig),
+		Nested: true, Children: []netfilter.Attribute{attrUnknown, attrUnknown}}
 	// Tuple attribute with Nested flag
-	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(ctaTupleOrig), Nested: true, Children: []netfilter.Attribute{attrDefault}}
+	attrTupleNestedOneChild = netfilter.Attribute{Type: uint16(ctaTupleOrig),
+		Nested: true, Children: []netfilter.Attribute{attrDefault}}
 )
 
 var ipTupleTests = []struct {
@@ -92,7 +91,7 @@ var ipTupleTests = []struct {
 			Nested:   true,
 			Children: []netfilter.Attribute{attrDefault},
 		},
-		err: errors.Wrap(errNeedChildren, opUnIPTup),
+		err: errNeedChildren,
 	},
 	{
 		name: "error child incorrect length",
@@ -126,22 +125,17 @@ var ipTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, 0x3FFF), opUnIPTup),
+		err: errUnknownAttribute,
 	},
 }
 
 func TestIPTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range ipTupleTests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			var ipt IPTuple
-
 			err := ipt.unmarshal(mustDecodeAttributes(tt.nfa.Children))
-
 			if tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.err.Error())
+				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
@@ -161,15 +155,13 @@ func TestIPTupleMarshalTwoWay(t *testing.T) {
 }
 
 func TestIPTupleMarshalError(t *testing.T) {
-
 	v4v6Mismatch := IPTuple{
 		SourceAddress:      net.ParseIP("1.2.3.4"),
 		DestinationAddress: net.ParseIP("::1"),
 	}
 
 	_, err := v4v6Mismatch.marshal()
-	require.Error(t, err)
-	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
+	require.ErrorIs(t, err, errBadIPTuple)
 }
 
 var protoTupleTests = []struct {
@@ -185,7 +177,7 @@ var protoTupleTests = []struct {
 			Nested:   true,
 			Children: []netfilter.Attribute{attrUnknown},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type), opUnPTup),
+		err: errUnknownAttribute,
 	},
 	{
 		name: "error unmarshal with incorrect amount of children",
@@ -193,7 +185,7 @@ var protoTupleTests = []struct {
 			Type:   uint16(ctaTupleProto),
 			Nested: true,
 		},
-		err: errors.Wrap(errNeedSingleChild, opUnPTup),
+		err: errNeedSingleChild,
 	},
 	{
 		name: "error unmarshal unknown ProtoTupleType",
@@ -206,7 +198,7 @@ var protoTupleTests = []struct {
 				attrDefault,
 			},
 		},
-		err: errors.Wrap(fmt.Errorf(errAttributeChild, attrUnknown.Type), opUnPTup),
+		err: errUnknownAttribute,
 	},
 	{
 		name: "correct icmpv4 prototuple",
@@ -276,16 +268,11 @@ var protoTupleTests = []struct {
 
 func TestProtoTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range protoTupleTests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			var pt ProtoTuple
-
 			err := pt.unmarshal(mustDecodeAttributes(tt.nfa.Children))
-
 			if tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.err.Error())
+				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
@@ -378,48 +365,24 @@ var tupleTests = []struct {
 		},
 	},
 	{
-		name: "error reply tuple with incorrect zone size",
-		nfa: netfilter.Attribute{
-			// CTA_TUPLE_REPLY
-			Type:   0x2,
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					// CTA_TUPLE_ZONE
-					Type: 0x3,
-					Data: []byte{0xAB, 0xCD, 0xEF, 0x01},
-				},
-				// Order-dependent, this is to pad the length of Children.
-				// Test should error before this attribute is parsed.
-				attrDefault,
-			},
-		},
-		err: errors.New("netlink: attribute 3 is not a uint16; length: 4"),
-	},
-	{
 		name: "error too few children",
 		nfa:  attrTupleNestedOneChild,
-		err:  errors.Wrap(errNeedChildren, opUnTup),
+		err:  errNeedChildren,
 	},
 	{
 		name: "error unknown nested tuple type",
 		nfa:  attrTupleUnknownNested,
-		err:  errors.Wrap(fmt.Errorf(errAttributeChild, attrTupleUnknownNested.Children[0].Type), opUnTup),
+		err:  errUnknownAttribute,
 	},
 }
 
 func TestTupleMarshalTwoWay(t *testing.T) {
 	for _, tt := range tupleTests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			var tpl Tuple
-
 			err := tpl.unmarshal(mustDecodeAttributes(tt.nfa.Children))
-
 			if tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.err.Error())
+				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
@@ -448,12 +411,10 @@ func TestTupleMarshalError(t *testing.T) {
 	}
 
 	_, err := ipTupleError.marshal(uint16(ctaTupleOrig))
-	require.Error(t, err)
-	require.EqualError(t, err, "IPTuple source and destination addresses must be valid and belong to the same address family")
+	require.ErrorIs(t, err, errBadIPTuple)
 }
 
 func TestTupleFilled(t *testing.T) {
-
 	// Empty Tuple
 	assert.Equal(t, false, Tuple{}.filled())
 
@@ -480,7 +441,6 @@ func TestTupleFilled(t *testing.T) {
 }
 
 func TestTupleIPv6(t *testing.T) {
-
 	var ipt IPTuple
 
 	// Uninitialized Tuple cannot be IPv6 (nor IPv4)

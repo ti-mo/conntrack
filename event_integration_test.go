@@ -93,10 +93,7 @@ func TestConnListenError(t *testing.T) {
 
 	// Too few listen workers
 	_, err = c.Listen(make(chan Event), 0, nil)
-	require.EqualError(t, err, "invalid worker count 0")
-
-	_, err = c.Listen(make(chan Event), 1, nil)
-	require.EqualError(t, err, "need one or more multicast groups to join")
+	require.ErrorIs(t, err, errNoWorkers)
 
 	// Successfully join a multicast group
 	_, err = c.Listen(make(chan Event), 1, netfilter.GroupsCT)
@@ -104,5 +101,5 @@ func TestConnListenError(t *testing.T) {
 
 	// Fail when joining another multicast group
 	_, err = c.Listen(make(chan Event), 1, netfilter.GroupsCT)
-	require.EqualError(t, err, "Conn has existing listeners, open another to listen on more groups")
+	require.ErrorIs(t, err, errConnHasListeners)
 }

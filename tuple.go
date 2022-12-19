@@ -7,16 +7,9 @@ import (
 	"syscall"
 
 	"github.com/mdlayher/netlink"
-	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 
 	"github.com/ti-mo/netfilter"
-)
-
-const (
-	opUnTup   = "Tuple unmarshal"
-	opUnIPTup = "IPTuple unmarshal"
-	opUnPTup  = "ProtoTuple unmarshal"
 )
 
 // A Tuple holds an IPTuple, ProtoTuple and a Zone.
@@ -41,15 +34,15 @@ func (t Tuple) String() string {
 	)
 }
 
-// unmarshal unmarshals a netfilter.Attribute into a Tuple.
+// unmarshal unmarshals netlink attributes into a Tuple.
 func (t *Tuple) unmarshal(ad *netlink.AttributeDecoder) error {
-
 	if ad.Len() < 2 {
-		return errors.Wrap(errNeedChildren, opUnTup)
+		return errNeedChildren
 	}
 
 	for ad.Next() {
-		switch tupleType(ad.Type()) {
+		tt := tupleType(ad.Type())
+		switch tt {
 		case ctaTupleIP:
 			var ti IPTuple
 			ad.Nested(ti.unmarshal)
@@ -61,7 +54,11 @@ func (t *Tuple) unmarshal(ad *netlink.AttributeDecoder) error {
 		case ctaTupleZone:
 			t.Zone = ad.Uint16()
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnTup)
+			return fmt.Errorf("child type %d: %w", ad.Type(), errUnknownAttribute)
+		}
+
+		if err := ad.Err(); err != nil {
+			return fmt.Errorf("unmarshal %s: %w", tt, err)
 		}
 	}
 
@@ -70,7 +67,6 @@ func (t *Tuple) unmarshal(ad *netlink.AttributeDecoder) error {
 
 // marshal marshals a Tuple to a netfilter.Attribute.
 func (t Tuple) marshal(at uint16) (netfilter.Attribute, error) {
-
 	nfa := netfilter.Attribute{Type: at, Nested: true, Children: make([]netfilter.Attribute, 2, 3)}
 
 	ipt, err := t.IP.marshal()
@@ -82,7 +78,9 @@ func (t Tuple) marshal(at uint16) (netfilter.Attribute, error) {
 	nfa.Children[1] = t.Proto.marshal()
 
 	if t.Zone != 0 {
-		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(ctaTupleZone), Data: netfilter.Uint16Bytes(t.Zone)})
+		nfa.Children = append(nfa.Children, netfilter.Attribute{
+			Type: uint16(ctaTupleZone), Data: netfilter.Uint16Bytes(t.Zone),
+		})
 	}
 
 	return nfa, nil
@@ -100,20 +98,18 @@ func (ipt IPTuple) filled() bool {
 	return len(ipt.SourceAddress) != 0 && len(ipt.DestinationAddress) != 0
 }
 
-// unmarshal unmarshals a netfilter.Attribute into an IPTuple.
+// unmarshal unmarshals netlink attributes into an IPTuple.
+//
 // IPv4 addresses will be represented by a 4-byte net.IP, IPv6 addresses by 16-byte.
 // The net.IP object is created with the raw bytes, NOT with net.ParseIP().
 // Use IP.Equal() to compare addresses in implementations and tests.
 func (ipt *IPTuple) unmarshal(ad *netlink.AttributeDecoder) error {
-
 	if ad.Len() != 2 {
-		return errors.Wrap(errNeedChildren, opUnIPTup)
+		return errNeedChildren
 	}
 
 	for ad.Next() {
-
 		b := ad.Bytes()
-
 		if len(b) != 4 && len(b) != 16 {
 			return errIncorrectSize
 		}
@@ -128,16 +124,15 @@ func (ipt *IPTuple) unmarshal(ad *netlink.AttributeDecoder) error {
 		case ctaIPv6Dst:
 			ipt.DestinationAddress = net.IP(b)
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnIPTup)
+			return fmt.Errorf("child type %d: %w", ad.Type(), errUnknownAttribute)
 		}
 	}
 
-	return nil
+	return ad.Err()
 }
 
 // marshal marshals an IPTuple to a netfilter.Attribute.
 func (ipt IPTuple) marshal() (netfilter.Attribute, error) {
-
 	// If either address is not a valid IP or if they do not belong to the same address family, returns false.
 	// Taken from net.IP, for some reason this function is not exported.
 	matchAddrFamily := func(ip net.IP, x net.IP) bool {
@@ -193,9 +188,8 @@ func (pt ProtoTuple) filled() bool {
 
 // unmarshal unmarshals a netfilter.Attribute into a ProtoTuple.
 func (pt *ProtoTuple) unmarshal(ad *netlink.AttributeDecoder) error {
-
 	if ad.Len() == 0 {
-		return errors.Wrap(errNeedSingleChild, opUnPTup)
+		return errNeedSingleChild
 	}
 
 	for ad.Next() {
@@ -219,16 +213,15 @@ func (pt *ProtoTuple) unmarshal(ad *netlink.AttributeDecoder) error {
 		case ctaProtoICMPCode, ctaProtoICMPv6Code:
 			pt.ICMPCode = ad.Uint8()
 		default:
-			return errors.Wrap(fmt.Errorf(errAttributeChild, ad.Type()), opUnPTup)
+			return fmt.Errorf("child type %d: %w", ad.Type(), errUnknownAttribute)
 		}
 	}
 
-	return nil
+	return ad.Err()
 }
 
 // marshal marshals a ProtoTuple into a netfilter.Attribute.
 func (pt ProtoTuple) marshal() netfilter.Attribute {
-
 	nfa := netfilter.Attribute{Type: uint16(ctaTupleProto), Nested: true, Children: make([]netfilter.Attribute, 3, 4)}
 
 	nfa.Children[0] = netfilter.Attribute{Type: uint16(ctaProtoNum), Data: []byte{pt.Protocol}}
@@ -237,14 +230,22 @@ func (pt ProtoTuple) marshal() netfilter.Attribute {
 	case unix.IPPROTO_ICMP:
 		nfa.Children[1] = netfilter.Attribute{Type: uint16(ctaProtoICMPType), Data: []byte{pt.ICMPType}}
 		nfa.Children[2] = netfilter.Attribute{Type: uint16(ctaProtoICMPCode), Data: []byte{pt.ICMPCode}}
-		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(ctaProtoICMPID), Data: netfilter.Uint16Bytes(pt.ICMPID)})
+		nfa.Children = append(nfa.Children, netfilter.Attribute{
+			Type: uint16(ctaProtoICMPID), Data: netfilter.Uint16Bytes(pt.ICMPID),
+		})
 	case unix.IPPROTO_ICMPV6:
 		nfa.Children[1] = netfilter.Attribute{Type: uint16(ctaProtoICMPv6Type), Data: []byte{pt.ICMPType}}
 		nfa.Children[2] = netfilter.Attribute{Type: uint16(ctaProtoICMPv6Code), Data: []byte{pt.ICMPCode}}
-		nfa.Children = append(nfa.Children, netfilter.Attribute{Type: uint16(ctaProtoICMPv6ID), Data: netfilter.Uint16Bytes(pt.ICMPID)})
+		nfa.Children = append(nfa.Children, netfilter.Attribute{
+			Type: uint16(ctaProtoICMPv6ID), Data: netfilter.Uint16Bytes(pt.ICMPID),
+		})
 	default:
-		nfa.Children[1] = netfilter.Attribute{Type: uint16(ctaProtoSrcPort), Data: netfilter.Uint16Bytes(pt.SourcePort)}
-		nfa.Children[2] = netfilter.Attribute{Type: uint16(ctaProtoDstPort), Data: netfilter.Uint16Bytes(pt.DestinationPort)}
+		nfa.Children[1] = netfilter.Attribute{
+			Type: uint16(ctaProtoSrcPort), Data: netfilter.Uint16Bytes(pt.SourcePort),
+		}
+		nfa.Children[2] = netfilter.Attribute{
+			Type: uint16(ctaProtoDstPort), Data: netfilter.Uint16Bytes(pt.DestinationPort),
+		}
 	}
 
 	return nfa

@@ -78,7 +78,6 @@ var (
 		name  string
 		attrs []netfilter.Attribute
 		flow  Flow
-		err   error
 	}{
 		{
 			name: "scalar and simple binary attributes",
@@ -346,69 +345,56 @@ var (
 	}
 
 	corpusFlowUnmarshalError = []struct {
-		name   string
-		errStr string
-		nfa    netfilter.Attribute
+		name string
+		nfa  netfilter.Attribute
 	}{
 		{
-			name:   "error unmarshal original tuple",
-			nfa:    netfilter.Attribute{Type: uint16(ctaTupleOrig)},
-			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal original tuple",
+			nfa:  netfilter.Attribute{Type: uint16(ctaTupleOrig)},
 		},
 		{
-			name:   "error unmarshal reply tuple",
-			nfa:    netfilter.Attribute{Type: uint16(ctaTupleReply)},
-			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal reply tuple",
+			nfa:  netfilter.Attribute{Type: uint16(ctaTupleReply)},
 		},
 		{
-			name:   "error unmarshal master tuple",
-			nfa:    netfilter.Attribute{Type: uint16(ctaTupleMaster)},
-			errStr: "Tuple unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal master tuple",
+			nfa:  netfilter.Attribute{Type: uint16(ctaTupleMaster)},
 		},
 		{
-			name:   "error unmarshal protoinfo",
-			nfa:    netfilter.Attribute{Type: uint16(ctaProtoInfo)},
-			errStr: "ProtoInfo unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal protoinfo",
+			nfa:  netfilter.Attribute{Type: uint16(ctaProtoInfo)},
 		},
 		{
-			name:   "error unmarshal helper",
-			nfa:    netfilter.Attribute{Type: uint16(ctaHelp)},
-			errStr: "Helper unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal helper",
+			nfa:  netfilter.Attribute{Type: uint16(ctaHelp)},
 		},
 		{
-			name:   "error unmarshal original counter",
-			nfa:    netfilter.Attribute{Type: uint16(ctaCountersOrig)},
-			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal original counter",
+			nfa:  netfilter.Attribute{Type: uint16(ctaCountersOrig)},
 		},
 		{
-			name:   "error unmarshal reply counter",
-			nfa:    netfilter.Attribute{Type: uint16(ctaCountersReply)},
-			errStr: "Counter unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal reply counter",
+			nfa:  netfilter.Attribute{Type: uint16(ctaCountersReply)},
 		},
 		{
-			name:   "error unmarshal security context",
-			nfa:    netfilter.Attribute{Type: uint16(ctaSecCtx)},
-			errStr: "Security unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal security context",
+			nfa:  netfilter.Attribute{Type: uint16(ctaSecCtx)},
 		},
 		{
-			name:   "error unmarshal timestamp",
-			nfa:    netfilter.Attribute{Type: uint16(ctaTimestamp)},
-			errStr: "Timestamp unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal timestamp",
+			nfa:  netfilter.Attribute{Type: uint16(ctaTimestamp)},
 		},
 		{
-			name:   "error unmarshal original seqadj",
-			nfa:    netfilter.Attribute{Type: uint16(ctaSeqAdjOrig)},
-			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal original seqadj",
+			nfa:  netfilter.Attribute{Type: uint16(ctaSeqAdjOrig)},
 		},
 		{
-			name:   "error unmarshal reply seqadj",
-			nfa:    netfilter.Attribute{Type: uint16(ctaSeqAdjReply)},
-			errStr: "SeqAdj unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal reply seqadj",
+			nfa:  netfilter.Attribute{Type: uint16(ctaSeqAdjReply)},
 		},
 		{
-			name:   "error unmarshal synproxy",
-			nfa:    netfilter.Attribute{Type: uint16(ctaSynProxy)},
-			errStr: "SynProxy unmarshal: need a Nested attribute to decode this structure",
+			name: "error unmarshal synproxy",
+			nfa:  netfilter.Attribute{Type: uint16(ctaSynProxy)},
 		},
 	}
 )
@@ -417,15 +403,7 @@ func TestFlowUnmarshal(t *testing.T) {
 	for _, tt := range corpusFlow {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
-			err := f.unmarshal(mustDecodeAttributes(tt.attrs))
-
-			if tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.err.Error())
-				return
-			}
-
-			require.NoError(t, err)
+			require.NoError(t, f.unmarshal(mustDecodeAttributes(tt.attrs)))
 
 			if diff := cmp.Diff(tt.flow, f); diff != "" {
 				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
@@ -436,13 +414,13 @@ func TestFlowUnmarshal(t *testing.T) {
 	for _, tt := range corpusFlowUnmarshalError {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
-			assert.EqualError(t, f.unmarshal(mustDecodeAttributes([]netfilter.Attribute{tt.nfa})), tt.errStr)
+			err := f.unmarshal(mustDecodeAttributes([]netfilter.Attribute{tt.nfa}))
+			assert.ErrorIs(t, err, errNotNested)
 		})
 	}
 }
 
 func TestFlowMarshal(t *testing.T) {
-
 	// Expect a marshal without errors
 	_, err := Flow{
 		TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowIPPT,
@@ -463,32 +441,26 @@ func TestFlowMarshal(t *testing.T) {
 
 	// Cannot marshal with both orig and reply tuples empty.
 	_, err = Flow{}.marshal()
-	assert.EqualError(t, err, errNeedTuples.Error())
+	assert.ErrorIs(t, err, errNeedTuples)
 
 	// Return error from orig/reply/master IPTuple marshals
 	_, err = Flow{TupleOrig: flowBadIPPT, TupleReply: flowIPPT}.marshal()
-	assert.EqualError(t, err, errBadIPTuple.Error())
+	assert.ErrorIs(t, err, errBadIPTuple)
 	_, err = Flow{TupleOrig: flowIPPT, TupleReply: flowBadIPPT}.marshal()
-	assert.EqualError(t, err, errBadIPTuple.Error())
+	assert.ErrorIs(t, err, errBadIPTuple)
 	_, err = Flow{TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowBadIPPT}.marshal()
-	assert.EqualError(t, err, errBadIPTuple.Error())
+	assert.ErrorIs(t, err, errBadIPTuple)
 }
 
 func TestUnmarshalFlowsError(t *testing.T) {
-
-	_, err := unmarshalFlows([]netlink.Message{{}})
-	assert.EqualError(t, err, "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
-
 	// Use netfilter.MarshalNetlink to assemble a Netlink message with a single attribute with empty data.
 	// Cause a random error in unmarshalFlows to cover error return.
 	nlm, _ := netfilter.MarshalNetlink(netfilter.Header{}, []netfilter.Attribute{{Type: 1}})
-	_, err = unmarshalFlows([]netlink.Message{nlm})
-	assert.EqualError(t, err, "Tuple unmarshal: need a Nested attribute to decode this structure")
-
+	_, err := unmarshalFlows([]netlink.Message{nlm})
+	assert.ErrorIs(t, err, errNotNested)
 }
 
 func TestNewFlow(t *testing.T) {
-
 	f := NewFlow(
 		13, StatusNATMask, net.ParseIP("2a01:1450:200e:985::200e"),
 		net.ParseIP("2a12:1250:200e:123::100d"), 64732, 443, 400, 0xf00,
@@ -528,17 +500,13 @@ func TestNewFlow(t *testing.T) {
 }
 
 func BenchmarkFlowUnmarshal(b *testing.B) {
-
 	b.ReportAllocs()
 
+	// Collect all test.attrs from corpus. This amounts to unmarshaling a flow
+	// with all attributes (including extensions) sent by the kernel.
 	var tests []netfilter.Attribute
-
-	// Collect all attributes from all tests in corpus that aren't expected to fail.
-	// This amounts to unmarshaling a flow with all attributes (including extensions) sent by the kernel.
 	for _, test := range corpusFlow {
-		if test.err == nil {
-			tests = append(tests, test.attrs...)
-		}
+		tests = append(tests, test.attrs...)
 	}
 
 	// Marshal these netfilter attributes and return netlink.AttributeDecoder.

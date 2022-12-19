@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/mdlayher/netlink"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
@@ -51,7 +50,7 @@ var eventTypeTests = []struct {
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: 255,
 		},
-		err: errors.New("unknown event type 255"),
+		err: errUnknownEventType,
 	},
 	{
 		name: "conntrack exp new",
@@ -75,20 +74,17 @@ var eventTypeTests = []struct {
 			SubsystemID: netfilter.NFSubsysCTNetlinkExp,
 			MessageType: 255,
 		},
-		err: errors.New("unknown event type 255"),
+		err: errUnknownEventType,
 	},
 }
 
 func TestEventTypeUnmarshal(t *testing.T) {
 	for _, tt := range eventTypeTests {
-
 		t.Run(tt.name, func(t *testing.T) {
 			var et eventType
-
 			err := et.unmarshal(tt.nfh)
 			if err != nil || tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error())
+				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
@@ -106,7 +102,6 @@ var eventTests = []struct {
 	e       Event
 	nfh     netfilter.Header
 	nfattrs []netfilter.Attribute
-	err     error
 }{
 	{
 		name: "correct empty new flow event",
@@ -134,47 +129,35 @@ var eventTests = []struct {
 
 func TestEventUnmarshal(t *testing.T) {
 	for _, tt := range eventTests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			// Re-use netfilter's MarshalNetlink because we don't want to roll binary netlink messages by hand.
 			nlm, err := netfilter.MarshalNetlink(tt.nfh, tt.nfattrs)
 			require.NoError(t, err)
 
 			var e Event
-
-			err = e.unmarshal(nlm)
-			if err != nil || tt.err != nil {
-				require.Error(t, err)
-				require.EqualError(t, tt.err, err.Error(), "unmarshal errors do not match")
-				return
-			}
-
+			assert.NoError(t, e.unmarshal(nlm))
 			assert.Equal(t, tt.e, e, "unexpected unmarshal")
 		})
 	}
 }
 
 func TestEventUnmarshalError(t *testing.T) {
-
 	// Unmarshal into event with existing Flow
 	eventExistingFlow := Event{Flow: &Flow{}}
-	assert.EqualError(t, eventExistingFlow.unmarshal(netlink.Message{}), errReusedEvent.Error())
-
-	// Netlink unmarshal error
-	emptyEvent := Event{}
-	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{}), "unmarshaling netfilter header: expected at least 4 bytes in netlink message payload")
+	assert.ErrorIs(t, eventExistingFlow.unmarshal(netlink.Message{}), errReusedEvent)
 
 	// EventType unmarshal error, blank SubsystemID
-	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{
-		Header: netlink.Header{}, Data: []byte{1, 2, 3, 4}}), "trying to decode a non-conntrack or conntrack-exp message")
+	var emptyEvent Event
+	assert.ErrorIs(t, emptyEvent.unmarshal(netlink.Message{
+		Header: netlink.Header{},
+		Data:   []byte{1, 2, 3, 4},
+	}), errNotConntrack)
 
 	// Cause a random error during Flow unmarshal
-	assert.EqualError(t, emptyEvent.unmarshal(netlink.Message{
+	assert.ErrorIs(t, emptyEvent.unmarshal(netlink.Message{
 		Header: netlink.Header{Type: netlink.HeaderType(netfilter.NFSubsysCTNetlink) << 8},
 		Data: []byte{
 			1, 2, 3, 4, // random 4-byte nfgenmsg
 			4, 0, 1, 0, // 4-byte (empty) netlink attribute of type 1
-		}}), "Tuple unmarshal: need a Nested attribute to decode this structure")
-
+		}}), errNotNested)
 }
