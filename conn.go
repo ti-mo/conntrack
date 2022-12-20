@@ -7,6 +7,7 @@ import (
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"
 	"github.com/ti-mo/netfilter"
+	"golang.org/x/sys/unix"
 )
 
 // Conn represents a Netlink connection to the Netfilter
@@ -135,8 +136,13 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 			}
 		}
 
+		// Underlying fd has been closed, exit receive loop.
+		if errors.Is(err, unix.EBADF) {
+			return
+		}
+
 		if err != nil {
-			errChan <- fmt.Errorf("Receive() netlink event, closing worker %d: %w", workerID, err)
+			errChan <- fmt.Errorf("Receive() netlink error, closing worker %d: %w", workerID, err)
 			return
 		}
 
