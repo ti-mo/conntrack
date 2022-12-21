@@ -6,7 +6,6 @@ linters-settings:
 
 linters:
   enable:
-    - goerr113
     - gofmt
     - goimports
     - govet
