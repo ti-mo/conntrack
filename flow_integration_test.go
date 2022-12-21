@@ -194,7 +194,6 @@ func TestConnCreateDeleteFlows(t *testing.T) {
 
 // Creates a flow, updates it and checks the result.
 func TestConnCreateUpdateFlow(t *testing.T) {
-
 	c, _, err := makeNSConn()
 	require.NoError(t, err)
 

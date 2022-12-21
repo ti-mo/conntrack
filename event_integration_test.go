@@ -6,10 +6,11 @@ import (
 	"net"
 	"testing"
 
+	"github.com/mdlayher/netlink"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sys/unix"
 
-	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
 )
 
@@ -24,24 +25,33 @@ func TestConnListen(t *testing.T) {
 
 	// Subscribe to new/update conntrack events using a single worker.
 	ev := make(chan Event)
-	errChan, err := lc.Listen(ev, 1, []netfilter.NetlinkGroup{netfilter.GroupCTNew, netfilter.GroupCTUpdate})
+	errChan, err := lc.Listen(ev, 1, []netfilter.NetlinkGroup{
+		netfilter.GroupCTNew,
+		netfilter.GroupCTUpdate,
+		netfilter.GroupCTDestroy,
+	})
 	require.NoError(t, err)
 
-	numFlows := 100
+	go func() {
+		err, ok := <-errChan
+		if !ok {
+			return
+		}
+		require.NoError(t, err)
+	}()
+	defer close(errChan)
 
-	var f Flow
 	var warn bool
 
-	for i := 1; i <= numFlows; i++ {
+	ip := net.ParseIP("::f00")
+	for _, proto := range []uint8{unix.IPPROTO_TCP, unix.IPPROTO_UDP, unix.IPPROTO_DCCP, unix.IPPROTO_SCTP} {
 		// Create the Flow.
-		f = NewFlow(
-			17, 0,
-			net.ParseIP("2a00:1450:400e:804::200e"),
-			net.ParseIP("2a00:1450:400e:804::200f"),
-			1234, uint16(i), 120, 0,
+		f := NewFlow(
+			proto, 0,
+			ip, ip, 123, 123,
+			120, 0,
 		)
-		err = sc.Create(f)
-		require.NoError(t, err, "creating IPv6 flow", i)
+		require.NoError(t, sc.Create(f))
 
 		// Read a new event from the channel.
 		re := <-ev
@@ -57,34 +67,34 @@ func TestConnListen(t *testing.T) {
 		} else {
 			assert.Equal(t, EventNew, re.Type)
 		}
-		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
+		assert.Equal(t, ip, re.Flow.TupleOrig.IP.SourceAddress)
 
 		// Update the Flow.
 		f.Timeout = 240
-		err = sc.Update(f)
-		require.NoError(t, err)
+		require.NoError(t, sc.Update(f))
 
 		// Read an update event from the channel.
 		re = <-ev
 
 		// Validate update event attributes.
 		assert.Equal(t, EventUpdate, re.Type)
-		assert.Equal(t, f.TupleOrig.Proto.DestinationPort, re.Flow.TupleOrig.Proto.DestinationPort)
+		assert.Equal(t, ip, re.Flow.TupleOrig.IP.SourceAddress)
 
 		// Compare the timeout on the connection, but within a 2-second window.
 		assert.GreaterOrEqual(t, re.Flow.Timeout, f.Timeout-2, "timeout")
+
+		// Delete the Flow.
+		require.NoError(t, sc.Delete(f))
+
+		// Read destroy event from the channel.
+		re = <-ev
+		assert.Equal(t, EventDestroy, re.Type)
+		assert.Equal(t, ip, re.Flow.TupleOrig.IP.SourceAddress)
 	}
 
 	// Close the sockets, interrupting any blocked listeners.
 	assert.NoError(t, lc.Close())
 	assert.NoError(t, sc.Close())
-
-	// Non-blocking read on errChan. No messages should appear when workers die.
-	select {
-	case err := <-errChan:
-		assert.NoError(t, err)
-	default:
-	}
 }
 
 func TestConnListenError(t *testing.T) {
