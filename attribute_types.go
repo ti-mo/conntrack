@@ -135,9 +135,14 @@ type ProtoInfoTCP struct {
 
 // unmarshal unmarshals netlink attributes into a ProtoInfoTCP.
 func (tpi *ProtoInfoTCP) unmarshal(ad *netlink.AttributeDecoder) error {
-	// A ProtoInfoTCP has at least 3 members, TCP_STATE and TCP_FLAGS_ORIG/REPLY.
-	if ad.Len() < 3 {
-		return errNeedChildren
+	// Since 86d21fc74745 ("netfilter: ctnetlink: add timeout and protoinfo to
+	// destroy events"), ProtoInfoTCP is sent in conntrack events, where
+	// previously it was only present in dumps/queries.
+	//
+	// NEW and UPDATE events potentially contain all attributes, but DESTROY
+	// events only contain TCP_STATE. Expect at least one attribute here.
+	if ad.Len() == 0 {
+		return errNeedSingleChild
 	}
 
 	for ad.Next() {
@@ -193,7 +198,7 @@ type ProtoInfoDCCP struct {
 // unmarshal unmarshals netlink attributes into a ProtoInfoDCCP.
 func (dpi *ProtoInfoDCCP) unmarshal(ad *netlink.AttributeDecoder) error {
 	if ad.Len() == 0 {
-		return errNeedChildren
+		return errNeedSingleChild
 	}
 
 	for ad.Next() {
@@ -233,7 +238,7 @@ type ProtoInfoSCTP struct {
 // unmarshal unmarshals netlink attributes into a ProtoInfoSCTP.
 func (spi *ProtoInfoSCTP) unmarshal(ad *netlink.AttributeDecoder) error {
 	if ad.Len() == 0 {
-		return errNeedChildren
+		return errNeedSingleChild
 	}
 
 	for ad.Next() {

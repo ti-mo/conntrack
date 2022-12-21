@@ -419,7 +419,6 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 // SynProxy, Labels. All other attributes are immutable past the point of creation.
 // See the ctnetlink_change_conntrack() kernel function for exact behaviour.
 func (c *Conn) Update(f Flow) error {
-
 	// Kernel rejects updates with a master tuple set
 	if f.TupleMaster.filled() {
 		return errUpdateMaster
@@ -459,7 +458,6 @@ func (c *Conn) Update(f Flow) error {
 // based on the original and reply tuple. When the Flow's ID field is filled, it must match the
 // ID on the connection returned from the tuple lookup, or the delete will fail.
 func (c *Conn) Delete(f Flow) error {
-
 	attrs, err := f.marshal()
 	if err != nil {
 		return err

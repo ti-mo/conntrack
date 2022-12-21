@@ -224,7 +224,7 @@ func TestProtoInfoTypeString(t *testing.T) {
 
 func TestAttributeProtoInfoTCP(t *testing.T) {
 	var pit ProtoInfoTCP
-	assert.ErrorIs(t, pit.unmarshal(adEmpty), errNeedChildren)
+	assert.ErrorIs(t, pit.unmarshal(adEmpty), errNeedSingleChild)
 
 	ad := adThreeUnknown
 	assert.ErrorIs(t, pit.unmarshal(&ad), errUnknownAttribute)
@@ -260,7 +260,7 @@ func TestAttributeProtoInfoTCP(t *testing.T) {
 
 func TestAttributeProtoInfoDCCP(t *testing.T) {
 	var pid ProtoInfoDCCP
-	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedChildren)
+	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedSingleChild)
 
 	ad := adThreeUnknown
 	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
@@ -288,7 +288,7 @@ func TestAttributeProtoInfoDCCP(t *testing.T) {
 
 func TestAttributeProtoInfoSCTP(t *testing.T) {
 	var pid ProtoInfoSCTP
-	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedChildren)
+	assert.ErrorIs(t, pid.unmarshal(adEmpty), errNeedSingleChild)
 
 	ad := adOneUnknown
 	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
