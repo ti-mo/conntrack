@@ -571,9 +571,9 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		// Make a new copy of the AD to avoid reinstantiation.
-		iad := ad
+		iad := *ad
 
 		var f Flow
-		_ = f.unmarshal(iad)
+		_ = f.unmarshal(&iad)
 	}
 }
