@@ -1,10 +1,9 @@
 package conntrack
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ti-mo/netfilter"
@@ -183,8 +182,8 @@ var corpusExpect = []struct {
 		exp: Expect{
 			TupleMaster: Tuple{
 				IP: IPTuple{
-					SourceAddress:      []byte{127, 0, 0, 1},
-					DestinationAddress: []byte{127, 0, 0, 2},
+					SourceAddress:      netip.MustParseAddr("127.0.0.1"),
+					DestinationAddress: netip.MustParseAddr("127.0.0.2"),
 				},
 				Proto: ProtoTuple{
 					Protocol:        6,
@@ -194,8 +193,8 @@ var corpusExpect = []struct {
 			},
 			Tuple: Tuple{
 				IP: IPTuple{
-					SourceAddress:      []byte{127, 0, 0, 1},
-					DestinationAddress: []byte{127, 0, 0, 2},
+					SourceAddress:      netip.MustParseAddr("127.0.0.1"),
+					DestinationAddress: netip.MustParseAddr("127.0.0.2"),
 				},
 				Proto: ProtoTuple{
 					Protocol:        6,
@@ -204,8 +203,8 @@ var corpusExpect = []struct {
 			},
 			Mask: Tuple{
 				IP: IPTuple{
-					SourceAddress:      []byte{255, 255, 255, 255},
-					DestinationAddress: []byte{255, 255, 255, 255},
+					SourceAddress:      netip.MustParseAddr("255.255.255.255"),
+					DestinationAddress: netip.MustParseAddr("255.255.255.255"),
 				},
 				Proto: ProtoTuple{
 					Protocol:        6,
@@ -263,11 +262,8 @@ func TestExpectUnmarshal(t *testing.T) {
 	for _, tt := range corpusExpect {
 		t.Run(tt.name, func(t *testing.T) {
 			var ex Expect
-			assert.NoError(t, ex.unmarshal(mustDecodeAttributes(tt.attrs)))
-
-			if diff := cmp.Diff(tt.exp, ex); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
+			require.NoError(t, ex.unmarshal(mustDecodeAttributes(tt.attrs)))
+			assert.Equal(t, tt.exp, ex, "unexpected unmarshal")
 		})
 	}
 
@@ -355,9 +351,7 @@ func TestExpectMarshal(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, exm); diff != "" {
-		t.Fatalf("unexpected Expect marshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, exm, "unexpected Expect marshal")
 
 	// Cannot marshal without tuple/mask/master Tuples
 	_, err = Expect{}.marshal()
@@ -424,10 +418,7 @@ func TestExpectNATUnmarshal(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-
-			if diff := cmp.Diff(tt.enat, enat); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.enat, enat, "unexpected unmarshal")
 		})
 	}
 }
@@ -439,8 +430,8 @@ func TestExpectNATMarshal(t *testing.T) {
 		Direction: true,
 		Tuple: Tuple{
 			IP: IPTuple{
-				SourceAddress:      net.ParseIP("baa:baa::b"),
-				DestinationAddress: net.ParseIP("ef00:3f00::ba13"),
+				SourceAddress:      netip.MustParseAddr("baa:baa::b"),
+				DestinationAddress: netip.MustParseAddr("ef00:3f00::ba13"),
 			},
 			Proto: ProtoTuple{
 				Protocol:        13,
@@ -458,9 +449,7 @@ func TestExpectNATMarshal(t *testing.T) {
 
 	// Only verify first attribute (direction); Tuple marshal has its own tests
 	want := netfilter.Attribute{Type: uint16(ctaExpectNATDir), Data: []byte{0, 0, 0, 1}}
-	if diff := cmp.Diff(want, enm.Children[0]); diff != "" {
-		t.Fatalf("unexpected ExpectNAT marshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, enm.Children[0], "unexpected ExpectNAT marshal")
 }
 
 func TestExpectTypeString(t *testing.T) {

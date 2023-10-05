@@ -1,7 +1,7 @@
 package conntrack
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,11 +21,10 @@ func TestProtoLookup(t *testing.T) {
 }
 
 func TestEventString(t *testing.T) {
-
 	tpl := Tuple{
 		IP: IPTuple{
-			SourceAddress:      net.IPv4(1, 2, 3, 4),
-			DestinationAddress: net.ParseIP("fe80::1"),
+			SourceAddress:      netip.MustParseAddr("1.2.3.4"),
+			DestinationAddress: netip.MustParseAddr("fe80::1"),
 		},
 		Proto: ProtoTuple{
 			SourcePort:      54321,

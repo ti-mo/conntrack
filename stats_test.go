@@ -3,7 +3,7 @@ package conntrack
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ti-mo/netfilter"
 )
@@ -67,10 +67,7 @@ func TestStatsUnmarshal(t *testing.T) {
 
 	var s Stats
 	s.unmarshal(nfa)
-
-	if diff := cmp.Diff(want, s); diff != "" {
-		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, s, "unexpected unmarshal")
 }
 
 func TestStatsExpectUnmarshal(t *testing.T) {
@@ -98,10 +95,7 @@ func TestStatsExpectUnmarshal(t *testing.T) {
 
 	var se StatsExpect
 	se.unmarshal(nfa)
-
-	if diff := cmp.Diff(want, se); diff != "" {
-		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, se, "unexpected unmarshal")
 }
 
 func TestStatsGlobalUnmarshal(t *testing.T) {
@@ -124,8 +118,5 @@ func TestStatsGlobalUnmarshal(t *testing.T) {
 
 	var sg StatsGlobal
 	sg.unmarshal(nfa)
-
-	if diff := cmp.Diff(want, sg); diff != "" {
-		t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, sg, "unexpected unmarshal")
 }

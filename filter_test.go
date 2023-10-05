@@ -3,9 +3,9 @@ package conntrack
 import (
 	"testing"
 
-	"github.com/ti-mo/netfilter"
+	"github.com/stretchr/testify/assert"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/ti-mo/netfilter"
 )
 
 func TestFilterMarshal(t *testing.T) {
@@ -22,7 +22,5 @@ func TestFilterMarshal(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(fm, f.marshal()); diff != "" {
-		t.Fatalf("unexpected Filter marshal (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, fm, f.marshal(), "unexpected Filter marshal")
 }

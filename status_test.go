@@ -3,7 +3,6 @@ package conntrack
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/mdlayher/netlink"
 	"github.com/mdlayher/netlink/nlenc"
 	"github.com/mdlayher/netlink/nltest"
@@ -72,15 +71,10 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.status.Value, s.Value); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
+			require.Equal(t, tt.status.Value, s.Value, "unexpected unmarshal")
 
 			ms := s.marshal()
-			require.NoError(t, err, "error during marshal:", s)
-			if diff := cmp.Diff(nfa, ms); diff != "" {
-				t.Fatalf("unexpected marshal (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, nfa, ms, "unexpected marshal")
 		})
 	}
 }

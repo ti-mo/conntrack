@@ -3,7 +3,7 @@
 package conntrack
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,7 +61,7 @@ func TestConnStatsGlobal(t *testing.T) {
 
 	// Create IPv4 flows
 	for i := 1; i <= numFlows; i++ {
-		f = NewFlow(6, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8), 1234, uint16(i), 120, 0)
+		f = NewFlow(6, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"), 1234, uint16(i), 120, 0)
 
 		err = c.Create(f)
 		require.NoError(t, err, "creating IPv4 flow", i)
@@ -71,8 +71,8 @@ func TestConnStatsGlobal(t *testing.T) {
 	for i := 1; i <= numFlows; i++ {
 		err = c.Create(NewFlow(
 			17, 0,
-			net.ParseIP("2a00:1450:400e:804::200e"),
-			net.ParseIP("2a00:1450:400e:804::200f"),
+			netip.MustParseAddr("2a00:1450:400e:804::200e"),
+			netip.MustParseAddr("2a00:1450:400e:804::200f"),
 			1234, uint16(i), 120, 0,
 		))
 		require.NoError(t, err, "creating IPv6 flow", i)

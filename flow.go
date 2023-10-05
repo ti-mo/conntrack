@@ -2,7 +2,7 @@ package conntrack
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
 
 	"github.com/mdlayher/netlink"
 	"github.com/ti-mo/netfilter"
@@ -44,7 +44,7 @@ type Flow struct {
 // source and destination addresses. srcPort and dstPort are the source and
 // destination ports. timeout is the non-zero time-to-live of a connection in
 // seconds.
-func NewFlow(proto uint8, status StatusFlag, srcAddr, destAddr net.IP,
+func NewFlow(proto uint8, status StatusFlag, srcAddr, destAddr netip.Addr,
 	srcPort, destPort uint16, timeout, mark uint32) Flow {
 
 	var f Flow

@@ -1,13 +1,11 @@
 package conntrack
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 	"time"
 
 	"github.com/mdlayher/netlink"
-
-	"github.com/google/go-cmp/cmp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,8 +51,8 @@ var (
 	}
 	flowIPPT = Tuple{
 		IP: IPTuple{
-			SourceAddress:      net.IP{1, 2, 3, 4},
-			DestinationAddress: net.IP{4, 3, 2, 1},
+			SourceAddress:      netip.MustParseAddr("1.2.3.4"),
+			DestinationAddress: netip.MustParseAddr("4.3.2.1"),
 		},
 		Proto: ProtoTuple{
 			Protocol:        6,
@@ -64,8 +62,8 @@ var (
 	}
 	flowBadIPPT = Tuple{
 		IP: IPTuple{
-			SourceAddress:      net.IP{1, 2, 3, 4},
-			DestinationAddress: net.ParseIP("::1"),
+			SourceAddress:      netip.MustParseAddr("1.2.3.4"),
+			DestinationAddress: netip.MustParseAddr("::1"),
 		},
 		Proto: ProtoTuple{
 			Protocol:        6,
@@ -404,10 +402,7 @@ func TestFlowUnmarshal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var f Flow
 			require.NoError(t, f.unmarshal(mustDecodeAttributes(tt.attrs)))
-
-			if diff := cmp.Diff(tt.flow, f); diff != "" {
-				t.Fatalf("unexpected unmarshal (-want +got):\n%s", diff)
-			}
+			assert.Equal(t, tt.flow, f, "unexpected unmarshal")
 		})
 	}
 
@@ -519,8 +514,8 @@ func TestUnmarshalFlowsError(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	f := NewFlow(
-		13, StatusNATMask, net.ParseIP("2a01:1450:200e:985::200e"),
-		net.ParseIP("2a12:1250:200e:123::100d"), 64732, 443, 400, 0xf00,
+		13, StatusNATMask, netip.MustParseAddr("2a01:1450:200e:985::200e"),
+		netip.MustParseAddr("2a12:1250:200e:123::100d"), 64732, 443, 400, 0xf00,
 	)
 
 	want := Flow{
@@ -528,8 +523,8 @@ func TestNewFlow(t *testing.T) {
 		Timeout: 400,
 		TupleOrig: Tuple{
 			IP: IPTuple{
-				SourceAddress:      net.ParseIP("2a01:1450:200e:985::200e"),
-				DestinationAddress: net.ParseIP("2a12:1250:200e:123::100d"),
+				SourceAddress:      netip.MustParseAddr("2a01:1450:200e:985::200e"),
+				DestinationAddress: netip.MustParseAddr("2a12:1250:200e:123::100d"),
 			},
 			Proto: ProtoTuple{
 				Protocol:        13,
@@ -539,8 +534,8 @@ func TestNewFlow(t *testing.T) {
 		},
 		TupleReply: Tuple{
 			IP: IPTuple{
-				DestinationAddress: net.ParseIP("2a01:1450:200e:985::200e"),
-				SourceAddress:      net.ParseIP("2a12:1250:200e:123::100d"),
+				DestinationAddress: netip.MustParseAddr("2a01:1450:200e:985::200e"),
+				SourceAddress:      netip.MustParseAddr("2a12:1250:200e:123::100d"),
 			},
 			Proto: ProtoTuple{
 				Protocol:        13,
@@ -551,9 +546,7 @@ func TestNewFlow(t *testing.T) {
 		Mark: 0xf00,
 	}
 
-	if diff := cmp.Diff(want, f); diff != "" {
-		t.Fatalf("unexpected builder output (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, f, "unexpected builder output")
 }
 
 func BenchmarkFlowUnmarshal(b *testing.B) {
@@ -568,6 +561,8 @@ func BenchmarkFlowUnmarshal(b *testing.B) {
 
 	// Marshal these netfilter attributes and return netlink.AttributeDecoder.
 	ad := mustDecodeAttributes(tests)
+
+	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
 		// Make a new copy of the AD to avoid reinstantiation.
