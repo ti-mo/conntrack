@@ -26,6 +26,48 @@ var (
 		Nested: true, Children: []netfilter.Attribute{attrDefault}}
 )
 
+var (
+	nfaTupleIPv4 = netfilter.Attribute{
+		Type:   uint16(ctaTupleIP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				// CTA_IP_V4_SRC
+				Type: 0x1,
+				Data: []byte{0x1, 0x2, 0x3, 0x4},
+			},
+			{
+				// CTA_IP_V4_DST
+				Type: 0x2,
+				Data: []byte{0x4, 0x3, 0x2, 0x1},
+			},
+		},
+	}
+
+	nfaTupleIPv6 = netfilter.Attribute{
+		Type:   uint16(ctaTupleIP),
+		Nested: true,
+		Children: []netfilter.Attribute{
+			{
+				// CTA_IP_V6_SRC
+				Type: 0x3,
+				Data: []byte{0x0, 0x1, 0x0, 0x1,
+					0x0, 0x2, 0x0, 0x2,
+					0x0, 0x3, 0x0, 0x3,
+					0x0, 0x4, 0x0, 0x4},
+			},
+			{
+				// CTA_IP_V6_DST
+				Type: 0x4,
+				Data: []byte{0x0, 0x4, 0x0, 0x4,
+					0x0, 0x3, 0x0, 0x3,
+					0x0, 0x2, 0x0, 0x2,
+					0x0, 0x1, 0x0, 0x1},
+			},
+		},
+	}
+)
+
 var ipTupleTests = []struct {
 	name string
 	nfa  netfilter.Attribute
@@ -34,22 +76,7 @@ var ipTupleTests = []struct {
 }{
 	{
 		name: "correct ipv4 tuple",
-		nfa: netfilter.Attribute{
-			Type:   uint16(ctaTupleIP),
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					// CTA_IP_V4_SRC
-					Type: 0x1,
-					Data: []byte{0x1, 0x2, 0x3, 0x4},
-				},
-				{
-					// CTA_IP_V4_DST
-					Type: 0x2,
-					Data: []byte{0x4, 0x3, 0x2, 0x1},
-				},
-			},
-		},
+		nfa:  nfaTupleIPv4,
 		cta: IPTuple{
 			SourceAddress:      net.ParseIP("1.2.3.4"),
 			DestinationAddress: net.ParseIP("4.3.2.1"),
@@ -57,28 +84,7 @@ var ipTupleTests = []struct {
 	},
 	{
 		name: "correct ipv6 tuple",
-		nfa: netfilter.Attribute{
-			Type:   uint16(ctaTupleIP),
-			Nested: true,
-			Children: []netfilter.Attribute{
-				{
-					// CTA_IP_V6_SRC
-					Type: 0x3,
-					Data: []byte{0x0, 0x1, 0x0, 0x1,
-						0x0, 0x2, 0x0, 0x2,
-						0x0, 0x3, 0x0, 0x3,
-						0x0, 0x4, 0x0, 0x4},
-				},
-				{
-					// CTA_IP_V6_DST
-					Type: 0x4,
-					Data: []byte{0x0, 0x4, 0x0, 0x4,
-						0x0, 0x3, 0x0, 0x3,
-						0x0, 0x2, 0x0, 0x2,
-						0x0, 0x1, 0x0, 0x1},
-				},
-			},
-		},
+		nfa:  nfaTupleIPv6,
 		cta: IPTuple{
 			SourceAddress:      net.ParseIP("1:1:2:2:3:3:4:4"),
 			DestinationAddress: net.ParseIP("4:4:3:3:2:2:1:1"),
@@ -456,8 +462,24 @@ func TestTupleIPv6(t *testing.T) {
 }
 
 func TestTupleTypeString(t *testing.T) {
-
 	if tupleType(255).String() == "" {
 		t.Fatal("TupleType string representation empty - did you run `go generate`?")
 	}
+}
+
+func BenchmarkIPTupleUnmarshal(b *testing.B) {
+	bench := func(b *testing.B, attr netfilter.Attribute) {
+		b.ReportAllocs()
+		ad := mustDecodeAttributes(attr.Children)
+		b.ResetTimer()
+		for n := 0; n < b.N; n++ {
+			// Make a new copy of the AD to avoid reinstantiation.
+			iad := *ad
+			var ipt IPTuple
+			require.NoError(b, ipt.unmarshal(&iad))
+		}
+	}
+
+	b.Run("ipv4", func(b *testing.B) { bench(b, nfaTupleIPv4) })
+	b.Run("ipv6", func(b *testing.B) { bench(b, nfaTupleIPv6) })
 }
