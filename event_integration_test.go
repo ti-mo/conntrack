@@ -3,7 +3,7 @@
 package conntrack
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/mdlayher/netlink"
@@ -43,7 +43,7 @@ func TestConnListen(t *testing.T) {
 
 	var warn bool
 
-	ip := net.ParseIP("::f00")
+	ip := netip.MustParseAddr("::f00")
 	for _, proto := range []uint8{unix.IPPROTO_TCP, unix.IPPROTO_UDP, unix.IPPROTO_DCCP, unix.IPPROTO_SCTP} {
 		// Create the Flow.
 		f := NewFlow(
