@@ -422,7 +422,7 @@ func TestFlowUnmarshal(t *testing.T) {
 
 func TestFlowMarshal(t *testing.T) {
 	// Expect a marshal without errors
-	_, err := Flow{
+	attrs, err := Flow{
 		TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowIPPT,
 		ProtoInfo: ProtoInfo{TCP: &ProtoInfoTCP{State: 42}},
 		Timeout:   123, Status: Status{Value: 1234}, Mark: 0x1234, Zone: 2,
@@ -430,8 +430,65 @@ func TestFlowMarshal(t *testing.T) {
 		SeqAdjOrig:  SequenceAdjust{Position: 1, OffsetBefore: 2, OffsetAfter: 3},
 		SeqAdjReply: SequenceAdjust{Position: 5, OffsetBefore: 6, OffsetAfter: 7},
 		SynProxy:    SynProxy{ISN: 0x12345678, ITS: 0x87654321, TSOff: 0xabcdef00},
+		Labels:      []byte{0x13, 0x37},
+		LabelsMask:  []byte{0xff, 0xff},
 	}.marshal()
 	assert.NoError(t, err)
+
+	want := []netfilter.Attribute{
+		{Type: uint16(ctaTupleOrig), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaTupleIP), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaIPv4Src), Data: []byte{0x1, 0x2, 0x3, 0x4}},
+				{Type: uint16(ctaIPv4Dst), Data: []byte{0x4, 0x3, 0x2, 0x1}},
+			}},
+			{Type: uint16(ctaTupleProto), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaProtoNum), Data: []byte{0x6}},
+				{Type: uint16(ctaProtoSrcPort), Data: []byte{0xff, 0x0}},
+				{Type: uint16(ctaProtoDstPort), Data: []byte{0x0, 0xff}}}},
+		}},
+		{Type: uint16(ctaTupleReply), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaTupleIP), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaIPv4Src), Data: []byte{0x1, 0x2, 0x3, 0x4}},
+				{Type: uint16(ctaIPv4Dst), Data: []byte{0x4, 0x3, 0x2, 0x1}}}},
+			{Type: uint16(ctaTupleProto), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaProtoNum), Data: []byte{0x6}},
+				{Type: uint16(ctaProtoSrcPort), Data: []byte{0xff, 0x0}},
+				{Type: uint16(ctaProtoDstPort), Data: []byte{0x0, 0xff}}}}}},
+		{Type: uint16(ctaTimeout), Data: []byte{0x0, 0x0, 0x0, 0x7b}},
+		{Type: uint16(ctaStatus), Data: []byte{0x0, 0x0, 0x4, 0xd2}},
+		{Type: uint16(ctaMark), Data: []byte{0x0, 0x0, 0x12, 0x34}},
+		{Type: uint16(ctaZone), Data: []byte{0x0, 0x2}},
+		{Type: uint16(ctaProtoInfo), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaProtoInfoTCP), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaProtoInfoTCPState), Data: []byte{0x2a}},
+				{Type: uint16(ctaProtoInfoTCPWScaleOriginal), Data: []byte{0x0}},
+				{Type: uint16(ctaProtoInfoTCPWScaleReply), Data: []byte{0x0}}}}}},
+		{Type: uint16(ctaHelp), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaHelpName), Data: []byte{0x66, 0x74, 0x70}}}},
+		{Type: uint16(ctaTupleMaster), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaTupleIP), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaIPv4Src), Data: []byte{0x1, 0x2, 0x3, 0x4}},
+				{Type: uint16(ctaIPv4Dst), Data: []byte{0x4, 0x3, 0x2, 0x1}}}},
+			{Type: uint16(ctaTupleProto), Nested: true, Children: []netfilter.Attribute{
+				{Type: uint16(ctaProtoNum), Data: []byte{0x6}},
+				{Type: uint16(ctaProtoSrcPort), Data: []byte{0xff, 0x0}},
+				{Type: uint16(ctaProtoDstPort), Data: []byte{0x0, 0xff}}}}}},
+		{Type: uint16(ctaSeqAdjOrig), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaSeqAdjCorrectionPos), Data: []byte{0x0, 0x0, 0x0, 0x1}},
+			{Type: uint16(ctaSeqAdjOffsetBefore), Data: []byte{0x0, 0x0, 0x0, 0x2}},
+			{Type: uint16(ctaSeqAdjOffsetAfter), Data: []byte{0x0, 0x0, 0x0, 0x3}}}},
+		{Type: uint16(ctaSeqAdjReply), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaSeqAdjCorrectionPos), Data: []byte{0x0, 0x0, 0x0, 0x5}},
+			{Type: uint16(ctaSeqAdjOffsetBefore), Data: []byte{0x0, 0x0, 0x0, 0x6}},
+			{Type: uint16(ctaSeqAdjOffsetAfter), Data: []byte{0x0, 0x0, 0x0, 0x7}}}},
+		{Type: uint16(ctaSynProxy), Nested: true, Children: []netfilter.Attribute{
+			{Type: uint16(ctaSynProxyISN), Data: []byte{0x12, 0x34, 0x56, 0x78}},
+			{Type: uint16(ctaSynProxyITS), Data: []byte{0x87, 0x65, 0x43, 0x21}},
+			{Type: uint16(ctaSynProxyTSOff), Data: []byte{0xab, 0xcd, 0xef, 0x0}}}},
+		{Type: uint16(ctaLabels), Data: []byte{0x13, 0x37}},
+		{Type: uint16(ctaLabelsMask), Data: []byte{0xff, 0xff}}}
+
+	assert.Equal(t, attrs, want)
 
 	// Can marshal with either orig or reply tuple available
 	_, err = Flow{TupleOrig: flowIPPT}.marshal()
