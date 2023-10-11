@@ -244,11 +244,11 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 	}
 
 	if f.SeqAdjOrig.filled() {
-		attrs = append(attrs, f.SeqAdjOrig.marshal())
+		attrs = append(attrs, f.SeqAdjOrig.marshal(false))
 	}
 
 	if f.SeqAdjReply.filled() {
-		attrs = append(attrs, f.SeqAdjReply.marshal())
+		attrs = append(attrs, f.SeqAdjReply.marshal(true))
 	}
 
 	if f.SynProxy.filled() {

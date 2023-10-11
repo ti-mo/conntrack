@@ -426,11 +426,10 @@ func (seq *SequenceAdjust) unmarshal(ad *netlink.AttributeDecoder) error {
 }
 
 // marshal marshals a SequenceAdjust into a netfilter.Attribute.
-func (seq SequenceAdjust) marshal() netfilter.Attribute {
-
+func (seq SequenceAdjust) marshal(reply bool) netfilter.Attribute {
 	// Set orig/reply AttributeType
 	at := ctaSeqAdjOrig
-	if seq.Direction {
+	if seq.Direction || reply {
 		at = ctaSeqAdjReply
 	}
 
