@@ -439,7 +439,7 @@ func TestAttributeSeqAdj(t *testing.T) {
 				sa.Direction = false
 			}
 
-			assert.EqualValues(t, nfaSeqAdj, sa.marshal())
+			assert.EqualValues(t, nfaSeqAdj, sa.marshal(false))
 		})
 	}
 }
