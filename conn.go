@@ -154,7 +154,7 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 
 		// Decode event and send on channel
 		ev = *new(Event)
-		err := ev.unmarshal(recv[0])
+		err := ev.Unmarshal(recv[0])
 		if err != nil {
 			errChan <- err
 			return
