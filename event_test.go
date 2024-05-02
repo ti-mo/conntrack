@@ -135,7 +135,7 @@ func TestEventUnmarshal(t *testing.T) {
 			require.NoError(t, err)
 
 			var e Event
-			assert.NoError(t, e.unmarshal(nlm))
+			assert.NoError(t, e.Unmarshal(nlm))
 			assert.Equal(t, tt.e, e, "unexpected unmarshal")
 		})
 	}
@@ -144,17 +144,17 @@ func TestEventUnmarshal(t *testing.T) {
 func TestEventUnmarshalError(t *testing.T) {
 	// Unmarshal into event with existing Flow
 	eventExistingFlow := Event{Flow: &Flow{}}
-	assert.ErrorIs(t, eventExistingFlow.unmarshal(netlink.Message{}), errReusedEvent)
+	assert.ErrorIs(t, eventExistingFlow.Unmarshal(netlink.Message{}), errReusedEvent)
 
 	// EventType unmarshal error, blank SubsystemID
 	var emptyEvent Event
-	assert.ErrorIs(t, emptyEvent.unmarshal(netlink.Message{
+	assert.ErrorIs(t, emptyEvent.Unmarshal(netlink.Message{
 		Header: netlink.Header{},
 		Data:   []byte{1, 2, 3, 4},
 	}), errNotConntrack)
 
 	// Cause a random error during Flow unmarshal
-	assert.ErrorIs(t, emptyEvent.unmarshal(netlink.Message{
+	assert.ErrorIs(t, emptyEvent.Unmarshal(netlink.Message{
 		Header: netlink.Header{Type: netlink.HeaderType(netfilter.NFSubsysCTNetlink) << 8},
 		Data: []byte{
 			1, 2, 3, 4, // random 4-byte nfgenmsg
