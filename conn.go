@@ -107,6 +107,7 @@ func (c *Conn) Listen(evChan chan<- Event, numWorkers uint8, groups []netfilter.
 
 	// Start numWorkers amount of worker goroutines
 	for id := uint8(0); id < numWorkers; id++ {
+		c.workers.Add(1)
 		go c.eventWorker(id, evChan, errChan)
 	}
 
@@ -119,7 +120,6 @@ func (c *Conn) eventWorker(workerID uint8, evChan chan<- Event, errChan chan<- e
 	var recv []netlink.Message
 	var ev Event
 
-	c.workers.Add(1)
 	defer c.workers.Done()
 
 	for {
