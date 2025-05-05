@@ -229,33 +229,29 @@ func TestAttributeProtoInfoTCP(t *testing.T) {
 	ad := adThreeUnknown
 	assert.ErrorIs(t, pit.unmarshal(&ad), errUnknownAttribute)
 
-	nfaProtoInfoTCP := netfilter.Attribute{
-		Type:   uint16(ctaProtoInfoTCP),
-		Nested: true,
-		Children: []netfilter.Attribute{
-			{
-				Type: uint16(ctaProtoInfoTCPState),
-				Data: []byte{1},
-			},
-			{
-				Type: uint16(ctaProtoInfoTCPFlagsOriginal),
-				Data: []byte{0, 2},
-			},
-			{
-				Type: uint16(ctaProtoInfoTCPFlagsReply),
-				Data: []byte{0, 3},
-			},
-			{
-				Type: uint16(ctaProtoInfoTCPWScaleOriginal),
-				Data: []byte{4},
-			},
-			{
-				Type: uint16(ctaProtoInfoTCPWScaleReply),
-				Data: []byte{5},
-			},
+	nfaProtoInfoTCP := []netfilter.Attribute{
+		{
+			Type: uint16(ctaProtoInfoTCPState),
+			Data: []byte{1},
+		},
+		{
+			Type: uint16(ctaProtoInfoTCPFlagsOriginal),
+			Data: []byte{0, 2},
+		},
+		{
+			Type: uint16(ctaProtoInfoTCPFlagsReply),
+			Data: []byte{0, 3},
+		},
+		{
+			Type: uint16(ctaProtoInfoTCPWScaleOriginal),
+			Data: []byte{4},
+		},
+		{
+			Type: uint16(ctaProtoInfoTCPWScaleReply),
+			Data: []byte{5},
 		},
 	}
-	assert.NoError(t, pit.unmarshal(mustDecodeAttributes(nfaProtoInfoTCP.Children)))
+	assert.NoError(t, pit.unmarshal(mustDecodeAttributes(nfaProtoInfoTCP)))
 }
 
 func TestAttributeProtoInfoDCCP(t *testing.T) {
@@ -265,25 +261,21 @@ func TestAttributeProtoInfoDCCP(t *testing.T) {
 	ad := adThreeUnknown
 	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
 
-	nfaProtoInfoDCCP := netfilter.Attribute{
-		Type:   uint16(ctaProtoInfoDCCP),
-		Nested: true,
-		Children: []netfilter.Attribute{
-			{
-				Type: uint16(ctaProtoInfoDCCPState),
-				Data: []byte{1},
-			},
-			{
-				Type: uint16(ctaProtoInfoDCCPRole),
-				Data: []byte{2},
-			},
-			{
-				Type: uint16(ctaProtoInfoDCCPHandshakeSeq),
-				Data: []byte{3, 4, 5, 6, 7, 8, 9, 10},
-			},
+	nfaProtoInfoDCCP := []netfilter.Attribute{
+		{
+			Type: uint16(ctaProtoInfoDCCPState),
+			Data: []byte{1},
+		},
+		{
+			Type: uint16(ctaProtoInfoDCCPRole),
+			Data: []byte{2},
+		},
+		{
+			Type: uint16(ctaProtoInfoDCCPHandshakeSeq),
+			Data: []byte{3, 4, 5, 6, 7, 8, 9, 10},
 		},
 	}
-	assert.NoError(t, pid.unmarshal(mustDecodeAttributes(nfaProtoInfoDCCP.Children)))
+	assert.NoError(t, pid.unmarshal(mustDecodeAttributes(nfaProtoInfoDCCP)))
 }
 
 func TestAttributeProtoInfoSCTP(t *testing.T) {
@@ -293,25 +285,21 @@ func TestAttributeProtoInfoSCTP(t *testing.T) {
 	ad := adOneUnknown
 	assert.ErrorIs(t, pid.unmarshal(&ad), errUnknownAttribute)
 
-	nfaProtoInfoSCTP := netfilter.Attribute{
-		Type:   uint16(ctaProtoInfoSCTP),
-		Nested: true,
-		Children: []netfilter.Attribute{
-			{
-				Type: uint16(ctaProtoInfoSCTPState),
-				Data: []byte{1},
-			},
-			{
-				Type: uint16(ctaProtoInfoSCTPVTagOriginal),
-				Data: []byte{2, 3, 4, 5},
-			},
-			{
-				Type: uint16(ctaProtoInfoSCTPVtagReply),
-				Data: []byte{6, 7, 8, 9},
-			},
+	nfaProtoInfoSCTP := []netfilter.Attribute{
+		{
+			Type: uint16(ctaProtoInfoSCTPState),
+			Data: []byte{1},
+		},
+		{
+			Type: uint16(ctaProtoInfoSCTPVTagOriginal),
+			Data: []byte{2, 3, 4, 5},
+		},
+		{
+			Type: uint16(ctaProtoInfoSCTPVtagReply),
+			Data: []byte{6, 7, 8, 9},
 		},
 	}
-	assert.NoError(t, pid.unmarshal(mustDecodeAttributes(nfaProtoInfoSCTP.Children)))
+	assert.NoError(t, pid.unmarshal(mustDecodeAttributes(nfaProtoInfoSCTP)))
 }
 
 func TestAttributeCounters(t *testing.T) {
@@ -326,25 +314,21 @@ func TestAttributeCounters(t *testing.T) {
 		t.Run(at.String(), func(t *testing.T) {
 			assert.ErrorIs(t, ctr.unmarshal(adEmpty), errNeedChildren)
 
-			nfaCounter := netfilter.Attribute{
-				Type:   uint16(at),
-				Nested: true,
-				Children: []netfilter.Attribute{
-					{
-						Type: uint16(ctaCountersBytes),
-						Data: make([]byte, 8),
-					},
-					{
-						Type: uint16(ctaCountersPackets),
-						Data: make([]byte, 8),
-					},
-					{
-						Type: uint16(ctaCountersPad),
-						Data: make([]byte, 8),
-					},
+			nfaCounter := []netfilter.Attribute{
+				{
+					Type: uint16(ctaCountersBytes),
+					Data: make([]byte, 8),
+				},
+				{
+					Type: uint16(ctaCountersPackets),
+					Data: make([]byte, 8),
+				},
+				{
+					Type: uint16(ctaCountersPad),
+					Data: make([]byte, 8),
 				},
 			}
-			assert.NoError(t, ctr.unmarshal(mustDecodeAttributes(nfaCounter.Children)))
+			assert.NoError(t, ctr.unmarshal(mustDecodeAttributes(nfaCounter)))
 
 			ad := adTwoUnknown
 			assert.ErrorIs(t, ctr.unmarshal(&ad), errUnknownAttribute)
@@ -359,21 +343,17 @@ func TestAttributeTimestamp(t *testing.T) {
 	ad := adOneUnknown
 	assert.ErrorIs(t, ts.unmarshal(&ad), errUnknownAttribute)
 
-	nfaTimestamp := netfilter.Attribute{
-		Type:   uint16(ctaTimestamp),
-		Nested: true,
-		Children: []netfilter.Attribute{
-			{
-				Type: uint16(ctaTimestampStart),
-				Data: make([]byte, 8),
-			},
-			{
-				Type: uint16(ctaTimestampStop),
-				Data: make([]byte, 8),
-			},
+	nfaTimestamp := []netfilter.Attribute{
+		{
+			Type: uint16(ctaTimestampStart),
+			Data: make([]byte, 8),
+		},
+		{
+			Type: uint16(ctaTimestampStop),
+			Data: make([]byte, 8),
 		},
 	}
-	assert.NoError(t, ts.unmarshal(mustDecodeAttributes(nfaTimestamp.Children)))
+	assert.NoError(t, ts.unmarshal(mustDecodeAttributes(nfaTimestamp)))
 }
 
 func TestAttributeSecCtx(t *testing.T) {
@@ -383,17 +363,13 @@ func TestAttributeSecCtx(t *testing.T) {
 	ad := adOneUnknown
 	assert.ErrorIs(t, sc.unmarshal(&ad), errUnknownAttribute)
 
-	nfaSecurity := netfilter.Attribute{
-		Type:   uint16(ctaSecCtx),
-		Nested: true,
-		Children: []netfilter.Attribute{
-			{
-				Type: uint16(ctaSecCtxName),
-				Data: []byte("foo"),
-			},
+	nfaSecurity := []netfilter.Attribute{
+		{
+			Type: uint16(ctaSecCtxName),
+			Data: []byte("foo"),
 		},
 	}
-	assert.NoError(t, sc.unmarshal(mustDecodeAttributes(nfaSecurity.Children)))
+	assert.NoError(t, sc.unmarshal(mustDecodeAttributes(nfaSecurity)))
 }
 
 func TestAttributeSeqAdj(t *testing.T) {
