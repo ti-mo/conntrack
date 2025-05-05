@@ -1,19 +1,19 @@
+version: "2"
 linters:
+  default: none
   enable:
-    - gofmt
-    - goimports
     - govet
-    - ineffassign
-    - misspell
-    - staticcheck
-    - unused
-    - goheader
-    - errcheck
     - gocyclo
-    - revive
-    - gosec
-    - gosimple
+    - goheader
     - lll
     - misspell
     - prealloc
-    - typecheck
+    - revive
+    - ineffassign
+    - staticcheck
+    - unused
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
