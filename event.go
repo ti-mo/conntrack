@@ -9,7 +9,8 @@ import (
 
 // Event holds information about a Conntrack event.
 type Event struct {
-	Type eventType
+	Header netfilter.Header
+	Type   eventType
 
 	Flow   *Flow
 	Expect *Expect
@@ -76,6 +77,8 @@ func (e *Event) Unmarshal(nlmsg netlink.Message) error {
 	if err != nil {
 		return err
 	}
+
+	e.Header = h
 
 	// Decode the header to make sure we're dealing with a Conntrack event.
 	if err := e.Type.unmarshal(h); err != nil {
