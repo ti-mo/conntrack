@@ -382,7 +382,7 @@ func (c *Conn) Get(f Flow) (Flow, error) {
 	}
 
 	pf := netfilter.ProtoIPv4
-	if f.TupleOrig.IP.IsIPv6() && f.TupleReply.IP.IsIPv6() {
+	if f.TupleOrig.IP.IsIPv6() || f.TupleReply.IP.IsIPv6() {
 		pf = netfilter.ProtoIPv6
 	}
 
