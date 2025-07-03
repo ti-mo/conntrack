@@ -298,6 +298,22 @@ func TestConnCreateGetFlow(t *testing.T) {
 
 		assert.Equal(t, qflow.TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, qflow.TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
+
+		fOrig := f
+		fOrig.TupleReply = Tuple{}
+		qflow, err = c.Get(fOrig)
+		require.NoError(t, err, "get flow by TupleOrig", n)
+
+		assert.Equal(t, qflow.TupleReply.IP.SourceAddress, f.TupleReply.IP.SourceAddress)
+		assert.Equal(t, qflow.TupleReply.IP.DestinationAddress, f.TupleReply.IP.DestinationAddress)
+
+		fReply := f
+		fReply.TupleOrig = Tuple{}
+		qflow, err = c.Get(fReply)
+		require.NoError(t, err, "get flow by TupleReply", n)
+
+		assert.Equal(t, qflow.TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
+		assert.Equal(t, qflow.TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
 	}
 }
 
