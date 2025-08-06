@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ti-mo/conntrack"
+	"github.com/ClickHouse/conntrack"
 	"github.com/ti-mo/netfilter"
 )
 

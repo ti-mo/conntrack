@@ -1,4 +1,4 @@
-module github.com/ti-mo/conntrack
+module github.com/ClickHouse/conntrack
 
 go 1.23.0
 
