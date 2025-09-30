@@ -94,6 +94,39 @@ func ExampleConn_dumpFilter() {
 	log.Print(df)
 }
 
+func ExampleConn_dumpFilterZone() {
+	// Open a Conntrack connection.
+	c, err := conntrack.Dial(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create flows in different zones
+	f1 := conntrack.NewFlow(
+		6, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"),
+		1234, 80, 120, 0,
+	)
+	f1.Zone = 10
+
+	f2 := conntrack.NewFlow(
+		17, 0, netip.MustParseAddr("2a00:1450:400e:804::200e"), netip.MustParseAddr("2a00:1450:400e:804::200f"),
+		1234, 80, 120, 0,
+	)
+	f2.Zone = 20
+
+	_ = c.Create(f1)
+	_ = c.Create(f2)
+
+	// Dump all flows in table 20.
+	df, err := c.DumpFilter(conntrack.NewFilter().Zone(20), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the result. Only f2 is displayed.
+	log.Print(df)
+}
+
 func ExampleConn_flush() {
 	// Open a Conntrack connection.
 	c, err := conntrack.Dial(nil)
