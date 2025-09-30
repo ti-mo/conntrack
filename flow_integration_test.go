@@ -401,3 +401,61 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 		}
 	}
 }
+
+// Creates flows in a specific zone, dumps them using zone filter, flushes them using zone filter,
+// and verifies they are removed. Requires Linux kernel 6.8 or greater for zone filtering support.
+func TestZoneFilter(t *testing.T) {
+	if kernelVersionLessThan(6, 8) {
+		t.Skip("Zone filtering requires Linux kernel 6.8 or greater")
+	}
+
+	if !findKsym("ctnetlink_alloc_filter") {
+		t.Skip("DumpFilter not supported in this kernel")
+	}
+
+	if !findKsym("ctnetlink_flush_iterate") {
+		t.Skip("FlushFilter not supported in this kernel")
+	}
+
+	c, _, err := makeNSConn()
+	require.NoError(t, err)
+
+	zone := uint16(100)
+
+	// Create two flows in zone 100
+	f1 := NewFlow(
+		6, 0,
+		netip.MustParseAddr("1.2.3.4"),
+		netip.MustParseAddr("5.6.7.8"),
+		1234, 80, 120, 0,
+	)
+	f1.Zone = zone
+
+	f2 := NewFlow(
+		17, 0,
+		netip.MustParseAddr("2a00:1450:400e:804::200e"),
+		netip.MustParseAddr("2a00:1450:400e:804::200f"),
+		1234, 80, 120, 0,
+	)
+	f2.Zone = zone
+
+	err = c.Create(f1)
+	require.NoError(t, err, "creating IPv4 flow in zone 100")
+
+	err = c.Create(f2)
+	require.NoError(t, err, "creating IPv6 flow in zone 100")
+
+	// Dump flows using zone filter - should return 2 flows
+	flows, err := c.DumpFilter(Filter{Zone: &zone}, nil)
+	require.NoError(t, err, "dumping flows with zone filter")
+	assert.Len(t, flows, 2, "expected 2 flows in zone 100")
+
+	// Flush flows using zone filter
+	err = c.FlushFilter(Filter{Zone: &zone})
+	require.NoError(t, err, "flushing flows with zone filter")
+
+	// Dump flows using zone filter again - should return empty list
+	flows, err = c.DumpFilter(Filter{Zone: &zone}, nil)
+	require.NoError(t, err, "dumping flows with zone filter after flush")
+	assert.Empty(t, flows, "expected no flows in zone 100 after flush")
+}

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -113,4 +114,45 @@ func findKsym(sym string) bool {
 	}
 
 	return false
+}
+
+// kernelVersion returns major and minor kernel version numbers parsed from the syscall.Uname's
+// Release field, or (0, 0) if the version can't be obtained or parsed.
+// The code was taken from src/internal/syscall/unix/kernel_version_linux.go.
+func kernelVersion() (major, minor int) {
+	var uname syscall.Utsname
+	if err := syscall.Uname(&uname); err != nil {
+		return
+	}
+
+	var (
+		values    [2]int
+		value, vi int
+	)
+	for _, c := range uname.Release {
+		if '0' <= c && c <= '9' {
+			value = (value * 10) + int(c-'0')
+		} else {
+			// Note that we're assuming N.N.N here.
+			// If we see anything else, we are likely to mis-parse it.
+			values[vi] = value
+			vi++
+			if vi >= len(values) {
+				break
+			}
+			value = 0
+		}
+	}
+
+	return values[0], values[1]
+}
+
+// kernelVersionLessThan returns true if and only if the actual kernel version
+// (major.minor) is less than the provided one.
+func kernelVersionLessThan(major, minor int) bool {
+	actualMajor, actualMinor := kernelVersion()
+	if actualMajor != major {
+		return actualMajor < major
+	}
+	return actualMinor < minor
 }

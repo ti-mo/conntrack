@@ -194,7 +194,8 @@ func (c *Conn) Dump(opts *DumpOptions) ([]Flow, error) {
 }
 
 // DumpFilter gets all Conntrack connections from the kernel in the form of a list
-// of Flow objects, but only returns Flows matching the connmark specified in the Filter parameter.
+// of Flow objects, but only returns Flows matching the connmark and/or zone specified in the Filter parameter.
+// Zone filtering requires Linux kernel 6.8 or greater.
 func (c *Conn) DumpFilter(f Filter, opts *DumpOptions) ([]Flow, error) {
 	msgType := ctGet
 	if opts != nil && opts.ZeroCounters {
@@ -272,6 +273,7 @@ func (c *Conn) Flush() error {
 
 // FlushFilter deletes all entries from the Conntrack table matching a given Filter.
 // Both IPv4 and IPv6 entries are considered for deletion.
+// Zone filtering requires Linux kernel 6.8 or greater.
 func (c *Conn) FlushFilter(f Filter) error {
 
 	req, err := netfilter.MarshalNetlink(
