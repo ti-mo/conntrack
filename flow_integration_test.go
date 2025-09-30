@@ -412,3 +412,58 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 		}
 	}
 }
+
+// Creates flows in a specific zone, dumps them using zone filter, flushes them using zone filter,
+// and verifies they are removed. Requires Linux kernel 6.8 or greater for zone filtering support.
+func TestZoneFilter(t *testing.T) {
+	c, _, err := makeNSConn()
+	require.NoError(t, err)
+
+	// One flow in the default zone (0).
+	require.NoError(t, c.Create(NewFlow(6, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"), 1234, 80, 120, 0)))
+
+	// Two flows in zone 100.
+	f1 := NewFlow(6, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"), 1234, 80, 120, 0)
+	f1.Zone = 100
+	require.NoError(t, c.Create(f1))
+
+	f2 := NewFlow(17, 0, netip.MustParseAddr("2a00:1450:400e:804::200e"), netip.MustParseAddr("2a00:1450:400e:804::200f"), 1234, 80, 120, 0)
+	f2.Zone = 100
+	require.NoError(t, c.Create(f2))
+
+	z0 := NewFilter().Zone(0)
+	z100 := NewFilter().Zone(100)
+
+	// 3 flows in total.
+	flows, err := c.Dump(nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 3, "expected 3 flows in total")
+
+	// Zone 0 should contain 1 flow.
+	flows, err = c.DumpFilter(z0, nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1, "expected 1 flow in zone 0")
+
+	// Zone 100 should contain 2 flows.
+	flows, err = c.DumpFilter(z100, nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 2, "expected 2 flows in zone 100")
+
+	// Flush zone 100.
+	require.NoError(t, c.FlushFilter(z100))
+
+	// 1 flow should remain in total.
+	flows, err = c.Dump(nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1, "expected 1 flow in total after flush")
+
+	// Zone 0 should still contain 1 flow.
+	flows, err = c.DumpFilter(z0, nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1, "expected 1 flow in zone 0 after flush")
+
+	// Zone 100 should be empty.
+	flows, err = c.DumpFilter(z100, nil)
+	require.NoError(t, err)
+	assert.Empty(t, flows, "expected no flows in zone 100 after flush")
+}

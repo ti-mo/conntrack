@@ -23,7 +23,7 @@ With this library, the user can:
 - Interact with conntrack connections and expectations through Flow and Expect types respectively
 - Create, get, update and delete Flows in an idiomatic way (and Expects, to an extent)
 - Listen for create/update/destroy events
-- Flush (empty) and dump (display) the whole conntrack table, optionally filtering on specific connection marks
+- Flush (empty) and dump (display) the whole conntrack table, optionally filtering on specific flow fields
 
 There are many usage examples in the [godoc](https://godoc.org/github.com/ti-mo/conntrack).
 

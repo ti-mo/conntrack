@@ -23,6 +23,14 @@ type Filter interface {
 	// match exactly.
 	MarkMask(mask uint32) Filter
 
+	// Zone sets the conntrack zone to filter on, similar to conntrack's -w/--zone
+	// option.
+	//
+	// If not specified, flows from all zones are returned.
+	//
+	// Requires Linux 6.8 or later.
+	Zone(zone uint16) Filter
+
 	marshal() []netfilter.Attribute
 }
 
@@ -42,6 +50,11 @@ func (f *filter) Mark(mark uint32) Filter {
 
 func (f *filter) MarkMask(mask uint32) Filter {
 	f.f[ctaMarkMask] = netfilter.Uint32Bytes(mask)
+	return f
+}
+
+func (f *filter) Zone(zone uint16) Filter {
+	f.f[ctaZone] = netfilter.Uint16Bytes(zone)
 	return f
 }
 
