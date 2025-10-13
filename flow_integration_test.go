@@ -405,10 +405,6 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 // Creates flows in a specific zone, dumps them using zone filter, flushes them using zone filter,
 // and verifies they are removed. Requires Linux kernel 6.8 or greater for zone filtering support.
 func TestZoneFilter(t *testing.T) {
-	if kernelVersionLessThan(6, 8) {
-		t.Skip("Zone filtering requires Linux kernel 6.8 or greater")
-	}
-
 	if !findKsym("ctnetlink_alloc_filter") {
 		t.Skip("DumpFilter not supported in this kernel")
 	}
