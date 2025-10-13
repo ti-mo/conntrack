@@ -11,7 +11,9 @@ import (
 // Zone can be used to filter connections by conntrack zone.
 type Filter struct {
 	Mark, Mask uint32
-	Zone       *uint16
+	// Requires at least Linux 6.8.
+	// If omitted, the default behavior is to consider ALL zones.
+	Zone *uint16
 }
 
 // marshal marshals a Filter into a list of netfilter.Attributes.

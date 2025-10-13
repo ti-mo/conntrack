@@ -435,11 +435,8 @@ func TestZoneFilter(t *testing.T) {
 	)
 	f2.Zone = zone
 
-	err = c.Create(f1)
-	require.NoError(t, err, "creating IPv4 flow in zone 100")
-
-	err = c.Create(f2)
-	require.NoError(t, err, "creating IPv6 flow in zone 100")
+	require.NoError(t, c.Create(f1), "creating IPv4 flow in zone 100")
+	require.NoError(t, c.Create(f2), "creating IPv6 flow in zone 100")
 
 	// Dump flows using zone filter - should return 2 flows
 	flows, err := c.DumpFilter(Filter{Zone: &zone}, nil)
@@ -447,8 +444,7 @@ func TestZoneFilter(t *testing.T) {
 	assert.Len(t, flows, 2, "expected 2 flows in zone 100")
 
 	// Flush flows using zone filter
-	err = c.FlushFilter(Filter{Zone: &zone})
-	require.NoError(t, err, "flushing flows with zone filter")
+	require.NoError(t, c.FlushFilter(Filter{Zone: &zone}), "flushing flows with zone filter")
 
 	// Dump flows using zone filter again - should return empty list
 	flows, err = c.DumpFilter(Filter{Zone: &zone}, nil)
