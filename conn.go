@@ -195,7 +195,11 @@ func (c *Conn) Dump(opts *DumpOptions) ([]Flow, error) {
 
 // DumpFilter gets all Conntrack connections from the kernel in the form of a list
 // of Flow objects, but only returns Flows matching the connmark specified in the Filter parameter.
-func (c *Conn) DumpFilter(f Filter, opts *DumpOptions) ([]Flow, error) {
+func (c *Conn) DumpFilter(filter Filter, opts *DumpOptions) ([]Flow, error) {
+	if filter == nil {
+		return nil, fmt.Errorf("filter is nil")
+	}
+
 	msgType := ctGet
 	if opts != nil && opts.ZeroCounters {
 		msgType = ctGetCtrZero
@@ -208,7 +212,7 @@ func (c *Conn) DumpFilter(f Filter, opts *DumpOptions) ([]Flow, error) {
 			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
 			Flags:       netlink.Request | netlink.Dump,
 		},
-		f.marshal())
+		filter.marshal())
 
 	if err != nil {
 		return nil, err
@@ -272,7 +276,10 @@ func (c *Conn) Flush() error {
 
 // FlushFilter deletes all entries from the Conntrack table matching a given Filter.
 // Both IPv4 and IPv6 entries are considered for deletion.
-func (c *Conn) FlushFilter(f Filter) error {
+func (c *Conn) FlushFilter(filter Filter) error {
+	if filter == nil {
+		return fmt.Errorf("filter is nil")
+	}
 
 	req, err := netfilter.MarshalNetlink(
 		netfilter.Header{
@@ -281,7 +288,7 @@ func (c *Conn) FlushFilter(f Filter) error {
 			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
 			Flags:       netlink.Request | netlink.Acknowledge,
 		},
-		f.marshal())
+		filter.marshal())
 
 	if err != nil {
 		return err

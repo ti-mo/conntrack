@@ -84,8 +84,8 @@ func ExampleConn_dumpFilter() {
 	_ = c.Create(f1)
 	_ = c.Create(f2)
 
-	// Dump all records in the Conntrack table that match the filter's mark/mask.
-	df, err := c.DumpFilter(conntrack.Filter{Mark: 0xff00, Mask: 0xff00}, nil)
+	// Dump all records in the Conntrack table that match the filter's mark.
+	df, err := c.DumpFilter(conntrack.NewFilter().Mark(0xff00), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -128,8 +128,8 @@ func ExampleConn_flushFilter() {
 	_ = c.Create(f1)
 	_ = c.Create(f2)
 
-	// Flush only the second flow matching the filter's mark/mask.
-	err = c.FlushFilter(conntrack.Filter{Mark: 0xff00, Mask: 0xff00})
+	// Flush only the second flow matching the filter's mark and mask.
+	err = c.FlushFilter(conntrack.NewFilter().Mark(0xff00).MarkMask(0xffff))
 	if err != nil {
 		log.Fatal(err)
 	}
