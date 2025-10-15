@@ -111,7 +111,6 @@ func TestConnFlush(t *testing.T) {
 }
 
 func TestConnFlushFilter(t *testing.T) {
-
 	// Kernels 3.x and earlier don't have filtered flush implemented yet.
 	// This is implemented in a separate function, ctnetlink_flush_conntrack,
 	// so we check if it is present before executing and checking the result.
@@ -150,8 +149,11 @@ func TestConnFlushFilter(t *testing.T) {
 	require.NoError(t, err, "dumping table before filtered flush")
 	assert.Equal(t, 2, len(flows))
 
+	// Nil filter should not panic.
+	require.Error(t, c.FlushFilter(nil))
+
 	// Flush only the flow matching the filter
-	err = c.FlushFilter(Filter{Mark: 0xff00, Mask: 0xff00})
+	err = c.FlushFilter(NewFilter().Mark(0xff00))
 	require.NoError(t, err, "flushing table")
 
 	// Expect only one flow to remain in the table
@@ -339,7 +341,6 @@ func TestDumpZero(t *testing.T) {
 
 // Creates IPv4 and IPv6 flows with connmarks and queries them using a filtered dump.
 func TestConnDumpFilter(t *testing.T) {
-
 	if !findKsym("ctnetlink_alloc_filter") {
 		t.Skip("DumpFilter not supported in this kernel")
 	}
@@ -349,13 +350,17 @@ func TestConnDumpFilter(t *testing.T) {
 
 	flows := map[string]Flow{
 		"v4m1": NewFlow(17, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"), 1234, 5678, 120, 0xff000000),
-		"v4m2": NewFlow(17, 0, netip.MustParseAddr("10.0.0.1"), netip.MustParseAddr("10.0.0.2"), 24000, 80, 120, 0x00ff0000),
+		"v4m2": NewFlow(17, 0, netip.MustParseAddr("10.0.0.1"), netip.MustParseAddr("10.0.0.2"), 24000, 80, 120, 0xff00ff00),
 		"v6m1": NewFlow(17, 0, netip.MustParseAddr("2a12:1234:200f:600::200a"), netip.MustParseAddr("2a12:1234:200f:600::200b"), 6554, 53, 120, 0x0000ff00),
 		"v6m2": NewFlow(17, 0, netip.MustParseAddr("900d:f00d:24::7"), netip.MustParseAddr("baad:beef:b00::b00"), 1323, 22, 120, 0x000000ff),
 	}
 
-	// Expect empty result from empty table dump
-	de, err := c.DumpFilter(Filter{Mark: 0x00000000, Mask: 0xffffffff}, nil)
+	// Nil filter should not panic.
+	_, err = c.DumpFilter(nil, nil)
+	require.Error(t, err)
+
+	// Expect empty result from empty table dump with empty filter.
+	de, err := c.DumpFilter(NewFilter(), nil)
 	require.NoError(t, err, "dumping empty table")
 	require.Len(t, de, 0, "expecting 0-length dump from empty table")
 
@@ -363,13 +368,19 @@ func TestConnDumpFilter(t *testing.T) {
 		err = c.Create(f)
 		require.NoError(t, err, "creating flow", n)
 
-		df, err := c.DumpFilter(Filter{Mark: f.Mark, Mask: f.Mark}, nil)
+		df, err := c.DumpFilter(NewFilter().Mark(f.Mark), nil)
 		require.NoError(t, err, "dumping filtered flows", n)
 
 		assert.Len(t, df, 1)
 		assert.Equal(t, df[0].TupleOrig.IP.SourceAddress, f.TupleOrig.IP.SourceAddress)
 		assert.Equal(t, df[0].TupleOrig.IP.DestinationAddress, f.TupleOrig.IP.DestinationAddress)
 	}
+
+	// Expect two flows to match the filter (0xff000000 and 0xff00ff00) since the
+	// rightmost 16 bits are masked off.
+	df, err := c.DumpFilter(NewFilter().Mark(0xff000000).MarkMask(0xffff0000), nil)
+	require.NoError(t, err)
+	assert.Len(t, df, 2, "expecting 2 flows to match filter")
 
 	// Expect table to be empty at end of run
 	d, err := c.Dump(nil)

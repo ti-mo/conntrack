@@ -8,9 +8,8 @@ import (
 	"github.com/ti-mo/netfilter"
 )
 
-func TestFilterMarshal(t *testing.T) {
-
-	f := Filter{Mark: 0xf0000000, Mask: 0x0000000f}
+func TestFilterMarkMask(t *testing.T) {
+	f := NewFilter().Mark(0xf0000000).MarkMask(0x0000000f)
 	fm := []netfilter.Attribute{
 		{
 			Type: uint16(ctaMark),
