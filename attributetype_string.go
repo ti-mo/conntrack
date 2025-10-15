@@ -33,11 +33,14 @@ func _() {
 	_ = x[ctaLabels-22]
 	_ = x[ctaLabelsMask-23]
 	_ = x[ctaSynProxy-24]
+	_ = x[ctaFilter-25]
+	_ = x[ctaStatusMask-26]
+	_ = x[ctaTimestampEvent-27]
 }
 
-const _attributeType_name = "ctaUnspecctaTupleOrigctaTupleReplyctaStatusctaProtoInfoctaHelpctaNatSrcctaTimeoutctaMarkctaCountersOrigctaCountersReplyctaUsectaIDctaNatDstctaTupleMasterctaSeqAdjOrigctaSeqAdjReplyctaSecMarkctaZonectaSecCtxctaTimestampctaMarkMaskctaLabelsctaLabelsMaskctaSynProxy"
+const _attributeType_name = "ctaUnspecctaTupleOrigctaTupleReplyctaStatusctaProtoInfoctaHelpctaNatSrcctaTimeoutctaMarkctaCountersOrigctaCountersReplyctaUsectaIDctaNatDstctaTupleMasterctaSeqAdjOrigctaSeqAdjReplyctaSecMarkctaZonectaSecCtxctaTimestampctaMarkMaskctaLabelsctaLabelsMaskctaSynProxyctaFilterctaStatusMaskctaTimestampEvent"
 
-var _attributeType_index = [...]uint16{0, 9, 21, 34, 43, 55, 62, 71, 81, 88, 103, 119, 125, 130, 139, 153, 166, 180, 190, 197, 206, 218, 229, 238, 251, 262}
+var _attributeType_index = [...]uint16{0, 9, 21, 34, 43, 55, 62, 71, 81, 88, 103, 119, 125, 130, 139, 153, 166, 180, 190, 197, 206, 218, 229, 238, 251, 262, 271, 284, 301}
 
 func (i attributeType) String() string {
 	if i >= attributeType(len(_attributeType_index)-1) {

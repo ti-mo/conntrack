@@ -6,7 +6,8 @@ import (
 
 // Filter is an object used to limit dump and flush operations to flows matching
 // certain fields. Use [NewFilter] to create a new filter, then chain methods to
-// set filter fields.
+// set filter fields. Methods mutate the Filter in place and return it for
+// chaining purposes.
 //
 // Pass a filter to [Conn.DumpFilter] or [Conn.FlushFilter].
 type Filter interface {
@@ -22,6 +23,22 @@ type Filter interface {
 	// If not specified, the kernel defaults to 0xFFFFFFFF, meaning the mark must
 	// match exactly.
 	MarkMask(mask uint32) Filter
+
+	// Status sets the conntrack status bits to filter on, similar to conntrack's
+	// -u/--status option.
+	//
+	// Requires Linux 5.15 or later.
+	Status(status Status) Filter
+
+	// StatusMask overrides the mask to apply before filtering on flow status.
+	// Since Status is a bitfield, mask defaults to the mark value itself since
+	// matching on the entire field would typically yield few matches. It's
+	// recommended to leave this unset unless you have a specific need.
+	//
+	// Doesn't have an equivalent in the conntrack CLI.
+	//
+	// Requires Linux 5.15 or later.
+	StatusMask(mask uint32) Filter
 
 	// Zone sets the conntrack zone to filter on, similar to conntrack's -w/--zone
 	// option.
@@ -50,6 +67,16 @@ func (f *filter) Mark(mark uint32) Filter {
 
 func (f *filter) MarkMask(mask uint32) Filter {
 	f.f[ctaMarkMask] = netfilter.Uint32Bytes(mask)
+	return f
+}
+
+func (f *filter) Status(status Status) Filter {
+	f.f[ctaStatus] = netfilter.Uint32Bytes(uint32(status.Value))
+	return f
+}
+
+func (f *filter) StatusMask(mask uint32) Filter {
+	f.f[ctaStatusMask] = netfilter.Uint32Bytes(mask)
 	return f
 }
 

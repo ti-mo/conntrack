@@ -413,8 +413,6 @@ func BenchmarkCreateDeleteFlow(b *testing.B) {
 	}
 }
 
-// Creates flows in a specific zone, dumps them using zone filter, flushes them using zone filter,
-// and verifies they are removed. Requires Linux kernel 6.8 or greater for zone filtering support.
 func TestZoneFilter(t *testing.T) {
 	c, _, err := makeNSConn()
 	require.NoError(t, err)
@@ -466,4 +464,29 @@ func TestZoneFilter(t *testing.T) {
 	flows, err = c.DumpFilter(z100, nil)
 	require.NoError(t, err)
 	assert.Empty(t, flows, "expected no flows in zone 100 after flush")
+}
+
+func TestStatusFilter(t *testing.T) {
+	c, _, err := makeNSConn()
+	require.NoError(t, err)
+
+	require.NoError(t, c.Create(NewFlow(6, StatusConfirmed, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("0.0.0.0"), 1234, 80, 120, 0)))
+	require.NoError(t, c.Create(NewFlow(6, StatusConfirmed, netip.MustParseAddr("5.6.7.8"), netip.MustParseAddr("0.0.0.0"), 1234, 80, 120, 0)))
+
+	flows, err := c.Dump(nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 2, "expected 2 flows in total")
+
+	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusConfirmed}), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 2)
+
+	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusDying}), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 0)
+
+	// This filter can never return anything since status and mask don't overlap.
+	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusConfirmed}).StatusMask(0x1), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 0)
 }
