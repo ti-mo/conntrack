@@ -44,31 +44,34 @@ type attributeType uint8
 
 // enum ctattr_type
 const (
-	ctaUnspec        attributeType = iota // CTA_UNSPEC
-	ctaTupleOrig                          // CTA_TUPLE_ORIG
-	ctaTupleReply                         // CTA_TUPLE_REPLY
-	ctaStatus                             // CTA_STATUS
-	ctaProtoInfo                          // CTA_PROTOINFO
-	ctaHelp                               // CTA_HELP
-	ctaNatSrc                             // CTA_NAT_SRC, Deprecated
-	ctaTimeout                            // CTA_TIMEOUT
-	ctaMark                               // CTA_MARK
-	ctaCountersOrig                       // CTA_COUNTERS_ORIG
-	ctaCountersReply                      // CTA_COUNTERS_REPLY
-	ctaUse                                // CTA_USE
-	ctaID                                 // CTA_ID
-	ctaNatDst                             // CTA_NAT_DST, Deprecated
-	ctaTupleMaster                        // CTA_TUPLE_MASTER
-	ctaSeqAdjOrig                         // CTA_SEQ_ADJ_ORIG
-	ctaSeqAdjReply                        // CTA_SEQ_ADJ_REPLY
-	ctaSecMark                            // CTA_SECMARK, Deprecated
-	ctaZone                               // CTA_ZONE
-	ctaSecCtx                             // CTA_SECCTX
-	ctaTimestamp                          // CTA_TIMESTAMP
-	ctaMarkMask                           // CTA_MARK_MASK
-	ctaLabels                             // CTA_LABELS
-	ctaLabelsMask                         // CTA_LABELS_MASK
-	ctaSynProxy                           // CTA_SYNPROXY
+	ctaUnspec         attributeType = iota // CTA_UNSPEC
+	ctaTupleOrig                           // CTA_TUPLE_ORIG
+	ctaTupleReply                          // CTA_TUPLE_REPLY
+	ctaStatus                              // CTA_STATUS
+	ctaProtoInfo                           // CTA_PROTOINFO
+	ctaHelp                                // CTA_HELP
+	ctaNatSrc                              // CTA_NAT_SRC, Deprecated
+	ctaTimeout                             // CTA_TIMEOUT
+	ctaMark                                // CTA_MARK
+	ctaCountersOrig                        // CTA_COUNTERS_ORIG
+	ctaCountersReply                       // CTA_COUNTERS_REPLY
+	ctaUse                                 // CTA_USE
+	ctaID                                  // CTA_ID
+	ctaNatDst                              // CTA_NAT_DST, Deprecated
+	ctaTupleMaster                         // CTA_TUPLE_MASTER
+	ctaSeqAdjOrig                          // CTA_SEQ_ADJ_ORIG
+	ctaSeqAdjReply                         // CTA_SEQ_ADJ_REPLY
+	ctaSecMark                             // CTA_SECMARK, Deprecated
+	ctaZone                                // CTA_ZONE
+	ctaSecCtx                              // CTA_SECCTX
+	ctaTimestamp                           // CTA_TIMESTAMP
+	ctaMarkMask                            // CTA_MARK_MASK
+	ctaLabels                              // CTA_LABELS
+	ctaLabelsMask                          // CTA_LABELS_MASK
+	ctaSynProxy                            // CTA_SYNPROXY
+	ctaFilter                              // CTA_FILTER
+	ctaStatusMask                          // CTA_STATUS_MASK
+	ctaTimestampEvent                      // CTA_TIMESTAMP_EVENT
 )
 
 // tupleType describes the type of tuple contained in this container.

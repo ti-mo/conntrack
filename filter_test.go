@@ -10,8 +10,16 @@ import (
 )
 
 func TestFilterMarshal(t *testing.T) {
-	f := NewFilter().Mark(0xf0000000).MarkMask(0x0000000f).Zone(42)
+	f := NewFilter().
+		Mark(0xf0000000).MarkMask(0x0000000f).
+		Zone(42).
+		Status(Status{StatusDying}).StatusMask(0xdeadbeef)
+
 	want := []netfilter.Attribute{
+		{
+			Type: uint16(ctaStatus),
+			Data: []byte{0, 0, 0x2, 0},
+		},
 		{
 			Type: uint16(ctaMark),
 			Data: []byte{0xf0, 0, 0, 0},
@@ -23,6 +31,10 @@ func TestFilterMarshal(t *testing.T) {
 		{
 			Type: uint16(ctaMarkMask),
 			Data: []byte{0, 0, 0, 0x0f},
+		},
+		{
+			Type: uint16(ctaStatusMask),
+			Data: []byte{0xde, 0xad, 0xbe, 0xef},
 		},
 	}
 
