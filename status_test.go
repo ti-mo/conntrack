@@ -34,12 +34,17 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 		{
 			name:   "default values",
 			b:      []byte{0x00, 0x00, 0x00, 0x00},
-			status: Status{},
+			status: 0,
+		},
+		{
+			name:   "assured",
+			b:      []byte{0x00, 0x00, 0x00, 0xc},
+			status: StatusAssured | StatusConfirmed,
 		},
 		{
 			name:   "out of range, only highest bits flipped",
 			b:      []byte{0xFF, 0xFF, 0x80, 0x00},
-			status: Status{Value: 0xFFFF8000},
+			status: 0xFFFF8000,
 		},
 		{
 			name: "error, byte array too short",
@@ -54,9 +59,7 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
-
 			// Wrap in status attribute container
 			nfa := netfilter.Attribute{
 				Type: uint16(ctaStatus),
@@ -64,14 +67,13 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 			}
 
 			var s Status
-
 			err := s.unmarshal(mustDecodeAttribute(nfa))
 			if err != nil || tt.err != nil {
 				require.ErrorIs(t, err, tt.err)
 				return
 			}
 
-			require.Equal(t, tt.status.Value, s.Value, "unexpected unmarshal")
+			require.Equal(t, tt.status, s, "unexpected unmarshal")
 
 			ms := s.marshal()
 			assert.Equal(t, nfa, ms, "unexpected marshal")
@@ -80,55 +82,24 @@ func TestStatusMarshalTwoWay(t *testing.T) {
 }
 
 func TestStatusFieldTest(t *testing.T) {
-
-	var s Status
-
-	s.Value = StatusExpected
-	assert.Equal(t, true, s.Expected(), "expected")
-
-	s.Value = StatusSeenReply
-	assert.Equal(t, true, s.SeenReply(), "seenreply")
-
-	s.Value = StatusAssured
-	assert.Equal(t, true, s.Assured(), "assured")
-
-	s.Value = StatusConfirmed
-	assert.Equal(t, true, s.Confirmed(), "confirmed")
-
-	s.Value = StatusSrcNAT
-	assert.Equal(t, true, s.SrcNAT(), "srcnat")
-
-	s.Value = StatusDstNAT
-	assert.Equal(t, true, s.DstNAT(), "dstnat")
-
-	s.Value = StatusSeqAdjust
-	assert.Equal(t, true, s.SeqAdjust(), "seqadjust")
-
-	s.Value = StatusSrcNATDone
-	assert.Equal(t, true, s.SrcNATDone(), "srcnatdone")
-
-	s.Value = StatusDstNATDone
-	assert.Equal(t, true, s.DstNATDone(), "dstnatdone")
-
-	s.Value = StatusDying
-	assert.Equal(t, true, s.Dying(), "dying")
-
-	s.Value = StatusFixedTimeout
-	assert.Equal(t, true, s.FixedTimeout(), "fixedtimeout")
-
-	s.Value = StatusTemplate
-	assert.Equal(t, true, s.Template(), "template")
-
-	s.Value = StatusHelper
-	assert.Equal(t, true, s.Helper(), "helper")
-
-	s.Value = StatusOffload
-	assert.Equal(t, true, s.Offload(), "offload")
+	assert.Equal(t, true, StatusExpected.Expected(), "expected")
+	assert.Equal(t, true, StatusSeenReply.SeenReply(), "seenreply")
+	assert.Equal(t, true, StatusAssured.Assured(), "assured")
+	assert.Equal(t, true, StatusConfirmed.Confirmed(), "confirmed")
+	assert.Equal(t, true, StatusSrcNAT.SrcNAT(), "srcnat")
+	assert.Equal(t, true, StatusDstNAT.DstNAT(), "dstnat")
+	assert.Equal(t, true, StatusSeqAdjust.SeqAdjust(), "seqadjust")
+	assert.Equal(t, true, StatusSrcNATDone.SrcNATDone(), "srcnatdone")
+	assert.Equal(t, true, StatusDstNATDone.DstNATDone(), "dstnatdone")
+	assert.Equal(t, true, StatusDying.Dying(), "dying")
+	assert.Equal(t, true, StatusFixedTimeout.FixedTimeout(), "fixedtimeout")
+	assert.Equal(t, true, StatusTemplate.Template(), "template")
+	assert.Equal(t, true, StatusHelper.Helper(), "helper")
+	assert.Equal(t, true, StatusOffload.Offload(), "offload")
 }
 
 func TestStatusString(t *testing.T) {
-	full := Status{Value: 0xffffffff}
-	empty := Status{}
+	full, empty := Status(0xffffffff), Status(0)
 
 	wantFull := "EXPECTED|SEEN_REPLY|ASSURED|CONFIRMED|SRC_NAT|DST_NAT|SEQ_ADJUST|SRC_NAT_DONE|DST_NAT_DONE|" +
 		"DYING|FIXED_TIMEOUT|TEMPLATE|UNTRACKED|HELPER|OFFLOAD"

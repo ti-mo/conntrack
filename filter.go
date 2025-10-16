@@ -93,7 +93,7 @@ func (f *filter) MarkMask(mask uint32) Filter {
 }
 
 func (f *filter) Status(status Status) Filter {
-	f.f[ctaStatus] = netfilter.Uint32Bytes(uint32(status.Value))
+	f.f[ctaStatus] = netfilter.Uint32Bytes(uint32(status))
 	return f
 }
 

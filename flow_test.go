@@ -148,7 +148,7 @@ var (
 					Data: []byte{0xff, 0x00, 0xff, 0x00},
 				},
 			},
-			flow: Flow{Status: Status{Value: 0xff00ff00}},
+			flow: Flow{Status: 0xff00ff00},
 		},
 		{
 			name: "protoinfo attribute w/ tcp info",
@@ -420,7 +420,7 @@ func TestFlowMarshal(t *testing.T) {
 	attrs, err := Flow{
 		TupleOrig: flowIPPT, TupleReply: flowIPPT, TupleMaster: flowIPPT,
 		ProtoInfo: ProtoInfo{TCP: &ProtoInfoTCP{State: 42}},
-		Timeout:   123, Status: Status{Value: 1234}, Mark: 0x1234, Zone: 2,
+		Timeout:   123, Status: 1234, Mark: 0x1234, Zone: 2,
 		Helper:      Helper{Name: "ftp"},
 		SeqAdjOrig:  SequenceAdjust{Position: 1, OffsetBefore: 2, OffsetAfter: 3},
 		SeqAdjReply: SequenceAdjust{Position: 5, OffsetBefore: 6, OffsetAfter: 7},
@@ -519,7 +519,7 @@ func TestNewFlow(t *testing.T) {
 	)
 
 	want := Flow{
-		Status:  Status{Value: StatusNATMask},
+		Status:  StatusNATMask,
 		Timeout: 400,
 		TupleOrig: Tuple{
 			IP: IPTuple{
