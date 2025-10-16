@@ -11,6 +11,15 @@ import (
 //
 // Pass a filter to [Conn.DumpFilter] or [Conn.FlushFilter].
 type Filter interface {
+	// Family sets the address (L3) family to filter on, similar to conntrack's
+	// -f/--family.
+	//
+	// Common values are [netfilter.ProtoIPv4] and [netfilter.ProtoIPv6].
+	//
+	// Requires Linux 4.20 or later for [Conn.DumpFilter] and Linux 5.3 for
+	// [Conn.FlushFilter].
+	Family(l3 netfilter.ProtoFamily) Filter
+
 	// Mark sets the connmark to filter on, similar to conntrack's --mark option.
 	//
 	// When not specifying a mark mask, the kernel defaults to 0xFFFFFFFF, meaning
@@ -48,6 +57,8 @@ type Filter interface {
 	// Requires Linux 6.8 or later.
 	Zone(zone uint16) Filter
 
+	family() netfilter.ProtoFamily
+
 	marshal() []netfilter.Attribute
 }
 
@@ -58,6 +69,17 @@ func NewFilter() Filter {
 
 type filter struct {
 	f map[attributeType][]byte
+
+	l3 netfilter.ProtoFamily
+}
+
+func (f *filter) Family(l3 netfilter.ProtoFamily) Filter {
+	f.l3 = l3
+	return f
+}
+
+func (f *filter) family() netfilter.ProtoFamily {
+	return f.l3
 }
 
 func (f *filter) Mark(mark uint32) Filter {

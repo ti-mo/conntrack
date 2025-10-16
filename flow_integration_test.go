@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/ti-mo/netfilter"
 )
 
 // Create a given number of flows with a randomized component and check the amount
@@ -489,4 +490,36 @@ func TestStatusFilter(t *testing.T) {
 	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusConfirmed}).StatusMask(0x1), nil)
 	require.NoError(t, err)
 	assert.Len(t, flows, 0)
+}
+
+func TestFamilyFilter(t *testing.T) {
+	c, _, err := makeNSConn()
+	require.NoError(t, err)
+
+	require.NoError(t, c.Create(NewFlow(unix.IPPROTO_TCP, 0, netip.MustParseAddr("1.2.3.4"), netip.MustParseAddr("5.6.7.8"), 1234, 80, 120, 0)))
+	require.NoError(t, c.Create(NewFlow(unix.IPPROTO_UDP, 0, netip.MustParseAddr("2a00:1450:400e:804::200e"), netip.MustParseAddr("2a00:1450:400e:804::200f"), 1234, 80, 120, 0)))
+
+	flows, err := c.Dump(nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 2, "expected 2 flows in total")
+
+	flows, err = c.DumpFilter(NewFilter().Family(netfilter.ProtoIPv4), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1)
+	assert.Equal(t, flows[0].TupleOrig.IP.SourceAddress, netip.MustParseAddr("1.2.3.4"))
+
+	flows, err = c.DumpFilter(NewFilter().Family(netfilter.ProtoIPv6), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1)
+	assert.Equal(t, flows[0].TupleOrig.IP.SourceAddress, netip.MustParseAddr("2a00:1450:400e:804::200e"))
+
+	assert.NoError(t, c.FlushFilter(NewFilter().Family(netfilter.ProtoIPv4)))
+	flows, err = c.Dump(nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1, "expected 1 flow in total")
+
+	flows, err = c.DumpFilter(NewFilter().Family(netfilter.ProtoIPv6), nil)
+	require.NoError(t, err)
+	assert.Len(t, flows, 1)
+	assert.Equal(t, flows[0].TupleOrig.IP.SourceAddress, netip.MustParseAddr("2a00:1450:400e:804::200e"))
 }
