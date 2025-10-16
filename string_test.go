@@ -40,7 +40,7 @@ func TestEventString(t *testing.T) {
 	// Event with Flow
 	ef := Event{Flow: &Flow{}}
 
-	ef.Flow.Status.Value = StatusAssured
+	ef.Flow.Status = StatusAssured
 
 	ef.Flow.TupleOrig = tpl
 

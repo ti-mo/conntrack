@@ -478,16 +478,16 @@ func TestStatusFilter(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, flows, 2, "expected 2 flows in total")
 
-	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusConfirmed}), nil)
+	flows, err = c.DumpFilter(NewFilter().Status(StatusConfirmed), nil)
 	require.NoError(t, err)
 	assert.Len(t, flows, 2)
 
-	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusDying}), nil)
+	flows, err = c.DumpFilter(NewFilter().Status(StatusDying), nil)
 	require.NoError(t, err)
 	assert.Len(t, flows, 0)
 
 	// This filter can never return anything since status and mask don't overlap.
-	flows, err = c.DumpFilter(NewFilter().Status(Status{StatusConfirmed}).StatusMask(0x1), nil)
+	flows, err = c.DumpFilter(NewFilter().Status(StatusConfirmed).StatusMask(0x1), nil)
 	require.NoError(t, err)
 	assert.Len(t, flows, 0)
 }

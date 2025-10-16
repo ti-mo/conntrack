@@ -44,12 +44,12 @@ type Flow struct {
 // source and destination addresses. srcPort and dstPort are the source and
 // destination ports. timeout is the non-zero time-to-live of a connection in
 // seconds.
-func NewFlow(proto uint8, status StatusFlag, srcAddr, destAddr netip.Addr,
+func NewFlow(proto uint8, status Status, srcAddr, destAddr netip.Addr,
 	srcPort, destPort uint16, timeout, mark uint32) Flow {
 
 	var f Flow
 
-	f.Status.Value = status
+	f.Status = status
 
 	f.Timeout = timeout
 	f.Mark = mark
@@ -107,7 +107,7 @@ func (f *Flow) unmarshal(ad *netlink.AttributeDecoder) error {
 		// CTA_STATUS is a bitfield of the state of the connection
 		// (eg. if packets are seen in both directions, etc.)
 		case ctaStatus:
-			f.Status.Value = StatusFlag(ad.Uint32())
+			f.Status = Status(ad.Uint32())
 		}
 	}
 
@@ -211,7 +211,7 @@ func (f Flow) marshal() ([]netfilter.Attribute, error) {
 		attrs = append(attrs, a)
 	}
 
-	if f.Status.Value != 0 {
+	if f.Status != 0 {
 		attrs = append(attrs, f.Status.marshal())
 	}
 

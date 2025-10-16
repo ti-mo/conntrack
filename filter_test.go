@@ -13,7 +13,7 @@ func TestFilterMarshal(t *testing.T) {
 	f := NewFilter().
 		Mark(0xf0000000).MarkMask(0x0000000f).
 		Zone(42).
-		Status(Status{StatusDying}).StatusMask(0xdeadbeef)
+		Status(StatusDying).StatusMask(0xdeadbeef)
 
 	want := []netfilter.Attribute{
 		{
