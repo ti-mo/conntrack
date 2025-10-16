@@ -193,8 +193,8 @@ func (c *Conn) Dump(opts *DumpOptions) ([]Flow, error) {
 	return unmarshalFlows(nlm)
 }
 
-// DumpFilter gets all Conntrack connections from the kernel in the form of a list
-// of Flow objects, but only returns Flows matching the connmark specified in the Filter parameter.
+// DumpFilter gets all Conntrack connections from the kernel in the form of a
+// list of Flow objects. Only Flows matching the provided [Filter] are returned.
 func (c *Conn) DumpFilter(filter Filter, opts *DumpOptions) ([]Flow, error) {
 	if filter == nil {
 		return nil, fmt.Errorf("filter is nil")
@@ -209,7 +209,7 @@ func (c *Conn) DumpFilter(filter Filter, opts *DumpOptions) ([]Flow, error) {
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(msgType),
-			Family:      netfilter.ProtoUnspec, // ProtoUnspec dumps both IPv4 and IPv6
+			Family:      filter.family(),
 			Flags:       netlink.Request | netlink.Dump,
 		},
 		filter.marshal())
@@ -274,8 +274,8 @@ func (c *Conn) Flush() error {
 	return nil
 }
 
-// FlushFilter deletes all entries from the Conntrack table matching a given Filter.
-// Both IPv4 and IPv6 entries are considered for deletion.
+// FlushFilter deletes all entries from the Conntrack table matching a given
+// [Filter].
 func (c *Conn) FlushFilter(filter Filter) error {
 	if filter == nil {
 		return fmt.Errorf("filter is nil")
@@ -285,8 +285,16 @@ func (c *Conn) FlushFilter(filter Filter) error {
 		netfilter.Header{
 			SubsystemID: netfilter.NFSubsysCTNetlink,
 			MessageType: netfilter.MessageType(ctDelete),
-			Family:      netfilter.ProtoUnspec, // Family is ignored for flush
+			Family:      filter.family(),
 			Flags:       netlink.Request | netlink.Acknowledge,
+
+			// Request 'new' filtered flush behaviour as described in e7600865db32
+			// ("netfilter: ctnetlink: Fix regression in conntrack entry deletion").
+			// Before this patch, the kernel would ignore the nfgenmsg family and
+			// flush the entire table. As of 1ef7f50ccc6e ("netfilter: ctnetlink:
+			// support CTA_FILTER for flush"), the same can be accomplished by setting
+			// an empty CTA_FILTER.
+			Version: 1,
 		},
 		filter.marshal())
 
