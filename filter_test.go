@@ -45,3 +45,21 @@ func TestFilterMarshal(t *testing.T) {
 
 	assert.Equal(t, want, got)
 }
+
+func TestFilterMutate(t *testing.T) {
+	f := NewFilter().
+		Mark(1).
+		Family(1)
+
+	mod := f.
+		Mark(2).
+		Family(2)
+
+	// Ensure original filter is unchanged.
+	assert.NotEqual(t, f, mod)
+	assert.Equal(t, []byte{0, 0, 0, 1}, f.(*filter).f[ctaMark])
+	assert.Equal(t, netfilter.ProtoFamily(1), f.(*filter).l3)
+
+	assert.Equal(t, []byte{0, 0, 0, 2}, mod.(*filter).f[ctaMark])
+	assert.Equal(t, netfilter.ProtoFamily(2), mod.(*filter).l3)
+}
